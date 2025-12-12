@@ -1,0 +1,10 @@
+{
+  "@@locale": "pl",
+  "auth_start_title": "Twój partner logistyczny zapewniający płynną dostawę.",
+  "auth_start_subtitle": "Nasze usługi logistyczne zapewniają kompleksowe rozwiązania w zakresie transportu.",
+  "auth_login": "Zaloguj się",
+  "auth_register": "Utwórz konto",
+  "common_or": "lub",
+  "language_pl": "Polski",
+  "language_en": "English"
+}
