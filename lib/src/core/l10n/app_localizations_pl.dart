@@ -23,6 +23,59 @@ class AppLocalizationsPl extends AppLocalizations {
   String get auth_register => 'Utwórz konto';
 
   @override
+  String get auth_login_title => 'Logowanie';
+
+  @override
+  String get auth_email_label => 'Adres email';
+
+  @override
+  String get auth_email_hint => 'jan.nowak@example.com';
+
+  @override
+  String get auth_password_label => 'Hasło';
+
+  @override
+  String get auth_forgot_password => 'Zapomniałeś hasła?';
+
+  @override
+  String get auth_terms_text =>
+      'Logując się, akceptujesz regulamin serwisu oraz politykę prywatności';
+
+  @override
+  String get auth_register_title => 'Utwórz nowe konto aby rozpocząć';
+
+  @override
+  String get auth_first_name_label => 'Imię';
+
+  @override
+  String get auth_first_name_hint => 'Imię';
+
+  @override
+  String get auth_last_name_label => 'Nazwisko';
+
+  @override
+  String get auth_last_name_hint => 'Nazwisko';
+
+  @override
+  String get auth_company_id_label => 'Id Firmy';
+
+  @override
+  String get auth_company_id_hint => 'Id Firmy';
+
+  @override
+  String get auth_already_have_account => 'Masz już konto? Zaloguj się';
+
+  @override
+  String get auth_forgot_password_title => 'Zapomniałeś hasła?';
+
+  @override
+  String get auth_forgot_password_description =>
+      'Nie martw się! To się zdarza. Wpisz adres e-mail powiązany z Twoim kontem.';
+
+  @override
+  String get auth_send_link => 'Wyślij link';
+
+  @override
   String get common_or => 'lub';
 
   @override

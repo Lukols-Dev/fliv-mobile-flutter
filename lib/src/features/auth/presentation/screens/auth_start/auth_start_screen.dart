@@ -112,7 +112,7 @@ class AuthStartScreen extends ConsumerWidget {
                               SizedBox(
                                 height: 56,
                                 child: FilledButton(
-                                  onPressed: () => context.go(""),
+                                  onPressed: () => context.push("/auth/login"),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF0F4D46),
                                     foregroundColor: Colors.white,
@@ -127,7 +127,7 @@ class AuthStartScreen extends ConsumerWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        t.auth_login, // np. "Zaloguj się"
+                                        t.auth_login,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w700,
@@ -145,7 +145,7 @@ class AuthStartScreen extends ConsumerWidget {
 
                               const SizedBox(height: 14),
 
-                              // OR DIVIDER
+                              // OR
                               Row(
                                 children: [
                                   const Expanded(
@@ -159,7 +159,7 @@ class AuthStartScreen extends ConsumerWidget {
                                       horizontal: 10,
                                     ),
                                     child: Text(
-                                      t.common_or, // np. "lub"
+                                      t.common_or,
                                       style: const TextStyle(
                                         color: Color(0xFF6B7280),
                                         fontSize: 13,
@@ -181,7 +181,8 @@ class AuthStartScreen extends ConsumerWidget {
                               SizedBox(
                                 height: 56,
                                 child: FilledButton(
-                                  onPressed: () => context.go(""),
+                                  onPressed: () =>
+                                      context.push("/auth/register"),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFF7FA87C),
                                     foregroundColor: Colors.white,

@@ -122,6 +122,108 @@ abstract class AppLocalizations {
   /// **'Utwórz konto'**
   String get auth_register;
 
+  /// No description provided for @auth_login_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Logowanie'**
+  String get auth_login_title;
+
+  /// No description provided for @auth_email_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Adres email'**
+  String get auth_email_label;
+
+  /// No description provided for @auth_email_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'jan.nowak@example.com'**
+  String get auth_email_hint;
+
+  /// No description provided for @auth_password_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Hasło'**
+  String get auth_password_label;
+
+  /// No description provided for @auth_forgot_password.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zapomniałeś hasła?'**
+  String get auth_forgot_password;
+
+  /// No description provided for @auth_terms_text.
+  ///
+  /// In pl, this message translates to:
+  /// **'Logując się, akceptujesz regulamin serwisu oraz politykę prywatności'**
+  String get auth_terms_text;
+
+  /// No description provided for @auth_register_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Utwórz nowe konto aby rozpocząć'**
+  String get auth_register_title;
+
+  /// No description provided for @auth_first_name_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Imię'**
+  String get auth_first_name_label;
+
+  /// No description provided for @auth_first_name_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'Imię'**
+  String get auth_first_name_hint;
+
+  /// No description provided for @auth_last_name_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nazwisko'**
+  String get auth_last_name_label;
+
+  /// No description provided for @auth_last_name_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nazwisko'**
+  String get auth_last_name_hint;
+
+  /// No description provided for @auth_company_id_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Id Firmy'**
+  String get auth_company_id_label;
+
+  /// No description provided for @auth_company_id_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'Id Firmy'**
+  String get auth_company_id_hint;
+
+  /// No description provided for @auth_already_have_account.
+  ///
+  /// In pl, this message translates to:
+  /// **'Masz już konto? Zaloguj się'**
+  String get auth_already_have_account;
+
+  /// No description provided for @auth_forgot_password_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zapomniałeś hasła?'**
+  String get auth_forgot_password_title;
+
+  /// No description provided for @auth_forgot_password_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie martw się! To się zdarza. Wpisz adres e-mail powiązany z Twoim kontem.'**
+  String get auth_forgot_password_description;
+
+  /// No description provided for @auth_send_link.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wyślij link'**
+  String get auth_send_link;
+
   /// No description provided for @common_or.
   ///
   /// In pl, this message translates to:
