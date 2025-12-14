@@ -313,6 +313,54 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Zapisz'**
   String get common_save;
+
+  /// No description provided for @driver_data_visa_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin wizy'**
+  String get driver_data_visa_deadline;
+
+  /// No description provided for @driver_data_license_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin prawa jazdy'**
+  String get driver_data_license_deadline;
+
+  /// No description provided for @driver_data_work_permit_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin pozwolenia na pracę'**
+  String get driver_data_work_permit_deadline;
+
+  /// No description provided for @driver_data_medical_exam_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin badania lekarskiego'**
+  String get driver_data_medical_exam_deadline;
+
+  /// No description provided for @driver_data_psychological_exam_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin badania psychologicznego'**
+  String get driver_data_psychological_exam_deadline;
+
+  /// No description provided for @driver_data_driver_card_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin karty kierowcy'**
+  String get driver_data_driver_card_deadline;
+
+  /// No description provided for @driver_data_residence_card_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin karty pobytu'**
+  String get driver_data_residence_card_deadline;
+
+  /// No description provided for @driver_data_driver_certificate_deadline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Termin świadectwa kierowcy'**
+  String get driver_data_driver_certificate_deadline;
 }
 
 class _AppLocalizationsDelegate

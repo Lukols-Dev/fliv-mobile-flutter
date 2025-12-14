@@ -119,4 +119,30 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get common_save => 'Zapisz';
+
+  @override
+  String get driver_data_visa_deadline => 'Termin wizy';
+
+  @override
+  String get driver_data_license_deadline => 'Termin prawa jazdy';
+
+  @override
+  String get driver_data_work_permit_deadline => 'Termin pozwolenia na pracę';
+
+  @override
+  String get driver_data_medical_exam_deadline => 'Termin badania lekarskiego';
+
+  @override
+  String get driver_data_psychological_exam_deadline =>
+      'Termin badania psychologicznego';
+
+  @override
+  String get driver_data_driver_card_deadline => 'Termin karty kierowcy';
+
+  @override
+  String get driver_data_residence_card_deadline => 'Termin karty pobytu';
+
+  @override
+  String get driver_data_driver_certificate_deadline =>
+      'Termin świadectwa kierowcy';
 }

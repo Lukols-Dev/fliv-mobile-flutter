@@ -119,4 +119,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get common_save => 'Save';
+
+  @override
+  String get driver_data_visa_deadline => 'Visa deadline';
+
+  @override
+  String get driver_data_license_deadline => 'Driving license deadline';
+
+  @override
+  String get driver_data_work_permit_deadline => 'Work permit deadline';
+
+  @override
+  String get driver_data_medical_exam_deadline =>
+      'Medical examination deadline';
+
+  @override
+  String get driver_data_psychological_exam_deadline =>
+      'Psychological examination deadline';
+
+  @override
+  String get driver_data_driver_card_deadline => 'Driver card deadline';
+
+  @override
+  String get driver_data_residence_card_deadline => 'Residence card deadline';
+
+  @override
+  String get driver_data_driver_certificate_deadline =>
+      'Driver\'s certificate deadline';
 }

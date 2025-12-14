@@ -73,7 +73,7 @@ class AccountScreen extends ConsumerWidget {
                       _ProfileListItem(
                         title: t.profile_driver_data,
                         onTap: () {
-                          // TODO: Navigate to driver data
+                          context.push('/account/driver-data');
                         },
                       ),
 

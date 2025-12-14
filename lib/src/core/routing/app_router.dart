@@ -9,6 +9,7 @@ import 'package:mobile/src/features/auth/presentation/screens/forgot_password/fo
 import 'package:mobile/src/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile/src/features/account/presentation/screens/account_screen.dart';
 import 'package:mobile/src/features/account/presentation/screens/your_data_screen.dart';
+import 'package:mobile/src/features/account/presentation/screens/driver_data_screen.dart';
 
 import 'route_not_found_screen.dart';
 import 'scaffold_with_bottom_nav.dart';
@@ -23,6 +24,7 @@ enum AppRoute {
   orders,
   account,
   yourData,
+  driverData,
 }
 
 extension AppRouteX on AppRoute {
@@ -36,6 +38,7 @@ extension AppRouteX on AppRoute {
     AppRoute.orders => '/orders',
     AppRoute.account => '/account',
     AppRoute.yourData => '/account/your-data',
+    AppRoute.driverData => '/account/driver-data',
   };
 }
 
@@ -85,6 +88,10 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoute.yourData.path,
               builder: (context, state) => const YourDataScreen(),
+            ),
+            GoRoute(
+              path: AppRoute.driverData.path,
+              builder: (context, state) => const DriverDataScreen(),
             ),
           ],
         ),
