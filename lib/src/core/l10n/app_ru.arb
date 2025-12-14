@@ -23,5 +23,17 @@
   "auth_send_link": "Send link",
   "common_or": "or",
   "language_pl": "Polish",
-  "language_en": "English"
+  "language_en": "English",
+  "profile_user_profile": "User Profile",
+  "profile_your_data": "Your data",
+  "profile_driver_data": "Driver data",
+  "profile_app_settings": "Application settings",
+  "profile_location": "Location",
+  "profile_language": "Polish language",
+  "profile_about_app": "About application",
+  "profile_terms": "Terms and conditions",
+  "profile_privacy_policy": "Privacy policy",
+  "profile_logout": "Log out",
+  "profile_phone_label": "Phone",
+  "common_save": "Save"
 }

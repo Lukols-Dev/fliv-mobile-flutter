@@ -83,4 +83,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get language_en => 'English';
+
+  @override
+  String get profile_user_profile => 'User Profile';
+
+  @override
+  String get profile_your_data => 'Your data';
+
+  @override
+  String get profile_driver_data => 'Driver data';
+
+  @override
+  String get profile_app_settings => 'Application settings';
+
+  @override
+  String get profile_location => 'Location';
+
+  @override
+  String get profile_language => 'Polish language';
+
+  @override
+  String get profile_about_app => 'About application';
+
+  @override
+  String get profile_terms => 'Terms and conditions';
+
+  @override
+  String get profile_privacy_policy => 'Privacy policy';
+
+  @override
+  String get profile_logout => 'Log out';
+
+  @override
+  String get profile_phone_label => 'Phone';
+
+  @override
+  String get common_save => 'Save';
 }

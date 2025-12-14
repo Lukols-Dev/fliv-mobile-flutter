@@ -7,6 +7,8 @@ import 'package:mobile/src/features/auth/presentation/screens/register/register_
 import 'package:mobile/src/features/auth/presentation/screens/forgot_password/forgot_password_screen.dart';
 
 import 'package:mobile/src/features/home/presentation/screens/home_screen.dart';
+import 'package:mobile/src/features/account/presentation/screens/account_screen.dart';
+import 'package:mobile/src/features/account/presentation/screens/your_data_screen.dart';
 
 import 'route_not_found_screen.dart';
 import 'scaffold_with_bottom_nav.dart';
@@ -20,6 +22,7 @@ enum AppRoute {
   home,
   orders,
   account,
+  yourData,
 }
 
 extension AppRouteX on AppRoute {
@@ -32,13 +35,13 @@ extension AppRouteX on AppRoute {
     AppRoute.home => '/home',
     AppRoute.orders => '/orders',
     AppRoute.account => '/account',
+    AppRoute.yourData => '/account/your-data',
   };
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 // final _ordersNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'orders');
-// final _accountNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'account');
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -74,6 +77,14 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoute.home.path,
               builder: (context, state) => const HomeScreen(),
+            ),
+            GoRoute(
+              path: AppRoute.account.path,
+              builder: (context, state) => const AccountScreen(),
+            ),
+            GoRoute(
+              path: AppRoute.yourData.path,
+              builder: (context, state) => const YourDataScreen(),
             ),
           ],
         ),

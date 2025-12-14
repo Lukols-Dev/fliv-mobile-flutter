@@ -83,4 +83,40 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get language_en => 'English';
+
+  @override
+  String get profile_user_profile => 'Profil użytkownika';
+
+  @override
+  String get profile_your_data => 'Twoje dane';
+
+  @override
+  String get profile_driver_data => 'Dane kierowcy';
+
+  @override
+  String get profile_app_settings => 'Ustawienia aplikacji';
+
+  @override
+  String get profile_location => 'Lokalizacja';
+
+  @override
+  String get profile_language => 'Język polski';
+
+  @override
+  String get profile_about_app => 'O aplikacji';
+
+  @override
+  String get profile_terms => 'Regulamin';
+
+  @override
+  String get profile_privacy_policy => 'Polityka prywatności';
+
+  @override
+  String get profile_logout => 'Wyloguj się';
+
+  @override
+  String get profile_phone_label => 'Telefon';
+
+  @override
+  String get common_save => 'Zapisz';
 }

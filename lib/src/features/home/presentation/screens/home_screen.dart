@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -68,9 +69,11 @@ class HomeScreen extends StatelessWidget {
                         border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.settings, size: 20),
+                        icon: const Icon(Icons.person_outline, size: 20),
                         color: const Color(0xFF111827),
-                        onPressed: () {},
+                        onPressed: () {
+                          context.push('/account');
+                        },
                       ),
                     ),
                   ],

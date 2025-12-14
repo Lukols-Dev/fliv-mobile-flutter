@@ -23,5 +23,17 @@
   "auth_send_link": "Wyślij link",
   "common_or": "lub",
   "language_pl": "Polski",
-  "language_en": "English"
+  "language_en": "English",
+  "profile_user_profile": "Profil użytkownika",
+  "profile_your_data": "Twoje dane",
+  "profile_driver_data": "Dane kierowcy",
+  "profile_app_settings": "Ustawienia aplikacji",
+  "profile_location": "Lokalizacja",
+  "profile_language": "Język polski",
+  "profile_about_app": "O aplikacji",
+  "profile_terms": "Regulamin",
+  "profile_privacy_policy": "Polityka prywatności",
+  "profile_logout": "Wyloguj się",
+  "profile_phone_label": "Telefon",
+  "common_save": "Zapisz"
 }

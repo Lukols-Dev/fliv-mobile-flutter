@@ -241,6 +241,78 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'English'**
   String get language_en;
+
+  /// No description provided for @profile_user_profile.
+  ///
+  /// In pl, this message translates to:
+  /// **'Profil użytkownika'**
+  String get profile_user_profile;
+
+  /// No description provided for @profile_your_data.
+  ///
+  /// In pl, this message translates to:
+  /// **'Twoje dane'**
+  String get profile_your_data;
+
+  /// No description provided for @profile_driver_data.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dane kierowcy'**
+  String get profile_driver_data;
+
+  /// No description provided for @profile_app_settings.
+  ///
+  /// In pl, this message translates to:
+  /// **'Ustawienia aplikacji'**
+  String get profile_app_settings;
+
+  /// No description provided for @profile_location.
+  ///
+  /// In pl, this message translates to:
+  /// **'Lokalizacja'**
+  String get profile_location;
+
+  /// No description provided for @profile_language.
+  ///
+  /// In pl, this message translates to:
+  /// **'Język polski'**
+  String get profile_language;
+
+  /// No description provided for @profile_about_app.
+  ///
+  /// In pl, this message translates to:
+  /// **'O aplikacji'**
+  String get profile_about_app;
+
+  /// No description provided for @profile_terms.
+  ///
+  /// In pl, this message translates to:
+  /// **'Regulamin'**
+  String get profile_terms;
+
+  /// No description provided for @profile_privacy_policy.
+  ///
+  /// In pl, this message translates to:
+  /// **'Polityka prywatności'**
+  String get profile_privacy_policy;
+
+  /// No description provided for @profile_logout.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wyloguj się'**
+  String get profile_logout;
+
+  /// No description provided for @profile_phone_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Telefon'**
+  String get profile_phone_label;
+
+  /// No description provided for @common_save.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zapisz'**
+  String get common_save;
 }
 
 class _AppLocalizationsDelegate
