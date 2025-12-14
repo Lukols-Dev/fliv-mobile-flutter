@@ -198,6 +198,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: FilledButton(
                                 onPressed: () {
                                   // TODO: Implement login logic
+                                  context.go('/home');
                                 },
                                 style: FilledButton.styleFrom(
                                   backgroundColor: const Color(0xFF0F4D46),
