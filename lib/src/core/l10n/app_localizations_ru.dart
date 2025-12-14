@@ -146,4 +146,55 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get driver_data_driver_certificate_deadline =>
       'Driver\'s certificate deadline';
+
+  @override
+  String get order_details_title => 'Order details';
+
+  @override
+  String get order_status_in_transit => 'In transit';
+
+  @override
+  String get order_client_data => 'Client data';
+
+  @override
+  String get order_contact_person => 'Contact person';
+
+  @override
+  String get order_phone => 'Phone';
+
+  @override
+  String get order_transport_route => 'Transport route';
+
+  @override
+  String get order_loading_point => 'Loading point';
+
+  @override
+  String get order_unloading_point => 'Unloading point';
+
+  @override
+  String get order_loaded => 'Loaded';
+
+  @override
+  String get order_en_route => 'En route';
+
+  @override
+  String get order_cargo => 'Cargo';
+
+  @override
+  String get order_cargo_type => 'Type of goods';
+
+  @override
+  String get order_weight => 'Weight';
+
+  @override
+  String get order_pallets => 'Pallets';
+
+  @override
+  String get order_notes => 'Notes';
+
+  @override
+  String get order_start_navigation => 'Start navigation';
+
+  @override
+  String get order_view_documents => 'View documents';
 }

@@ -145,4 +145,55 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get driver_data_driver_certificate_deadline =>
       'Termin świadectwa kierowcy';
+
+  @override
+  String get order_details_title => 'Szczegóły zlecenia';
+
+  @override
+  String get order_status_in_transit => 'W trasie';
+
+  @override
+  String get order_client_data => 'Dane klienta';
+
+  @override
+  String get order_contact_person => 'Osoba kontaktowa';
+
+  @override
+  String get order_phone => 'Telefon';
+
+  @override
+  String get order_transport_route => 'Trasa transportu';
+
+  @override
+  String get order_loading_point => 'Punkt załadunku';
+
+  @override
+  String get order_unloading_point => 'Punkt rozładunku';
+
+  @override
+  String get order_loaded => 'Załadowano';
+
+  @override
+  String get order_en_route => 'W drodze';
+
+  @override
+  String get order_cargo => 'Ładunek';
+
+  @override
+  String get order_cargo_type => 'Rodzaj towaru';
+
+  @override
+  String get order_weight => 'Waga';
+
+  @override
+  String get order_pallets => 'Palety';
+
+  @override
+  String get order_notes => 'Uwagi';
+
+  @override
+  String get order_start_navigation => 'Rozpocznij nawigację';
+
+  @override
+  String get order_view_documents => 'Zobacz dokumenty';
 }

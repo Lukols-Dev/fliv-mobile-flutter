@@ -146,143 +146,150 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // ORDER CARD
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0F4D46),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(18),
-                            topRight: Radius.circular(18),
+                InkWell(
+                  onTap: () {
+                    context.push('/orders/ZL-221235325');
+                  },
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF0F4D46),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(18),
+                              topRight: Radius.circular(18),
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                const Expanded(
-                                  child: Text(
-                                    'Numer zlecenia',
-                                    style: TextStyle(
-                                      color: Color(0xFFD1FAE5),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEF4444),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: const Text(
-                                    'W trasie',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                '#ZL-221253525',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const [
-                                _OrderStat(
-                                  icon: Icons.route_outlined,
-                                  text: '485 km',
-                                ),
-                                _OrderStat(
-                                  icon: Icons.schedule_outlined,
-                                  text: '5h 30min',
-                                ),
-                                _OrderStat(
-                                  icon: Icons.local_shipping_outlined,
-                                  text: '18.5 t',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                        child: Column(
-                          children: [
-                            _TimelineRow(
-                              color: const Color(0xFF10B981),
-                              title: 'Punkt załadunku',
-                              subtitle1: 'Piaseczno, Polska',
-                              subtitle2: 'Jana Pawła II 05, 05-500',
-                              date: '12.10.2025',
-                            ),
-                            const SizedBox(height: 10),
-                            _TimelineRow(
-                              color: const Color(0xFFEF4444),
-                              title: 'Punkt rozładunku',
-                              subtitle1: 'Wien, Austria',
-                              subtitle2: 'Opernring 2, Ecke, Elisabeth Str.',
-                              date: '16.10.2025',
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              height: 54,
-                              width: double.infinity,
-                              child: FilledButton(
-                                onPressed: () {},
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0F4D46),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.near_me_outlined, size: 18),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      'Otwórz nawigację',
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Expanded(
+                                    child: Text(
+                                      'Numer zlecenia',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        color: Color(0xFFD1FAE5),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEF4444),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: const Text(
+                                      'W trasie',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '#ZL-221253525',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: const [
+                                  _OrderStat(
+                                    icon: Icons.route_outlined,
+                                    text: '485 km',
+                                  ),
+                                  _OrderStat(
+                                    icon: Icons.schedule_outlined,
+                                    text: '5h 30min',
+                                  ),
+                                  _OrderStat(
+                                    icon: Icons.local_shipping_outlined,
+                                    text: '18.5 t',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                          child: Column(
+                            children: [
+                              _TimelineRow(
+                                color: const Color(0xFF10B981),
+                                title: 'Punkt załadunku',
+                                subtitle1: 'Piaseczno, Polska',
+                                subtitle2: 'Jana Pawła II 05, 05-500',
+                                date: '12.10.2025',
+                              ),
+                              const SizedBox(height: 10),
+                              _TimelineRow(
+                                color: const Color(0xFFEF4444),
+                                title: 'Punkt rozładunku',
+                                subtitle1: 'Wien, Austria',
+                                subtitle2: 'Opernring 2, Ecke, Elisabeth Str.',
+                                date: '16.10.2025',
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 54,
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: () {},
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0F4D46),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Icon(Icons.near_me_outlined, size: 18),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Otwórz nawigację',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

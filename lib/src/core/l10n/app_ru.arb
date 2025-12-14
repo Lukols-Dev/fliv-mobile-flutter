@@ -43,5 +43,22 @@
   "driver_data_psychological_exam_deadline": "Psychological examination deadline",
   "driver_data_driver_card_deadline": "Driver card deadline",
   "driver_data_residence_card_deadline": "Residence card deadline",
-  "driver_data_driver_certificate_deadline": "Driver's certificate deadline"
+  "driver_data_driver_certificate_deadline": "Driver's certificate deadline",
+  "order_details_title": "Order details",
+  "order_status_in_transit": "In transit",
+  "order_client_data": "Client data",
+  "order_contact_person": "Contact person",
+  "order_phone": "Phone",
+  "order_transport_route": "Transport route",
+  "order_loading_point": "Loading point",
+  "order_unloading_point": "Unloading point",
+  "order_loaded": "Loaded",
+  "order_en_route": "En route",
+  "order_cargo": "Cargo",
+  "order_cargo_type": "Type of goods",
+  "order_weight": "Weight",
+  "order_pallets": "Pallets",
+  "order_notes": "Notes",
+  "order_start_navigation": "Start navigation",
+  "order_view_documents": "View documents"
 }

@@ -43,5 +43,22 @@
   "driver_data_psychological_exam_deadline": "Termin badania psychologicznego",
   "driver_data_driver_card_deadline": "Termin karty kierowcy",
   "driver_data_residence_card_deadline": "Termin karty pobytu",
-  "driver_data_driver_certificate_deadline": "Termin świadectwa kierowcy"
+  "driver_data_driver_certificate_deadline": "Termin świadectwa kierowcy",
+  "order_details_title": "Szczegóły zlecenia",
+  "order_status_in_transit": "W trasie",
+  "order_client_data": "Dane klienta",
+  "order_contact_person": "Osoba kontaktowa",
+  "order_phone": "Telefon",
+  "order_transport_route": "Trasa transportu",
+  "order_loading_point": "Punkt załadunku",
+  "order_unloading_point": "Punkt rozładunku",
+  "order_loaded": "Załadowano",
+  "order_en_route": "W drodze",
+  "order_cargo": "Ładunek",
+  "order_cargo_type": "Rodzaj towaru",
+  "order_weight": "Waga",
+  "order_pallets": "Palety",
+  "order_notes": "Uwagi",
+  "order_start_navigation": "Rozpocznij nawigację",
+  "order_view_documents": "Zobacz dokumenty"
 }

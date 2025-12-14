@@ -361,6 +361,108 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Termin świadectwa kierowcy'**
   String get driver_data_driver_certificate_deadline;
+
+  /// No description provided for @order_details_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Szczegóły zlecenia'**
+  String get order_details_title;
+
+  /// No description provided for @order_status_in_transit.
+  ///
+  /// In pl, this message translates to:
+  /// **'W trasie'**
+  String get order_status_in_transit;
+
+  /// No description provided for @order_client_data.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dane klienta'**
+  String get order_client_data;
+
+  /// No description provided for @order_contact_person.
+  ///
+  /// In pl, this message translates to:
+  /// **'Osoba kontaktowa'**
+  String get order_contact_person;
+
+  /// No description provided for @order_phone.
+  ///
+  /// In pl, this message translates to:
+  /// **'Telefon'**
+  String get order_phone;
+
+  /// No description provided for @order_transport_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Trasa transportu'**
+  String get order_transport_route;
+
+  /// No description provided for @order_loading_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Punkt załadunku'**
+  String get order_loading_point;
+
+  /// No description provided for @order_unloading_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Punkt rozładunku'**
+  String get order_unloading_point;
+
+  /// No description provided for @order_loaded.
+  ///
+  /// In pl, this message translates to:
+  /// **'Załadowano'**
+  String get order_loaded;
+
+  /// No description provided for @order_en_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'W drodze'**
+  String get order_en_route;
+
+  /// No description provided for @order_cargo.
+  ///
+  /// In pl, this message translates to:
+  /// **'Ładunek'**
+  String get order_cargo;
+
+  /// No description provided for @order_cargo_type.
+  ///
+  /// In pl, this message translates to:
+  /// **'Rodzaj towaru'**
+  String get order_cargo_type;
+
+  /// No description provided for @order_weight.
+  ///
+  /// In pl, this message translates to:
+  /// **'Waga'**
+  String get order_weight;
+
+  /// No description provided for @order_pallets.
+  ///
+  /// In pl, this message translates to:
+  /// **'Palety'**
+  String get order_pallets;
+
+  /// No description provided for @order_notes.
+  ///
+  /// In pl, this message translates to:
+  /// **'Uwagi'**
+  String get order_notes;
+
+  /// No description provided for @order_start_navigation.
+  ///
+  /// In pl, this message translates to:
+  /// **'Rozpocznij nawigację'**
+  String get order_start_navigation;
+
+  /// No description provided for @order_view_documents.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zobacz dokumenty'**
+  String get order_view_documents;
 }
 
 class _AppLocalizationsDelegate
