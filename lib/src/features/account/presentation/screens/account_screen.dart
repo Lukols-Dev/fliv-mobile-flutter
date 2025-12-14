@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/src/core/utils/open_url.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/core/l10n/l10n.dart';
+import 'package:mobile/src/core/l10n/locale_controller.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
+
+  Future<void> _launchUrl(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -94,7 +105,41 @@ class AccountScreen extends ConsumerWidget {
                       _ProfileListItem(
                         title: t.profile_language,
                         onTap: () {
-                          // TODO: Navigate to language settings
+                          showModalBottomSheet(
+                            context: context,
+                            showDragHandle: true,
+                            builder: (ctx) {
+                              final currentLocale = ref.read(
+                                localeControllerProvider,
+                              );
+                              return SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    for (final l in SupportedLocales.all)
+                                      ListTile(
+                                        title: Text(SupportedLocales.label(l)),
+                                        trailing:
+                                            l.languageCode ==
+                                                currentLocale.languageCode
+                                            ? const Icon(Icons.check_rounded)
+                                            : null,
+                                        onTap: () {
+                                          ref
+                                              .read(
+                                                localeControllerProvider
+                                                    .notifier,
+                                              )
+                                              .setLocale(l);
+                                          if (ctx.mounted) Navigator.pop(ctx);
+                                        },
+                                      ),
+                                    const SizedBox(height: 8),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
                         },
                       ),
 
@@ -108,15 +153,17 @@ class AccountScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       _ProfileListItem(
                         title: t.profile_terms,
-                        onTap: () {
-                          // TODO: Navigate to terms
-                        },
+                        onTap: () => openLegalUrl(
+                          context,
+                          'https://www.neuroface.pl/pl/regulamin',
+                        ),
                       ),
                       _ProfileListItem(
                         title: t.profile_privacy_policy,
-                        onTap: () {
-                          // TODO: Navigate to privacy policy
-                        },
+                        onTap: () => openLegalUrl(
+                          context,
+                          'https://www.neuroface.pl/pl/polityka-prywatnosci',
+                        ),
                       ),
 
                       const SizedBox(height: 32),
