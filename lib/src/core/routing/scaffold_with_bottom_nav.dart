@@ -27,9 +27,9 @@ class ScaffoldWithBottomNav extends StatelessWidget {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.local_shipping_outlined),
-            selectedIcon: Icon(Icons.local_shipping),
-            label: 'Orders',
+            icon: Icon(Icons.route_outlined),
+            selectedIcon: Icon(Icons.route_rounded),
+            label: 'Route',
           ),
           NavigationDestination(
             icon: Icon(Icons.description_outlined),

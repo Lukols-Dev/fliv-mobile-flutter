@@ -13,6 +13,7 @@ import 'package:mobile/src/features/account/presentation/screens/driver_data_scr
 import 'package:mobile/src/features/orders/presentation/screens/order_details_screen.dart';
 import 'package:mobile/src/features/documents/presentation/screens/documents_screen.dart';
 import 'package:mobile/src/features/documents/presentation/screens/add_document_screen.dart';
+import 'package:mobile/src/features/route/presentation/screens/route_screen.dart';
 
 import 'route_not_found_screen.dart';
 import 'scaffold_with_bottom_nav.dart';
@@ -29,6 +30,7 @@ enum AppRoute {
   yourData,
   driverData,
   orderDetails,
+  route,
   documents,
   addDocument,
 }
@@ -46,6 +48,7 @@ extension AppRouteX on AppRoute {
     AppRoute.yourData => '/account/your-data',
     AppRoute.driverData => '/account/driver-data',
     AppRoute.orderDetails => '/orders/:orderId',
+    AppRoute.route => '/route',
     AppRoute.documents => '/documents',
     AppRoute.addDocument => '/documents/add',
   };
@@ -53,6 +56,7 @@ extension AppRouteX on AppRoute {
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+final _routeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'route');
 final _documentsNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'documents',
 );
@@ -115,6 +119,15 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoute.driverData.path,
               builder: (context, state) => const DriverDataScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          navigatorKey: _routeNavigatorKey,
+          routes: [
+            GoRoute(
+              path: AppRoute.route.path,
+              builder: (context, state) => const RouteScreen(),
             ),
           ],
         ),
