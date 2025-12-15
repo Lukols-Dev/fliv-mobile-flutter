@@ -196,4 +196,49 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get order_view_documents => 'Zobacz dokumenty';
+
+  @override
+  String get documents_title => 'Dokumenty';
+
+  @override
+  String get documents_filter_all => 'Wszystkie';
+
+  @override
+  String get documents_filter_synchronized => 'Zsynchronizowane';
+
+  @override
+  String get documents_filter_local => 'Lokalne';
+
+  @override
+  String get documents_status_synchronized => 'Zsynchronizowano';
+
+  @override
+  String get documents_status_local_only => 'Tylko lokalnie';
+
+  @override
+  String get documents_status_syncing => 'Synchronizacja...';
+
+  @override
+  String get documents_add_title => 'Dodaj dokument';
+
+  @override
+  String get documents_add_subtitle => 'Wypełnij informacje o nowym dokumencie';
+
+  @override
+  String get documents_add_photo_label => 'Zdjęcie dokumentu';
+
+  @override
+  String get documents_add_photo_hint => 'Zrób zdjęcie lub wybierz z galerii';
+
+  @override
+  String get documents_add_photo_max_size => 'Maksymalny rozmiar: 10 MB';
+
+  @override
+  String get documents_add_name_label => 'Nazwa dokumentu';
+
+  @override
+  String get documents_add_name_hint => 'np. CMR - List przewozowy';
+
+  @override
+  String get documents_add_button => 'Dodaj dokument';
 }

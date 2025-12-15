@@ -31,6 +31,11 @@ class ScaffoldWithBottomNav extends StatelessWidget {
             selectedIcon: Icon(Icons.local_shipping),
             label: 'Orders',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.description_outlined),
+            selectedIcon: Icon(Icons.description),
+            label: 'Documents',
+          ),
         ],
       ),
     );

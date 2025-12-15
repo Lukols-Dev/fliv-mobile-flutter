@@ -60,5 +60,20 @@
   "order_pallets": "Pallets",
   "order_notes": "Notes",
   "order_start_navigation": "Start navigation",
-  "order_view_documents": "View documents"
+  "order_view_documents": "View documents",
+  "documents_title": "Documents",
+  "documents_filter_all": "All",
+  "documents_filter_synchronized": "Synchronized",
+  "documents_filter_local": "Local",
+  "documents_status_synchronized": "Synchronized",
+  "documents_status_local_only": "Local only",
+  "documents_status_syncing": "Synchronizing...",
+  "documents_add_title": "Add document",
+  "documents_add_subtitle": "Fill in information about the new document",
+  "documents_add_photo_label": "Document photo",
+  "documents_add_photo_hint": "Take a photo or choose from gallery",
+  "documents_add_photo_max_size": "Maximum size: 10 MB",
+  "documents_add_name_label": "Document name",
+  "documents_add_name_hint": "e.g. CMR - Consignment note",
+  "documents_add_button": "Add document"
 }

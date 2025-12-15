@@ -197,4 +197,50 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get order_view_documents => 'View documents';
+
+  @override
+  String get documents_title => 'Documents';
+
+  @override
+  String get documents_filter_all => 'All';
+
+  @override
+  String get documents_filter_synchronized => 'Synchronized';
+
+  @override
+  String get documents_filter_local => 'Local';
+
+  @override
+  String get documents_status_synchronized => 'Synchronized';
+
+  @override
+  String get documents_status_local_only => 'Local only';
+
+  @override
+  String get documents_status_syncing => 'Synchronizing...';
+
+  @override
+  String get documents_add_title => 'Add document';
+
+  @override
+  String get documents_add_subtitle =>
+      'Fill in information about the new document';
+
+  @override
+  String get documents_add_photo_label => 'Document photo';
+
+  @override
+  String get documents_add_photo_hint => 'Take a photo or choose from gallery';
+
+  @override
+  String get documents_add_photo_max_size => 'Maximum size: 10 MB';
+
+  @override
+  String get documents_add_name_label => 'Document name';
+
+  @override
+  String get documents_add_name_hint => 'e.g. CMR - Consignment note';
+
+  @override
+  String get documents_add_button => 'Add document';
 }

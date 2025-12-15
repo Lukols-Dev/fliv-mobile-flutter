@@ -251,7 +251,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                     height: 56,
                     child: FilledButton(
                       onPressed: () {
-                        // TODO: Navigate to documents
+                        context.go('/documents}');
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF7FA87C),

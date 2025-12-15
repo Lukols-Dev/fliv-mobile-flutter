@@ -11,6 +11,8 @@ import 'package:mobile/src/features/account/presentation/screens/account_screen.
 import 'package:mobile/src/features/account/presentation/screens/your_data_screen.dart';
 import 'package:mobile/src/features/account/presentation/screens/driver_data_screen.dart';
 import 'package:mobile/src/features/orders/presentation/screens/order_details_screen.dart';
+import 'package:mobile/src/features/documents/presentation/screens/documents_screen.dart';
+import 'package:mobile/src/features/documents/presentation/screens/add_document_screen.dart';
 
 import 'route_not_found_screen.dart';
 import 'scaffold_with_bottom_nav.dart';
@@ -27,6 +29,8 @@ enum AppRoute {
   yourData,
   driverData,
   orderDetails,
+  documents,
+  addDocument,
 }
 
 extension AppRouteX on AppRoute {
@@ -42,11 +46,16 @@ extension AppRouteX on AppRoute {
     AppRoute.yourData => '/account/your-data',
     AppRoute.driverData => '/account/driver-data',
     AppRoute.orderDetails => '/orders/:orderId',
+    AppRoute.documents => '/documents',
+    AppRoute.addDocument => '/documents/add',
   };
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+final _documentsNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'documents',
+);
 // final _ordersNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'orders');
 
 final GoRouter appRouter = GoRouter(
@@ -78,6 +87,10 @@ final GoRouter appRouter = GoRouter(
         return OrderDetailsScreen(orderId: orderId);
       },
     ),
+    GoRoute(
+      path: AppRoute.addDocument.path,
+      builder: (context, state) => const AddDocumentScreen(),
+    ),
 
     // APP (bottom nav z zachowaniem stanu tabów)
     StatefulShellRoute.indexedStack(
@@ -102,6 +115,18 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoute.driverData.path,
               builder: (context, state) => const DriverDataScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          navigatorKey: _documentsNavigatorKey,
+          routes: [
+            GoRoute(
+              path: AppRoute.documents.path,
+              builder: (context, state) {
+                final orderId = state.uri.queryParameters['orderId'];
+                return DocumentsScreen(orderId: orderId);
+              },
             ),
           ],
         ),

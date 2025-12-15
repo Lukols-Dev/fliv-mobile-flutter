@@ -463,6 +463,96 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Zobacz dokumenty'**
   String get order_view_documents;
+
+  /// No description provided for @documents_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dokumenty'**
+  String get documents_title;
+
+  /// No description provided for @documents_filter_all.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wszystkie'**
+  String get documents_filter_all;
+
+  /// No description provided for @documents_filter_synchronized.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zsynchronizowane'**
+  String get documents_filter_synchronized;
+
+  /// No description provided for @documents_filter_local.
+  ///
+  /// In pl, this message translates to:
+  /// **'Lokalne'**
+  String get documents_filter_local;
+
+  /// No description provided for @documents_status_synchronized.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zsynchronizowano'**
+  String get documents_status_synchronized;
+
+  /// No description provided for @documents_status_local_only.
+  ///
+  /// In pl, this message translates to:
+  /// **'Tylko lokalnie'**
+  String get documents_status_local_only;
+
+  /// No description provided for @documents_status_syncing.
+  ///
+  /// In pl, this message translates to:
+  /// **'Synchronizacja...'**
+  String get documents_status_syncing;
+
+  /// No description provided for @documents_add_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dodaj dokument'**
+  String get documents_add_title;
+
+  /// No description provided for @documents_add_subtitle.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wypełnij informacje o nowym dokumencie'**
+  String get documents_add_subtitle;
+
+  /// No description provided for @documents_add_photo_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zdjęcie dokumentu'**
+  String get documents_add_photo_label;
+
+  /// No description provided for @documents_add_photo_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zrób zdjęcie lub wybierz z galerii'**
+  String get documents_add_photo_hint;
+
+  /// No description provided for @documents_add_photo_max_size.
+  ///
+  /// In pl, this message translates to:
+  /// **'Maksymalny rozmiar: 10 MB'**
+  String get documents_add_photo_max_size;
+
+  /// No description provided for @documents_add_name_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nazwa dokumentu'**
+  String get documents_add_name_label;
+
+  /// No description provided for @documents_add_name_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'np. CMR - List przewozowy'**
+  String get documents_add_name_hint;
+
+  /// No description provided for @documents_add_button.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dodaj dokument'**
+  String get documents_add_button;
 }
 
 class _AppLocalizationsDelegate

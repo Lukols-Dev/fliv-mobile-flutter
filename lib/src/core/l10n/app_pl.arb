@@ -60,5 +60,20 @@
   "order_pallets": "Palety",
   "order_notes": "Uwagi",
   "order_start_navigation": "Rozpocznij nawigację",
-  "order_view_documents": "Zobacz dokumenty"
+  "order_view_documents": "Zobacz dokumenty",
+  "documents_title": "Dokumenty",
+  "documents_filter_all": "Wszystkie",
+  "documents_filter_synchronized": "Zsynchronizowane",
+  "documents_filter_local": "Lokalne",
+  "documents_status_synchronized": "Zsynchronizowano",
+  "documents_status_local_only": "Tylko lokalnie",
+  "documents_status_syncing": "Synchronizacja...",
+  "documents_add_title": "Dodaj dokument",
+  "documents_add_subtitle": "Wypełnij informacje o nowym dokumencie",
+  "documents_add_photo_label": "Zdjęcie dokumentu",
+  "documents_add_photo_hint": "Zrób zdjęcie lub wybierz z galerii",
+  "documents_add_photo_max_size": "Maksymalny rozmiar: 10 MB",
+  "documents_add_name_label": "Nazwa dokumentu",
+  "documents_add_name_hint": "np. CMR - List przewozowy",
+  "documents_add_button": "Dodaj dokument"
 }
