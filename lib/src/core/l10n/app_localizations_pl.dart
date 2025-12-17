@@ -76,7 +76,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get auth_send_link => 'Wyślij link';
 
   @override
+  String get auth_invalid_email => 'Nieprawidłowy adres email';
+
+  @override
   String get common_or => 'lub';
+
+  @override
+  String get common_fill_all_fields => 'Wypełnij wszystkie pola';
 
   @override
   String get language_pl => 'Polski';

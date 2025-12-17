@@ -2,20 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/utils/open_url.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
+import 'package:mobile/src/features/auth/application/auth_controller.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
-
-  Future<void> _launchUrl(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -173,9 +166,13 @@ class AccountScreen extends ConsumerWidget {
                         width: double.infinity,
                         height: 56,
                         child: FilledButton(
-                          onPressed: () {
-                            // TODO: Implement logout logic
-                            context.go('/auth');
+                          onPressed: () async {
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .signOut();
+                            if (context.mounted) {
+                              context.go('/auth');
+                            }
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF0F4D46),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
+import 'package:mobile/src/features/auth/application/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -25,10 +26,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  bool _isValidEmail(String value) {
+    // TODO:MVP: prosta walidacja; jak chcesz, podepnę validator później
+    return value.contains('@') && value.contains('.');
+  }
+
+  Future<void> _submit(AppLocalizations t) async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.common_fill_all_fields)));
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.auth_invalid_email)));
+      return;
+    }
+
+    await ref
+        .read(authControllerProvider.notifier)
+        .signIn(email: email, password: password);
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final locale = ref.watch(localeControllerProvider);
+
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
+
+    ref.listen(authControllerProvider, (prev, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
+        },
+      );
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -38,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
+          onPressed: isLoading ? null : () => context.pop(),
         ),
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -90,7 +132,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: _emailController,
+                                  enabled: !isLoading,
                                   keyboardType: TextInputType.emailAddress,
+                                  textInputAction: TextInputAction.next,
                                   decoration: InputDecoration(
                                     hintText: t.auth_email_hint,
                                     hintStyle: const TextStyle(
@@ -132,9 +176,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                                     ),
                                     TextButton(
-                                      onPressed: () {
-                                        context.push('/auth/forgot-password');
-                                      },
+                                      onPressed: isLoading
+                                          ? null
+                                          : () => context.push(
+                                              '/auth/forgot-password',
+                                            ),
                                       style: TextButton.styleFrom(
                                         padding: EdgeInsets.zero,
                                         minimumSize: Size.zero,
@@ -155,7 +201,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: _passwordController,
+                                  enabled: !isLoading,
                                   obscureText: _obscurePassword,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) async {
+                                    if (!isLoading) {
+                                      await _submit(t);
+                                    }
+                                  },
                                   decoration: InputDecoration(
                                     hintText: '........',
                                     hintStyle: const TextStyle(
@@ -179,11 +232,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                             : Icons.visibility_off_outlined,
                                         color: const Color(0xFF6B7280),
                                       ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _obscurePassword = !_obscurePassword;
-                                        });
-                                      },
+                                      onPressed: isLoading
+                                          ? null
+                                          : () => setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            }),
                                     ),
                                   ),
                                 ),
@@ -196,10 +250,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             SizedBox(
                               height: 56,
                               child: FilledButton(
-                                onPressed: () {
-                                  // TODO: Implement login logic
-                                  context.go('/home');
-                                },
+                                onPressed: isLoading ? null : () => _submit(t),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: const Color(0xFF0F4D46),
                                   foregroundColor: Colors.white,
@@ -209,24 +260,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   elevation: 8,
                                   shadowColor: const Color(0x22000000),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      t.auth_login,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            t.auth_login,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          const Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 18,
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Icon(
-                                      Icons.arrow_forward_rounded,
-                                      size: 18,
-                                    ),
-                                  ],
-                                ),
                               ),
                             ),
 
@@ -268,9 +328,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             SizedBox(
                               height: 56,
                               child: FilledButton(
-                                onPressed: () {
-                                  context.push('/auth/register');
-                                },
+                                onPressed: isLoading
+                                    ? null
+                                    : () => context.push('/auth/register'),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: const Color(0xFF7FA87C),
                                   foregroundColor: Colors.white,

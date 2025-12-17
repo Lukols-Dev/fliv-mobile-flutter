@@ -6,6 +6,7 @@ import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
 import 'package:mobile/src/core/routing/app_router.dart';
+import 'package:mobile/src/features/auth/application/auth_controller.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -18,9 +19,26 @@ class _AppState extends ConsumerState<App> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FlutterNativeSplash.remove();
+
+    ref.listenManual(authControllerProvider, (prev, next) {
+      next.whenData((session) {
+        final loc = appRouter.routeInformationProvider.value.uri.path;
+
+        if (session == null) {
+          if (loc != '/auth') appRouter.go('/auth');
+        } else {
+          if (loc.startsWith('/auth')) appRouter.go('/home');
+        }
+      });
     });
+
+    _init();
+  }
+
+  Future<void> _init() async {
+    await ref.read(authControllerProvider.future);
+
+    FlutterNativeSplash.remove();
   }
 
   @override

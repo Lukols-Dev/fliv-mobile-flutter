@@ -76,7 +76,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get auth_send_link => 'Send link';
 
   @override
+  String get auth_invalid_email => 'Invalid email address';
+
+  @override
   String get common_or => 'or';
+
+  @override
+  String get common_fill_all_fields => 'Fill in all fields';
 
   @override
   String get language_pl => 'Polish';

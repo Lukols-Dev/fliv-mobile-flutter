@@ -224,11 +224,23 @@ abstract class AppLocalizations {
   /// **'Wyślij link'**
   String get auth_send_link;
 
+  /// No description provided for @auth_invalid_email.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nieprawidłowy adres email'**
+  String get auth_invalid_email;
+
   /// No description provided for @common_or.
   ///
   /// In pl, this message translates to:
   /// **'lub'**
   String get common_or;
+
+  /// No description provided for @common_fill_all_fields.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wypełnij wszystkie pola'**
+  String get common_fill_all_fields;
 
   /// No description provided for @language_pl.
   ///

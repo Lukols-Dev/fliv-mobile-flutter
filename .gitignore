@@ -12,6 +12,17 @@
 .swiftpm/
 migrate_working_dir/
 
+# Environment files (do NOT commit secrets/config)
+env/*.env
+!env/env.example
+
+# Optional: local override files
+env/*.local
+env/*.local.env
+
+# Optional: if you use CI-generated env artifacts
+env/*.generated
+
 # IntelliJ related
 *.iml
 *.ipr
