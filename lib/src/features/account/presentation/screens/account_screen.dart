@@ -15,6 +15,11 @@ class AccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(driverProfileProvider);
+    final profile = profileAsync.maybeWhen(data: (p) => p, orElse: () => null);
+    final fullName = profile != null
+        ? '${profile.firstName} ${profile.lastName}'.trim()
+        : '—';
+    final driverId = profile?.driverCode ?? '—';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -43,12 +48,7 @@ class AccountScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            profileAsync.when(
-                              data: (p) =>
-                                  '${p.firstName} ${p.lastName}'.trim(),
-                              loading: () => '—',
-                              error: (_, __) => '—',
-                            ),
+                            fullName,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 24,
@@ -58,7 +58,7 @@ class AccountScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'ID: ${profileAsync.when(data: (p) => p.driverCode ?? '—', loading: () => '—', error: (_, __) => '—')}',
+                            'ID: $driverId',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 14,

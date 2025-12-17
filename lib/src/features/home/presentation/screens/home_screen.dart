@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static const routeName = '/home';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(driverProfileProvider);
+    final profile = profileAsync.maybeWhen(data: (p) => p, orElse: () => null);
+    final fullName = profile != null
+        ? '${profile.firstName} ${profile.lastName}'.trim()
+        : '—';
+    final driverId = profile?.driverCode ?? '—';
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
       body: SafeArea(
@@ -30,8 +38,8 @@ class HomeScreen extends StatelessWidget {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
+                        children: [
+                          const Text(
                             'Witaj z powrotem!',
                             style: TextStyle(
                               fontSize: 12,
@@ -39,19 +47,19 @@ class HomeScreen extends StatelessWidget {
                               color: Color(0xFF6B7280),
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            'Jan Nowak',
-                            style: TextStyle(
+                            fullName,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF111827),
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            '18/12 - 8:47',
-                            style: TextStyle(
+                            'ID: $driverId',
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF9CA3AF),
