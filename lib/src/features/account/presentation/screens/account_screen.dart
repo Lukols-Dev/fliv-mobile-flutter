@@ -6,6 +6,7 @@ import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
 import 'package:mobile/src/features/auth/application/auth_controller.dart';
+import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -13,6 +14,7 @@ class AccountScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppLocalizations.of(context)!;
+    final profileAsync = ref.watch(driverProfileProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -40,18 +42,25 @@ class AccountScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Jan Nowak',
-                            style: TextStyle(
+                          Text(
+                            profileAsync.when(
+                              data: (p) =>
+                                  '${p.firstName} ${p.lastName}'.trim(),
+                              loading: () => '—',
+                              error: (_, __) => '—',
+                            ),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF111827),
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'ID: DRV-2874',
-                            style: TextStyle(
+                          Text(
+                            'ID: ${profileAsync.when(data: (p) => p.driverCode ?? '—', loading: () => '—', error: (_, __) => '—')}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFF6B7280),

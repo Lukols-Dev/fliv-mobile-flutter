@@ -83,7 +83,9 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
               ),
             ),
           ),
-          data: (_) {
+          data: (profile) {
+            // Ensure controllers are populated even if listener doesn't fire
+            _applyProfileOnce(profile);
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
