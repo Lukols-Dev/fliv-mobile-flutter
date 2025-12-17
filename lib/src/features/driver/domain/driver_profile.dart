@@ -5,6 +5,15 @@ class DriverProfile {
     this.email,
     this.phone,
     this.companyInternalId,
+    this.driverCode,
+    this.visaExpiresAt,
+    this.drivingLicenseExpiresAt,
+    this.workPermitExpiresAt,
+    this.medicalCheckExpiresAt,
+    this.psychCheckExpiresAt,
+    this.driverCardExpiresAt,
+    this.residenceCardExpiresAt,
+    this.driverCertificateExpiresAt,
   });
 
   final String firstName;
@@ -12,4 +21,13 @@ class DriverProfile {
   final String? email;
   final String? phone;
   final String? companyInternalId;
+  final String? driverCode;
+  final DateTime? visaExpiresAt;
+  final DateTime? drivingLicenseExpiresAt;
+  final DateTime? workPermitExpiresAt;
+  final DateTime? medicalCheckExpiresAt;
+  final DateTime? psychCheckExpiresAt;
+  final DateTime? driverCardExpiresAt;
+  final DateTime? residenceCardExpiresAt;
+  final DateTime? driverCertificateExpiresAt;
 }

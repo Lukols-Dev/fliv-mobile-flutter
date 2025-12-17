@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../domain/register_driver_payload.dart';
+import '../domain/update_driver_documents_payload.dart';
 import '../domain/update_user_profile_payload.dart';
 import 'driver_profile_dto.dart';
 
@@ -18,5 +19,9 @@ class DriverApi {
 
   Future<void> updateProfile(UpdateUserProfilePayload payload) async {
     await _dio.patch('/api/v1/driver/profile', data: payload.toJson());
+  }
+
+  Future<void> updateDocuments(UpdateDriverDocumentsPayload payload) async {
+    await _dio.patch('/api/v1/driver/documents', data: payload.toJson());
   }
 }
