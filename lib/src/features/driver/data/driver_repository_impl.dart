@@ -4,6 +4,7 @@ import '../../../core/network/dio_provider.dart';
 import '../domain/driver_repository.dart';
 import '../domain/driver_profile.dart';
 import '../domain/register_driver_payload.dart';
+import '../domain/update_user_profile_payload.dart';
 
 import 'driver_api.dart';
 
@@ -28,5 +29,10 @@ class DriverRepositoryImpl implements DriverRepository {
   Future<DriverProfile> getProfile() async {
     final dto = await _api.getProfile();
     return dto.toDomain();
+  }
+
+  @override
+  Future<void> updateProfile(UpdateUserProfilePayload payload) {
+    return _api.updateProfile(payload);
   }
 }

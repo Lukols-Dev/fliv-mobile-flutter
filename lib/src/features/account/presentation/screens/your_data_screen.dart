@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
+import 'package:mobile/src/features/driver/data/driver_repository_impl.dart';
 import 'package:mobile/src/features/driver/domain/driver_profile.dart';
+import 'package:mobile/src/features/driver/domain/update_user_profile_payload.dart';
 
 class YourDataScreen extends ConsumerStatefulWidget {
   const YourDataScreen({super.key});
@@ -18,6 +20,7 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _didSetInitialValues = false;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -310,10 +313,36 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
                       width: double.infinity,
                       height: 56,
                       child: FilledButton(
-                        onPressed: () {
-                          // TODO: Implement save logic
-                          context.pop();
-                        },
+                        onPressed: _isSaving
+                            ? null
+                            : () async {
+                                setState(() => _isSaving = true);
+                                try {
+                                  final repo = ref.read(
+                                    driverRepositoryProvider,
+                                  );
+                                  await repo.updateProfile(
+                                    UpdateUserProfilePayload(
+                                      firstName: _firstNameController.text,
+                                      lastName: _lastNameController.text,
+                                      phone: _phoneController.text,
+                                    ),
+                                  );
+
+                                  ref.invalidate(driverProfileProvider);
+                                  if (context.mounted) context.pop();
+                                } catch (e) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Błąd zapisu profilu: $e'),
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted)
+                                    setState(() => _isSaving = false);
+                                }
+                              },
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF0F4D46),
                           foregroundColor: Colors.white,
@@ -321,13 +350,21 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: Text(
-                          t.common_save,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                t.common_save,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       ),
                     ),
 

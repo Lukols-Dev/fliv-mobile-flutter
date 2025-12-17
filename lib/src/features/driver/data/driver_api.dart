@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../domain/register_driver_payload.dart';
+import '../domain/update_user_profile_payload.dart';
 import 'driver_profile_dto.dart';
 
 class DriverApi {
@@ -13,5 +14,9 @@ class DriverApi {
   Future<DriverProfileDto> getProfile({String? accessToken}) async {
     final res = await _dio.get('/api/v1/driver/profile');
     return DriverProfileDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<void> updateProfile(UpdateUserProfilePayload payload) async {
+    await _dio.patch('/api/v1/driver/profile', data: payload.toJson());
   }
 }
