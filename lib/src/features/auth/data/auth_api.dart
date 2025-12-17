@@ -12,11 +12,22 @@ class AuthApi {
     required String password,
   }) async {
     final res = await _dio.post(
-      '/api/auth/sign-in/email', //TODO:
+      '/api/auth/sign-in/email',
       data: {'email': email, 'password': password},
     );
 
     return LoginResponseDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<SignUpResponseDto> signUpEmail({
+    required String email,
+    required String password,
+  }) async {
+    final res = await _dio.post(
+      '/api/auth/sign-up/email',
+      data: {'email': email, 'password': password},
+    );
+    return SignUpResponseDto.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> signOut() async {

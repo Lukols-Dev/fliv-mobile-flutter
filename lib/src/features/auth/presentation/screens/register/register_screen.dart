@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
+import 'package:mobile/src/features/auth/application/auth_controller.dart';
+import 'package:mobile/src/features/driver/domain/register_driver_payload.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -35,6 +37,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final locale = ref.watch(localeControllerProvider);
+
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
+
+    ref.listen(authControllerProvider, (prev, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
+        },
+      );
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -294,9 +309,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             SizedBox(
                               height: 56,
                               child: FilledButton(
-                                onPressed: () {
-                                  // TODO: Implement register logic
-                                },
+                                onPressed: isLoading
+                                    ? null
+                                    : () async {
+                                        final email = _emailController.text
+                                            .trim();
+                                        final password =
+                                            _passwordController.text;
+
+                                        final payload = RegisterDriverPayload(
+                                          firstName: _firstNameController.text,
+                                          lastName: _lastNameController.text,
+                                          companyInternalId:
+                                              _companyIdController.text,
+                                          phone:
+                                              null, // dopniesz pole jak dodasz w UI
+                                          isAgreedToTerms:
+                                              true, // docelowo checkbox
+                                          isAgreedToPrivacyPolicy:
+                                              true, // docelowo checkbox
+                                        );
+
+                                        await ref
+                                            .read(
+                                              authControllerProvider.notifier,
+                                            )
+                                            .signUpDriver(
+                                              email: email,
+                                              password: password,
+                                              driver: payload,
+                                            );
+                                      },
                                 style: FilledButton.styleFrom(
                                   backgroundColor: const Color(0xFF0F4D46),
                                   foregroundColor: Colors.white,
@@ -306,13 +349,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   elevation: 8,
                                   shadowColor: const Color(0x22000000),
                                 ),
-                                child: Text(
-                                  t.auth_register,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(t.auth_register),
                               ),
                             ),
 

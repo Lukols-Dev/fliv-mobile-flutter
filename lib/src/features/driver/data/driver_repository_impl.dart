@@ -1,0 +1,24 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/network/dio_provider.dart';
+import '../domain/driver_repository.dart';
+import '../domain/register_driver_payload.dart';
+import 'driver_api.dart';
+
+final driverApiProvider = Provider<DriverApi>((ref) {
+  return DriverApi(ref.read(dioProvider));
+});
+
+final driverRepositoryProvider = Provider<DriverRepository>((ref) {
+  return DriverRepositoryImpl(ref.read(driverApiProvider));
+});
+
+class DriverRepositoryImpl implements DriverRepository {
+  DriverRepositoryImpl(this._api);
+  final DriverApi _api;
+
+  @override
+  Future<void> registerDriver({required RegisterDriverPayload payload}) {
+    return _api.registerDriver(payload: payload);
+  }
+}

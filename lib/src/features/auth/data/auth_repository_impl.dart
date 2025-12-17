@@ -27,6 +27,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthSession> signUpEmail({
+    required String email,
+    required String password,
+  }) async {
+    final dto = await _api.signUpEmail(email: email, password: password);
+    return AuthSession(accessToken: dto.accessToken);
+  }
+
+  @override
   Future<void> signOut() async {
     await _api.signOut();
   }

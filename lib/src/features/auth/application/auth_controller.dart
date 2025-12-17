@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/auth_session.dart';
 import '../data/auth_repository_impl.dart';
 import '../../../core/storage/secure_storage_provider.dart';
+import '../../driver/data/driver_repository_impl.dart';
+import '../../driver/domain/register_driver_payload.dart';
 
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthSession?>(AuthController.new);
@@ -24,6 +26,33 @@ class AuthController extends AsyncNotifier<AuthSession?> {
 
       final storage = ref.read(secureStorageProvider);
       await storage.write(key: kAccessTokenKey, value: session.accessToken);
+
+      return session;
+    });
+  }
+
+  Future<void> signUpDriver({
+    required String email,
+    required String password,
+    required RegisterDriverPayload driver,
+  }) async {
+    state = const AsyncLoading();
+
+    state = await AsyncValue.guard(() async {
+      final authRepo = ref.read(authRepositoryProvider);
+
+      final session = await authRepo.signUpEmail(
+        email: email,
+        password: password,
+      );
+
+      final token = session.accessToken;
+
+      final driverRepo = ref.read(driverRepositoryProvider);
+      await driverRepo.registerDriver(payload: driver);
+
+      final storage = ref.read(secureStorageProvider);
+      await storage.write(key: kAccessTokenKey, value: token);
 
       return session;
     });
