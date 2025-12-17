@@ -2,20 +2,97 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
+import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
+import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   static const routeName = '/home';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _ztController = TextEditingController();
+  bool _isAssigning = false;
+
+  @override
+  void dispose() {
+    _ztController.dispose();
+    super.dispose();
+  }
+
+  String _formatLoadingDate(DateTime? dt) {
+    if (dt == null) return '—';
+    final d = dt.toLocal();
+    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+  }
+
+  String _statusLabel(String raw) {
+    switch (raw) {
+      case 'IN_PROGRESS':
+        return 'W trasie';
+      case 'LOADING':
+        return 'Załadunek';
+      case 'UNLOADING':
+        return 'Rozładunek';
+      case 'PAUSED':
+        return 'Pauza';
+      case 'COMPLETED':
+        return 'Zakończone';
+      case 'PROBLEM':
+        return 'Problem';
+      default:
+        return raw;
+    }
+  }
+
+  Future<void> _assignOrder(BuildContext context) async {
+    final zt = _ztController.text.trim();
+    if (zt.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Podaj numer ZT.')));
+      return;
+    }
+
+    setState(() => _isAssigning = true);
+    try {
+      final repo = ref.read(driverTransportOrdersRepositoryProvider);
+      await repo.assignByZtNumber(ztNumber: zt);
+      ref.invalidate(currentDriverOrderProvider);
+      _ztController.clear();
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Zlecenie przypisane.')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Nie udało się przypisać zlecenia: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAssigning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profileAsync = ref.watch(driverProfileProvider);
     final profile = profileAsync.maybeWhen(data: (p) => p, orElse: () => null);
     final fullName = profile != null
         ? '${profile.firstName} ${profile.lastName}'.trim()
         : '—';
     final driverId = profile?.driverCode ?? '—';
+    final currentOrderAsync = ref.watch(currentDriverOrderProvider);
+    final currentOrder = currentOrderAsync.maybeWhen(
+      data: (o) => o,
+      orElse: () => null,
+    );
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
       body: SafeArea(
@@ -153,13 +230,16 @@ class HomeScreen extends ConsumerWidget {
 
                 const SizedBox(height: 10),
 
-                // ORDER CARD
-                InkWell(
-                  onTap: () {
-                    context.push('/orders/ZL-221235325');
-                  },
-                  borderRadius: BorderRadius.circular(18),
-                  child: Container(
+                if (currentOrderAsync.isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (currentOrder == null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
@@ -168,167 +248,209 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF0F4D46),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(18),
-                              topRight: Radius.circular(18),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Expanded(
-                                    child: Text(
-                                      'Numer zlecenia',
-                                      style: TextStyle(
-                                        color: Color(0xFFD1FAE5),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEF4444),
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: const Text(
-                                      'W trasie',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              const Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  '#ZL-221253525',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: const [
-                                  _OrderStat(
-                                    icon: Icons.route_outlined,
-                                    text: '485 km',
-                                  ),
-                                  _OrderStat(
-                                    icon: Icons.schedule_outlined,
-                                    text: '5h 30min',
-                                  ),
-                                  _OrderStat(
-                                    icon: Icons.local_shipping_outlined,
-                                    text: '18.5 t',
-                                  ),
-                                ],
-                              ),
-                            ],
+                        const Text(
+                          'Brak przypisanego zlecenia',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF111827),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                          child: Column(
-                            children: [
-                              _TimelineRow(
-                                color: const Color(0xFF10B981),
-                                title: 'Punkt załadunku',
-                                subtitle1: 'Piaseczno, Polska',
-                                subtitle2: 'Jana Pawła II 05, 05-500',
-                                date: '12.10.2025',
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Aby przypisać zlecenie, wpisz numer ZT otrzymany od dyspozytora.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _ztController,
+                          textInputAction: TextInputAction.done,
+                          decoration: InputDecoration(
+                            hintText: 'np. ZT-123456',
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5DC),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: _isAssigning
+                                ? null
+                                : () => _assignOrder(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F4D46),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              const SizedBox(height: 10),
-                              _TimelineRow(
-                                color: const Color(0xFFEF4444),
-                                title: 'Punkt rozładunku',
-                                subtitle1: 'Wien, Austria',
-                                subtitle2: 'Opernring 2, Ecke, Elisabeth Str.',
-                                date: '16.10.2025',
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 54,
-                                width: double.infinity,
-                                child: FilledButton(
-                                  onPressed: () {},
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0F4D46),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: _isAssigning
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Przypisz zlecenie',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(Icons.near_me_outlined, size: 18),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Otwórz nawigację',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ],
                     ),
+                  )
+                else
+                  InkWell(
+                    onTap: () => context.push('/orders/${currentOrder.id}'),
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF0F4D46),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(18),
+                                topRight: Radius.circular(18),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    const Expanded(
+                                      child: Text(
+                                        'Numer zlecenia',
+                                        style: TextStyle(
+                                          color: Color(0xFFD1FAE5),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEF4444),
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _statusLabel(currentOrder.status),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    '#${currentOrder.ztNumber}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                            child: Column(
+                              children: [
+                                _TimelineRow(
+                                  color: const Color(0xFF10B981),
+                                  title: 'Punkt załadunku',
+                                  subtitle1: currentOrder.fromCountry,
+                                  subtitle2: '',
+                                  date: _formatLoadingDate(
+                                    currentOrder.loadingDate,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                _TimelineRow(
+                                  color: const Color(0xFFEF4444),
+                                  title: 'Punkt rozładunku',
+                                  subtitle1: currentOrder.toCountry,
+                                  subtitle2: '',
+                                  date: '—',
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 54,
+                                  width: double.infinity,
+                                  child: FilledButton(
+                                    onPressed: () {
+                                      // TODO: Implement open navigation
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFF0F4D46),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.near_me_outlined, size: 18),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          'Otwórz nawigację',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _OrderStat extends StatelessWidget {
-  const _OrderStat({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.white),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
     );
   }
 }

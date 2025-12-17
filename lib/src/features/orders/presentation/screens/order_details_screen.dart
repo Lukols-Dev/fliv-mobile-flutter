@@ -2,15 +2,99 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 
 class OrderDetailsScreen extends ConsumerWidget {
   const OrderDetailsScreen({super.key, this.orderId});
 
   final String? orderId;
 
+  String _dashIfEmpty(String? v) {
+    final s = v?.trim();
+    if (s == null || s.isEmpty) return '-';
+    return s;
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    final d = dt.toLocal();
+    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+  }
+
+  String _formatWeightKg(int? kg) {
+    if (kg == null) return '-';
+    return '$kg kg';
+  }
+
+  String _formatBoolPl(bool? v) {
+    if (v == null) return '-';
+    return v ? 'Tak' : 'Nie';
+  }
+
+  Color _statusColor(String? status) {
+    switch (status) {
+      case 'COMPLETED':
+        return const Color(0xFF10B981);
+      case 'PROBLEM':
+        return const Color(0xFFEF4444);
+      case 'PAUSED':
+        return const Color(0xFFFF6B35);
+      case 'IN_PROGRESS':
+      case 'LOADING':
+      case 'UNLOADING':
+        return const Color(0xFFFF6B35);
+      default:
+        return const Color(0xFF9CA3AF);
+    }
+  }
+
+  String _statusLabel(AppLocalizations t, String? status) {
+    switch (status) {
+      case 'IN_PROGRESS':
+        return t.order_status_in_transit;
+      case 'LOADING':
+        return 'Załadunek';
+      case 'UNLOADING':
+        return 'Rozładunek';
+      case 'PAUSED':
+        return 'Pauza';
+      case 'COMPLETED':
+        return 'Zakończone';
+      case 'PROBLEM':
+        return 'Problem';
+      default:
+        return '-';
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppLocalizations.of(context)!;
+    final id = orderId;
+    if (id == null || id.trim().isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6F7F8),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+            ),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: const Center(child: Text('Brak ID zlecenia')),
+      );
+    }
+
+    final detailsAsync = ref.watch(driverOrderDetailsProvider(id));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
@@ -30,257 +114,270 @@ class OrderDetailsScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
+      body: detailsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Błąd pobierania zlecenia: $e')),
+        data: (details) {
+          final statusLabel = _statusLabel(t, details.status);
+          final statusColor = _statusColor(details.status);
 
-                    // HEADER
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
+                        const SizedBox(height: 8),
+
+                        // HEADER
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    t.order_details_title,
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF111827),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '#${_dashIfEmpty(details.ztNumber)}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                statusLabel,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // CLIENT DATA CARD
+                        _InfoCard(
+                          title: t.order_client_data,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                t.order_details_title,
+                                _dashIfEmpty(details.clientName),
                                 style: const TextStyle(
-                                  fontSize: 28,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF111827),
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                '#ZL-221235325',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF6B7280),
+                              const SizedBox(height: 12),
+                              _InfoRow(
+                                label: t.order_contact_person,
+                                value: '-',
+                              ),
+                              const SizedBox(height: 8),
+                              _InfoRow(label: t.order_phone, value: '-'),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // TRANSPORT ROUTE CARD
+                        _InfoCard(
+                          title: t.order_transport_route,
+                          child: Column(
+                            children: [
+                              _RoutePoint(
+                                color: const Color(0xFF10B981),
+                                title: t.order_loading_point,
+                                location: _dashIfEmpty(details.fromCountry),
+                                address: '-',
+                                date: _formatDate(details.loadingDate),
+                                status: '-',
+                                statusColor: const Color(0xFF10B981),
+                                showLine: true,
+                              ),
+                              const SizedBox(height: 10),
+                              _RoutePoint(
+                                color: const Color(0xFFEF4444),
+                                title: t.order_unloading_point,
+                                location: _dashIfEmpty(details.toCountry),
+                                address: '-',
+                                date: '-',
+                                status: '-',
+                                statusColor: const Color(0xFFEF4444),
+                                showLine: false,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // CARGO CARD
+                        _InfoCard(
+                          title: t.order_cargo,
+                          child: Column(
+                            children: [
+                              _InfoRow(
+                                label: t.order_cargo_type,
+                                value: _dashIfEmpty(details.cargoDescription),
+                              ),
+                              const SizedBox(height: 12),
+                              _InfoRow(
+                                label: t.order_weight,
+                                value: _formatWeightKg(details.cargoWeightKg),
+                              ),
+                              const SizedBox(height: 12),
+                              _InfoRow(
+                                label: 'Wymaga temperatury',
+                                value: _formatBoolPl(
+                                  details.temperatureSensitive,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _InfoRow(label: t.order_pallets, value: '-'),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // NOTES CARD
+                        _InfoCard(
+                          title: t.order_notes,
+                          child: Text(
+                            _dashIfEmpty(details.notes),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF111827),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ACTION BUTTONS
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 18,
+                      offset: Offset(0, -6),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: FilledButton(
+                          onPressed: () {
+                            // TODO: Implement start navigation
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F4D46),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.near_me_outlined, size: 20),
+                              const SizedBox(width: 10),
+                              Text(
+                                t.order_start_navigation,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF6B35),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            t.order_status_in_transit,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: FilledButton(
+                          onPressed: () {
+                            context.go('/documents?orderId=${details.id}');
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF7FA87C),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // CLIENT DATA CARD
-                    _InfoCard(
-                      title: t.order_client_data,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'TransLog Polska Sp. z o.o.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF111827),
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.description_outlined, size: 20),
+                              const SizedBox(width: 10),
+                              Text(
+                                t.order_view_documents,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          _InfoRow(
-                            label: t.order_contact_person,
-                            value: 'Marek Kowalski',
-                          ),
-                          const SizedBox(height: 8),
-                          _InfoRow(
-                            label: t.order_phone,
-                            value: '+48 601 234 567',
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // TRANSPORT ROUTE CARD
-                    _InfoCard(
-                      title: t.order_transport_route,
-                      child: Column(
-                        children: [
-                          _RoutePoint(
-                            color: const Color(0xFF10B981),
-                            title: t.order_loading_point,
-                            location: 'Piaseczno, Polska',
-                            address: 'Jana Pawła II 05, 05-500',
-                            date: '12.10.2025',
-                            status: '${t.order_loaded} 10:34',
-                            statusColor: const Color(0xFF10B981),
-                            showLine: true,
-                          ),
-                          const SizedBox(height: 10),
-                          _RoutePoint(
-                            color: const Color(0xFFEF4444),
-                            title: t.order_unloading_point,
-                            location: 'Wien, Austria',
-                            address: 'Opernring 3, Ecke, Elisabethstraße',
-                            date: '16.10.2025',
-                            status: '${t.order_en_route}, ETA: 10:30',
-                            statusColor: const Color(0xFFEF4444),
-                            showLine: false,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // CARGO CARD
-                    _InfoCard(
-                      title: t.order_cargo,
-                      child: Column(
-                        children: [
-                          _InfoRow(
-                            label: t.order_cargo_type,
-                            value: 'Części samochodowe',
-                          ),
-                          const SizedBox(height: 12),
-                          _InfoRow(label: t.order_weight, value: '18,500 kg'),
-                          const SizedBox(height: 12),
-                          _InfoRow(
-                            label: t.order_pallets,
-                            value: '24 szt. [EURO]',
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // NOTES CARD
-                    _InfoCard(
-                      title: t.order_notes,
-                      child: const Text(
-                        'Ładunek wymaga szczególnej ostrożności. Kontakt z odbiorcą 30 minut przed dostawą.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF111827),
-                          height: 1.5,
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 100),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
-
-          // ACTION BUTTONS
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 18,
-                  offset: Offset(0, -6),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: () {
-                        // TODO: Implement start navigation
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F4D46),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.near_me_outlined, size: 20),
-                          const SizedBox(width: 10),
-                          Text(
-                            t.order_start_navigation,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: () {
-                        context.go('/documents}');
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF7FA87C),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.description_outlined, size: 20),
-                          const SizedBox(width: 10),
-                          Text(
-                            t.order_view_documents,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
