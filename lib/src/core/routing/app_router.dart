@@ -138,7 +138,8 @@ final GoRouter appRouter = GoRouter(
               path: AppRoute.documents.path,
               builder: (context, state) {
                 final orderId = state.uri.queryParameters['orderId'];
-                return DocumentsScreen(orderId: orderId);
+                final ztNumber = state.uri.queryParameters['ztNumber'];
+                return DocumentsScreen(orderId: orderId, ztNumber: ztNumber);
               },
             ),
           ],

@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/features/documents/application/transport_order_documents_provider.dart';
+import 'package:mobile/src/features/documents/domain/transport_order_document.dart';
+import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 
 enum DocumentFilter { all, synchronized, local }
 
 enum DocumentStatus { synchronized, localOnly, syncing }
 
 class DocumentsScreen extends ConsumerStatefulWidget {
-  const DocumentsScreen({super.key, this.orderId});
+  const DocumentsScreen({super.key, this.orderId, this.ztNumber});
 
   final String? orderId;
+  final String? ztNumber;
 
   @override
   ConsumerState<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -19,30 +23,42 @@ class DocumentsScreen extends ConsumerStatefulWidget {
 class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   DocumentFilter _selectedFilter = DocumentFilter.all;
 
+  String _documentTitle(TransportOrderDocument doc) {
+    final description = doc.description?.trim();
+    if (description != null && description.isNotEmpty) return description;
+    final filename = doc.originalFilename?.trim();
+    if (filename != null && filename.isNotEmpty) return filename;
+    return 'Dokument';
+  }
+
+  String _documentSubtitle(TransportOrderDocument doc) {
+    final mime = doc.mimeType.trim();
+    final size = doc.sizeBytes;
+    if (mime.isNotEmpty && size != null) {
+      return '$mime • $size B';
+    }
+    if (mime.isNotEmpty) return mime;
+    return '-';
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final currentOrderAsync = ref.watch(currentDriverOrderProvider);
+    final currentOrder = currentOrderAsync.maybeWhen(
+      data: (o) => o,
+      orElse: () => null,
+    );
+    final resolvedOrderId = widget.orderId ?? currentOrder?.id;
+    final resolvedZtLabel = (widget.ztNumber?.trim().isNotEmpty ?? false)
+        ? widget.ztNumber!.trim()
+        : (currentOrder?.ztNumber ?? '');
+    final hasResolvedOrder =
+        resolvedOrderId != null && resolvedOrderId.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
-      appBar: widget.orderId != null
-          ? AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
-                ),
-                onPressed: () => context.pop(),
-              ),
-            )
-          : null,
+      appBar: null,
       body: SafeArea(
         child: Column(
           children: [
@@ -60,10 +76,10 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       color: Color(0xFF111827),
                     ),
                   ),
-                  if (widget.orderId != null) ...[
+                  if (resolvedZtLabel.trim().isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '#${widget.orderId}',
+                      '#$resolvedZtLabel',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -73,44 +89,70 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   ],
                   const SizedBox(height: 20),
 
-                  // FILTERS
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _FilterChip(
-                          label: t.documents_filter_all,
-                          count: 8,
-                          isSelected: _selectedFilter == DocumentFilter.all,
-                          onTap: () => setState(
-                            () => _selectedFilter = DocumentFilter.all,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _FilterChip(
-                          label: t.documents_filter_synchronized,
-                          count: 4,
-                          isSelected:
-                              _selectedFilter == DocumentFilter.synchronized,
-                          onTap: () => setState(
-                            () => _selectedFilter = DocumentFilter.synchronized,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _FilterChip(
-                          label: t.documents_filter_local,
-                          count: 3,
-                          isSelected: _selectedFilter == DocumentFilter.local,
-                          onTap: () => setState(
-                            () => _selectedFilter = DocumentFilter.local,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // FILTERS (only when we have an order)
+                  if (hasResolvedOrder)
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final orderId = resolvedOrderId;
+                        if (orderId.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        final docsAsync = ref.watch(
+                          transportOrderDocumentsProvider(orderId),
+                        );
+                        final docs = docsAsync.maybeWhen(
+                          data: (d) => d,
+                          orElse: () => const [],
+                        );
+
+                        final allCount = docs.length;
+                        final syncedCount =
+                            docs.length; // server docs == synced
+                        final localCount = 0;
+
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_all,
+                                count: allCount,
+                                isSelected:
+                                    _selectedFilter == DocumentFilter.all,
+                                onTap: () => setState(
+                                  () => _selectedFilter = DocumentFilter.all,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_synchronized,
+                                count: syncedCount,
+                                isSelected:
+                                    _selectedFilter ==
+                                    DocumentFilter.synchronized,
+                                onTap: () => setState(
+                                  () => _selectedFilter =
+                                      DocumentFilter.synchronized,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_local,
+                                count: localCount,
+                                isSelected:
+                                    _selectedFilter == DocumentFilter.local,
+                                onTap: () => setState(
+                                  () => _selectedFilter = DocumentFilter.local,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -119,49 +161,117 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
 
             // DOCUMENTS LIST
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                children: [
-                  _DocumentCard(
-                    title: 'CMR - List przewozowy',
-                    date: '12.10.2025 • 10:34',
-                    status: DocumentStatus.synchronized,
-                    t: t,
-                  ),
-                  const SizedBox(height: 12),
-                  _DocumentCard(
-                    title: 'Faktura VAT',
-                    date: '12.10.2025 • 10:35',
-                    status: DocumentStatus.synchronized,
-                    t: t,
-                  ),
-                  const SizedBox(height: 12),
-                  _DocumentCard(
-                    title: 'Potwierdzenie dostawy',
-                    date: '12.10.2025 • 10:36',
-                    status: DocumentStatus.localOnly,
-                    t: t,
-                    onSync: () {
-                      // TODO: Implement sync
+              child: Builder(
+                builder: (context) {
+                  // When screen is opened from bottom nav (no orderId):
+                  // - if no current order => show "assign ZT" window
+                  if (widget.orderId == null) {
+                    if (currentOrderAsync.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (currentOrder == null) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: const [
+                              Text(
+                                'Brak przypisanego ZT',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  }
+
+                  if (!hasResolvedOrder) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final orderId = resolvedOrderId;
+                  if (orderId.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  final docsAsync = ref.watch(
+                    transportOrderDocumentsProvider(orderId),
+                  );
+
+                  return docsAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (e, _) =>
+                        Center(child: Text('Błąd pobierania dokumentów: $e')),
+                    data: (docs) {
+                      if (docs.isEmpty) {
+                        return const Center(
+                          child: Text('Dodaj pierwszy dokument do zlecenia.'),
+                        );
+                      }
+
+                      final filtered = switch (_selectedFilter) {
+                        DocumentFilter.all => docs,
+                        DocumentFilter.synchronized => docs,
+                        DocumentFilter.local => const [],
+                      };
+
+                      if (filtered.isEmpty) {
+                        return const Center(
+                          child: Text('Brak dokumentów w tym filtrze.'),
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final doc = filtered[index];
+                          return _DocumentCard(
+                            title: _documentTitle(doc),
+                            date: _documentSubtitle(doc),
+                            status: DocumentStatus.synchronized,
+                            t: t,
+                          );
+                        },
+                      );
                     },
-                  ),
-                  const SizedBox(height: 12),
-                  _DocumentCard(
-                    title: 'Dokumentacja celna',
-                    date: '12.10.2025 • 10:37',
-                    status: DocumentStatus.syncing,
-                    t: t,
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/documents/add');
-        },
+        onPressed: hasResolvedOrder
+            ? () {
+                context.push('/documents/add');
+              }
+            : null,
         backgroundColor: const Color(0xFF0F4D46),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -232,14 +342,12 @@ class _DocumentCard extends StatelessWidget {
     required this.date,
     required this.status,
     required this.t,
-    this.onSync,
   });
 
   final String title;
   final String date;
   final DocumentStatus status;
   final AppLocalizations t;
-  final VoidCallback? onSync;
 
   @override
   Widget build(BuildContext context) {
@@ -349,26 +457,6 @@ class _DocumentCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // SYNC BUTTON (only for local only)
-          if (status == DocumentStatus.localOnly && onSync != null)
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F4D46),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.cloud_upload_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                onPressed: onSync,
-                padding: EdgeInsets.zero,
-              ),
-            ),
         ],
       ),
     );

@@ -346,7 +346,13 @@ class OrderDetailsScreen extends ConsumerWidget {
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
-                            context.go('/documents?orderId=${details.id}');
+                            final zt = details.ztNumber?.trim();
+                            final ztQuery = (zt == null || zt.isEmpty)
+                                ? ''
+                                : '&ztNumber=$zt';
+                            context.go(
+                              '/documents?orderId=${details.id}$ztQuery',
+                            );
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF7FA87C),
