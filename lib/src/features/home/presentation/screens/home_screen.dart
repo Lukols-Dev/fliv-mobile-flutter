@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
+import 'package:mobile/src/features/users/application/avatar_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -93,6 +94,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (o) => o,
       orElse: () => null,
     );
+    final avatarAsync = ref.watch(avatarControllerProvider);
+    final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
       body: SafeArea(
@@ -106,10 +109,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 24,
-                      backgroundColor: Color(0xFFE5E7EB),
-                      child: Icon(Icons.person, color: Color(0xFF111827)),
+                      backgroundColor: const Color(0xFFE5E7EB),
+                      backgroundImage: avatarUrl != null
+                          ? NetworkImage(avatarUrl)
+                          : null,
+                      child: avatarUrl == null
+                          ? const Icon(Icons.person, color: Color(0xFF111827))
+                          : null,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

@@ -1,15 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/src/core/utils/open_url.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
 import 'package:mobile/src/features/auth/application/auth_controller.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
+import 'package:mobile/src/features/users/application/avatar_controller.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
+
+  Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
+    final picker = ImagePicker();
+
+    try {
+      final file = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1024,
+      );
+      if (file == null) return;
+
+      await ref
+          .read(avatarControllerProvider.notifier)
+          .uploadAvatar(filePath: file.path);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Zmieniono avatar.')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Nie udało się zmienić avatara: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,6 +51,10 @@ class AccountScreen extends ConsumerWidget {
         ? '${profile.firstName} ${profile.lastName}'.trim()
         : '—';
     final driverId = profile?.driverCode ?? '—';
+
+    final avatarAsync = ref.watch(avatarControllerProvider);
+    final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
+    final isAvatarUploading = avatarAsync.isLoading;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -37,13 +72,68 @@ class AccountScreen extends ConsumerWidget {
                       // PROFILE HEADER
                       Column(
                         children: [
-                          const CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Color(0xFFE5E7EB),
-                            child: Icon(
-                              Icons.person,
-                              size: 50,
-                              color: Color(0xFF111827),
+                          InkWell(
+                            onTap: () => _pickAndUploadAvatar(context, ref),
+                            borderRadius: BorderRadius.circular(999),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: const Color(0xFFE5E7EB),
+                                  backgroundImage: avatarUrl != null
+                                      ? NetworkImage(avatarUrl)
+                                      : null,
+                                  child: avatarUrl == null
+                                      ? const Icon(
+                                          Icons.person,
+                                          size: 50,
+                                          color: Color(0xFF111827),
+                                        )
+                                      : null,
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: const Color(0xFFE5E7EB),
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 18,
+                                      color: Color(0xFF111827),
+                                    ),
+                                  ),
+                                ),
+                                if (isAvatarUploading)
+                                  Container(
+                                    width: 104,
+                                    height: 104,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 26,
+                                        height: 26,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 16),
