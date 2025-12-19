@@ -167,7 +167,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   // - if no current order => show "assign ZT" window
                   if (widget.orderId == null) {
                     if (currentOrderAsync.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF004F45),
+                        ),
+                      );
                     }
                     if (currentOrder == null) {
                       return Padding(
@@ -221,8 +225,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   );
 
                   return docsAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF004F45),
+                      ),
+                    ),
                     error: (e, _) =>
                         Center(child: Text('Błąd pobierania dokumentów: $e')),
                     data: (docs) {
