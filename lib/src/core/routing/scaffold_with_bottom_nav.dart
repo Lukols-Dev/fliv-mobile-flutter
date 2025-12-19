@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -58,10 +59,13 @@ class ScaffoldWithBottomNav extends StatelessWidget {
               label: '',
             ),
             NavigationDestination(
-              icon: Icon(
-                Icons.route_outlined,
-                color: Color(0xFF004F45),
-                size: 28,
+              icon: Transform.rotate(
+                angle: math.pi / 2,
+                child: Icon(
+                  Icons.route_outlined,
+                  color: Color(0xFF004F45),
+                  size: 28,
+                ),
               ),
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
@@ -69,10 +73,13 @@ class ScaffoldWithBottomNav extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Color.fromRGBO(0, 79, 69, 0.10),
                 ),
-                child: const Icon(
-                  Icons.route_rounded,
-                  color: Color(0xFF004F45),
-                  size: 28,
+                child: Transform.rotate(
+                  angle: math.pi / 2,
+                  child: const Icon(
+                    Icons.route_rounded,
+                    color: Color(0xFF004F45),
+                    size: 28,
+                  ),
                 ),
               ),
               label: '',
