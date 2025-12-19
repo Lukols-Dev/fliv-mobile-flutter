@@ -21,8 +21,15 @@ class DriverLocalDataSource {
   }
 
   Future<DriverProfile?> getMyProfile() async {
-    final row = await _db.getMyDriverProfile();
-    return _rowToDomain(row);
+    try {
+      final row = await _db.getMyDriverProfile();
+      return _rowToDomain(row);
+    } catch (e) {
+      // If database schema is outdated or query fails, return null
+      // This allows the app to fallback to API fetch
+      print('Error reading cached profile: $e');
+      return null;
+    }
   }
 
   Future<void> upsertMyProfile(DriverProfile profile) {
@@ -45,8 +52,14 @@ class DriverLocalDataSource {
       phone: row.phone,
       companyInternalId: row.companyInternalId,
       driverCode: row.driverCode,
-      // NOTE: document expiry fields are not yet persisted locally.
-      // They will be filled from API when online.
+      visaExpiresAt: row.visaExpiry,
+      drivingLicenseExpiresAt: row.licenseExpiry,
+      workPermitExpiresAt: row.workPermitExpiry,
+      medicalCheckExpiresAt: row.medicalExamExpiry,
+      psychCheckExpiresAt: row.psychologicalExamExpiry,
+      driverCardExpiresAt: row.tachographCardExpiry,
+      residenceCardExpiresAt: row.residenceCardExpiry,
+      driverCertificateExpiresAt: row.driverCertificateExpiry,
     );
   }
 
@@ -67,6 +80,30 @@ class DriverLocalDataSource {
       driverCode: profile.driverCode == null
           ? const Value.absent()
           : Value(profile.driverCode!),
+      visaExpiry: profile.visaExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.visaExpiresAt!),
+      licenseExpiry: profile.drivingLicenseExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.drivingLicenseExpiresAt!),
+      workPermitExpiry: profile.workPermitExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.workPermitExpiresAt!),
+      medicalExamExpiry: profile.medicalCheckExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.medicalCheckExpiresAt!),
+      psychologicalExamExpiry: profile.psychCheckExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.psychCheckExpiresAt!),
+      tachographCardExpiry: profile.driverCardExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.driverCardExpiresAt!),
+      residenceCardExpiry: profile.residenceCardExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.residenceCardExpiresAt!),
+      driverCertificateExpiry: profile.driverCertificateExpiresAt == null
+          ? const Value.absent()
+          : Value(profile.driverCertificateExpiresAt!),
     );
   }
 }
