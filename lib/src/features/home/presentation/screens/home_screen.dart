@@ -365,6 +365,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: const Color(0xFFE5E7EB)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                              spreadRadius: 0,
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -372,7 +380,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Container(
                               padding: const EdgeInsets.all(14),
                               decoration: const BoxDecoration(
-                                color: Color(0xFF0F4D46),
+                                gradient: LinearGradient(
+                                  begin: Alignment(0.50, 0.00),
+                                  end: Alignment(0.50, 1.00),
+                                  colors: [
+                                    Color(0xFF004F45),
+                                    Color(0xFF005A4D),
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(18),
                                   topRight: Radius.circular(18),
@@ -472,6 +487,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           borderRadius: BorderRadius.circular(
                                             14,
                                           ),
+                                        ),
+                                        elevation: 4,
+                                        shadowColor: Colors.black.withOpacity(
+                                          0.2,
                                         ),
                                       ),
                                       child: Row(
