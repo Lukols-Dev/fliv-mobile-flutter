@@ -8,6 +8,7 @@ import 'package:mobile/src/core/l10n/locale_controller.dart';
 import 'package:mobile/src/core/network/connectivity_provider.dart';
 import 'package:mobile/src/core/routing/app_router.dart';
 import 'package:mobile/src/features/auth/application/auth_controller.dart';
+import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -16,10 +17,13 @@ class App extends ConsumerStatefulWidget {
   ConsumerState<App> createState() => _AppState();
 }
 
-class _AppState extends ConsumerState<App> {
+class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   late final ProviderSubscription _offlineSub;
+
+  DateTime? _lastResumeRefresh;
+
   @override
   void initState() {
     super.initState();
@@ -58,8 +62,33 @@ class _AppState extends ConsumerState<App> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _offlineSub.close();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+
+    // debounce: nie odświeżaj 5 razy jak system "mieli" lifecycle
+    final now = DateTime.now();
+    if (_lastResumeRefresh != null &&
+        now.difference(_lastResumeRefresh!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastResumeRefresh = now;
+
+    // tylko jeśli ONLINE
+    final offline = ref.read(isOfflineProvider);
+    if (offline) return;
+
+    // tylko jeśli zalogowany
+    final session = ref.read(authControllerProvider).asData?.value;
+    if (session == null) return;
+
+    // odśwież profil (provider sam zapisze do cache jeśli tak masz)
+    ref.invalidate(driverProfileProvider);
   }
 
   Future<void> _init() async {
