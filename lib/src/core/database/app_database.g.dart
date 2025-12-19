@@ -93,6 +93,97 @@ class $DriverProfileTableTable extends DriverProfileTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _medicalExamExpiryMeta = const VerificationMeta(
+    'medicalExamExpiry',
+  );
+  @override
+  late final GeneratedColumn<DateTime> medicalExamExpiry =
+      GeneratedColumn<DateTime>(
+        'medical_exam_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _psychologicalExamExpiryMeta =
+      const VerificationMeta('psychologicalExamExpiry');
+  @override
+  late final GeneratedColumn<DateTime> psychologicalExamExpiry =
+      GeneratedColumn<DateTime>(
+        'psychological_exam_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _tachographCardExpiryMeta =
+      const VerificationMeta('tachographCardExpiry');
+  @override
+  late final GeneratedColumn<DateTime> tachographCardExpiry =
+      GeneratedColumn<DateTime>(
+        'tachograph_card_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _licenseExpiryMeta = const VerificationMeta(
+    'licenseExpiry',
+  );
+  @override
+  late final GeneratedColumn<DateTime> licenseExpiry =
+      GeneratedColumn<DateTime>(
+        'license_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _visaExpiryMeta = const VerificationMeta(
+    'visaExpiry',
+  );
+  @override
+  late final GeneratedColumn<DateTime> visaExpiry = GeneratedColumn<DateTime>(
+    'visa_expiry',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _workPermitExpiryMeta = const VerificationMeta(
+    'workPermitExpiry',
+  );
+  @override
+  late final GeneratedColumn<DateTime> workPermitExpiry =
+      GeneratedColumn<DateTime>(
+        'work_permit_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _residenceCardExpiryMeta =
+      const VerificationMeta('residenceCardExpiry');
+  @override
+  late final GeneratedColumn<DateTime> residenceCardExpiry =
+      GeneratedColumn<DateTime>(
+        'residence_card_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _driverCertificateExpiryMeta =
+      const VerificationMeta('driverCertificateExpiry');
+  @override
+  late final GeneratedColumn<DateTime> driverCertificateExpiry =
+      GeneratedColumn<DateTime>(
+        'driver_certificate_expiry',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     key,
@@ -103,6 +194,14 @@ class $DriverProfileTableTable extends DriverProfileTable
     companyInternalId,
     driverCode,
     updatedAt,
+    medicalExamExpiry,
+    psychologicalExamExpiry,
+    tachographCardExpiry,
+    licenseExpiry,
+    visaExpiry,
+    workPermitExpiry,
+    residenceCardExpiry,
+    driverCertificateExpiry,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -173,6 +272,75 @@ class $DriverProfileTableTable extends DriverProfileTable
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('medical_exam_expiry')) {
+      context.handle(
+        _medicalExamExpiryMeta,
+        medicalExamExpiry.isAcceptableOrUnknown(
+          data['medical_exam_expiry']!,
+          _medicalExamExpiryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('psychological_exam_expiry')) {
+      context.handle(
+        _psychologicalExamExpiryMeta,
+        psychologicalExamExpiry.isAcceptableOrUnknown(
+          data['psychological_exam_expiry']!,
+          _psychologicalExamExpiryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tachograph_card_expiry')) {
+      context.handle(
+        _tachographCardExpiryMeta,
+        tachographCardExpiry.isAcceptableOrUnknown(
+          data['tachograph_card_expiry']!,
+          _tachographCardExpiryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('license_expiry')) {
+      context.handle(
+        _licenseExpiryMeta,
+        licenseExpiry.isAcceptableOrUnknown(
+          data['license_expiry']!,
+          _licenseExpiryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visa_expiry')) {
+      context.handle(
+        _visaExpiryMeta,
+        visaExpiry.isAcceptableOrUnknown(data['visa_expiry']!, _visaExpiryMeta),
+      );
+    }
+    if (data.containsKey('work_permit_expiry')) {
+      context.handle(
+        _workPermitExpiryMeta,
+        workPermitExpiry.isAcceptableOrUnknown(
+          data['work_permit_expiry']!,
+          _workPermitExpiryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('residence_card_expiry')) {
+      context.handle(
+        _residenceCardExpiryMeta,
+        residenceCardExpiry.isAcceptableOrUnknown(
+          data['residence_card_expiry']!,
+          _residenceCardExpiryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('driver_certificate_expiry')) {
+      context.handle(
+        _driverCertificateExpiryMeta,
+        driverCertificateExpiry.isAcceptableOrUnknown(
+          data['driver_certificate_expiry']!,
+          _driverCertificateExpiryMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -214,6 +382,38 @@ class $DriverProfileTableTable extends DriverProfileTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      medicalExamExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}medical_exam_expiry'],
+      ),
+      psychologicalExamExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}psychological_exam_expiry'],
+      ),
+      tachographCardExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}tachograph_card_expiry'],
+      ),
+      licenseExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}license_expiry'],
+      ),
+      visaExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}visa_expiry'],
+      ),
+      workPermitExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}work_permit_expiry'],
+      ),
+      residenceCardExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}residence_card_expiry'],
+      ),
+      driverCertificateExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}driver_certificate_expiry'],
+      ),
     );
   }
 
@@ -233,6 +433,14 @@ class DriverProfileTableData extends DataClass
   final String? companyInternalId;
   final String? driverCode;
   final DateTime updatedAt;
+  final DateTime? medicalExamExpiry;
+  final DateTime? psychologicalExamExpiry;
+  final DateTime? tachographCardExpiry;
+  final DateTime? licenseExpiry;
+  final DateTime? visaExpiry;
+  final DateTime? workPermitExpiry;
+  final DateTime? residenceCardExpiry;
+  final DateTime? driverCertificateExpiry;
   const DriverProfileTableData({
     required this.key,
     required this.firstName,
@@ -242,6 +450,14 @@ class DriverProfileTableData extends DataClass
     this.companyInternalId,
     this.driverCode,
     required this.updatedAt,
+    this.medicalExamExpiry,
+    this.psychologicalExamExpiry,
+    this.tachographCardExpiry,
+    this.licenseExpiry,
+    this.visaExpiry,
+    this.workPermitExpiry,
+    this.residenceCardExpiry,
+    this.driverCertificateExpiry,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -262,6 +478,34 @@ class DriverProfileTableData extends DataClass
       map['driver_code'] = Variable<String>(driverCode);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || medicalExamExpiry != null) {
+      map['medical_exam_expiry'] = Variable<DateTime>(medicalExamExpiry);
+    }
+    if (!nullToAbsent || psychologicalExamExpiry != null) {
+      map['psychological_exam_expiry'] = Variable<DateTime>(
+        psychologicalExamExpiry,
+      );
+    }
+    if (!nullToAbsent || tachographCardExpiry != null) {
+      map['tachograph_card_expiry'] = Variable<DateTime>(tachographCardExpiry);
+    }
+    if (!nullToAbsent || licenseExpiry != null) {
+      map['license_expiry'] = Variable<DateTime>(licenseExpiry);
+    }
+    if (!nullToAbsent || visaExpiry != null) {
+      map['visa_expiry'] = Variable<DateTime>(visaExpiry);
+    }
+    if (!nullToAbsent || workPermitExpiry != null) {
+      map['work_permit_expiry'] = Variable<DateTime>(workPermitExpiry);
+    }
+    if (!nullToAbsent || residenceCardExpiry != null) {
+      map['residence_card_expiry'] = Variable<DateTime>(residenceCardExpiry);
+    }
+    if (!nullToAbsent || driverCertificateExpiry != null) {
+      map['driver_certificate_expiry'] = Variable<DateTime>(
+        driverCertificateExpiry,
+      );
+    }
     return map;
   }
 
@@ -283,6 +527,30 @@ class DriverProfileTableData extends DataClass
           ? const Value.absent()
           : Value(driverCode),
       updatedAt: Value(updatedAt),
+      medicalExamExpiry: medicalExamExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(medicalExamExpiry),
+      psychologicalExamExpiry: psychologicalExamExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(psychologicalExamExpiry),
+      tachographCardExpiry: tachographCardExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tachographCardExpiry),
+      licenseExpiry: licenseExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(licenseExpiry),
+      visaExpiry: visaExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(visaExpiry),
+      workPermitExpiry: workPermitExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workPermitExpiry),
+      residenceCardExpiry: residenceCardExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(residenceCardExpiry),
+      driverCertificateExpiry: driverCertificateExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(driverCertificateExpiry),
     );
   }
 
@@ -302,6 +570,26 @@ class DriverProfileTableData extends DataClass
       ),
       driverCode: serializer.fromJson<String?>(json['driverCode']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      medicalExamExpiry: serializer.fromJson<DateTime?>(
+        json['medicalExamExpiry'],
+      ),
+      psychologicalExamExpiry: serializer.fromJson<DateTime?>(
+        json['psychologicalExamExpiry'],
+      ),
+      tachographCardExpiry: serializer.fromJson<DateTime?>(
+        json['tachographCardExpiry'],
+      ),
+      licenseExpiry: serializer.fromJson<DateTime?>(json['licenseExpiry']),
+      visaExpiry: serializer.fromJson<DateTime?>(json['visaExpiry']),
+      workPermitExpiry: serializer.fromJson<DateTime?>(
+        json['workPermitExpiry'],
+      ),
+      residenceCardExpiry: serializer.fromJson<DateTime?>(
+        json['residenceCardExpiry'],
+      ),
+      driverCertificateExpiry: serializer.fromJson<DateTime?>(
+        json['driverCertificateExpiry'],
+      ),
     );
   }
   @override
@@ -316,6 +604,20 @@ class DriverProfileTableData extends DataClass
       'companyInternalId': serializer.toJson<String?>(companyInternalId),
       'driverCode': serializer.toJson<String?>(driverCode),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'medicalExamExpiry': serializer.toJson<DateTime?>(medicalExamExpiry),
+      'psychologicalExamExpiry': serializer.toJson<DateTime?>(
+        psychologicalExamExpiry,
+      ),
+      'tachographCardExpiry': serializer.toJson<DateTime?>(
+        tachographCardExpiry,
+      ),
+      'licenseExpiry': serializer.toJson<DateTime?>(licenseExpiry),
+      'visaExpiry': serializer.toJson<DateTime?>(visaExpiry),
+      'workPermitExpiry': serializer.toJson<DateTime?>(workPermitExpiry),
+      'residenceCardExpiry': serializer.toJson<DateTime?>(residenceCardExpiry),
+      'driverCertificateExpiry': serializer.toJson<DateTime?>(
+        driverCertificateExpiry,
+      ),
     };
   }
 
@@ -328,6 +630,14 @@ class DriverProfileTableData extends DataClass
     Value<String?> companyInternalId = const Value.absent(),
     Value<String?> driverCode = const Value.absent(),
     DateTime? updatedAt,
+    Value<DateTime?> medicalExamExpiry = const Value.absent(),
+    Value<DateTime?> psychologicalExamExpiry = const Value.absent(),
+    Value<DateTime?> tachographCardExpiry = const Value.absent(),
+    Value<DateTime?> licenseExpiry = const Value.absent(),
+    Value<DateTime?> visaExpiry = const Value.absent(),
+    Value<DateTime?> workPermitExpiry = const Value.absent(),
+    Value<DateTime?> residenceCardExpiry = const Value.absent(),
+    Value<DateTime?> driverCertificateExpiry = const Value.absent(),
   }) => DriverProfileTableData(
     key: key ?? this.key,
     firstName: firstName ?? this.firstName,
@@ -339,6 +649,28 @@ class DriverProfileTableData extends DataClass
         : this.companyInternalId,
     driverCode: driverCode.present ? driverCode.value : this.driverCode,
     updatedAt: updatedAt ?? this.updatedAt,
+    medicalExamExpiry: medicalExamExpiry.present
+        ? medicalExamExpiry.value
+        : this.medicalExamExpiry,
+    psychologicalExamExpiry: psychologicalExamExpiry.present
+        ? psychologicalExamExpiry.value
+        : this.psychologicalExamExpiry,
+    tachographCardExpiry: tachographCardExpiry.present
+        ? tachographCardExpiry.value
+        : this.tachographCardExpiry,
+    licenseExpiry: licenseExpiry.present
+        ? licenseExpiry.value
+        : this.licenseExpiry,
+    visaExpiry: visaExpiry.present ? visaExpiry.value : this.visaExpiry,
+    workPermitExpiry: workPermitExpiry.present
+        ? workPermitExpiry.value
+        : this.workPermitExpiry,
+    residenceCardExpiry: residenceCardExpiry.present
+        ? residenceCardExpiry.value
+        : this.residenceCardExpiry,
+    driverCertificateExpiry: driverCertificateExpiry.present
+        ? driverCertificateExpiry.value
+        : this.driverCertificateExpiry,
   );
   DriverProfileTableData copyWithCompanion(DriverProfileTableCompanion data) {
     return DriverProfileTableData(
@@ -354,6 +686,30 @@ class DriverProfileTableData extends DataClass
           ? data.driverCode.value
           : this.driverCode,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      medicalExamExpiry: data.medicalExamExpiry.present
+          ? data.medicalExamExpiry.value
+          : this.medicalExamExpiry,
+      psychologicalExamExpiry: data.psychologicalExamExpiry.present
+          ? data.psychologicalExamExpiry.value
+          : this.psychologicalExamExpiry,
+      tachographCardExpiry: data.tachographCardExpiry.present
+          ? data.tachographCardExpiry.value
+          : this.tachographCardExpiry,
+      licenseExpiry: data.licenseExpiry.present
+          ? data.licenseExpiry.value
+          : this.licenseExpiry,
+      visaExpiry: data.visaExpiry.present
+          ? data.visaExpiry.value
+          : this.visaExpiry,
+      workPermitExpiry: data.workPermitExpiry.present
+          ? data.workPermitExpiry.value
+          : this.workPermitExpiry,
+      residenceCardExpiry: data.residenceCardExpiry.present
+          ? data.residenceCardExpiry.value
+          : this.residenceCardExpiry,
+      driverCertificateExpiry: data.driverCertificateExpiry.present
+          ? data.driverCertificateExpiry.value
+          : this.driverCertificateExpiry,
     );
   }
 
@@ -367,7 +723,15 @@ class DriverProfileTableData extends DataClass
           ..write('phone: $phone, ')
           ..write('companyInternalId: $companyInternalId, ')
           ..write('driverCode: $driverCode, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('medicalExamExpiry: $medicalExamExpiry, ')
+          ..write('psychologicalExamExpiry: $psychologicalExamExpiry, ')
+          ..write('tachographCardExpiry: $tachographCardExpiry, ')
+          ..write('licenseExpiry: $licenseExpiry, ')
+          ..write('visaExpiry: $visaExpiry, ')
+          ..write('workPermitExpiry: $workPermitExpiry, ')
+          ..write('residenceCardExpiry: $residenceCardExpiry, ')
+          ..write('driverCertificateExpiry: $driverCertificateExpiry')
           ..write(')'))
         .toString();
   }
@@ -382,6 +746,14 @@ class DriverProfileTableData extends DataClass
     companyInternalId,
     driverCode,
     updatedAt,
+    medicalExamExpiry,
+    psychologicalExamExpiry,
+    tachographCardExpiry,
+    licenseExpiry,
+    visaExpiry,
+    workPermitExpiry,
+    residenceCardExpiry,
+    driverCertificateExpiry,
   );
   @override
   bool operator ==(Object other) =>
@@ -394,7 +766,15 @@ class DriverProfileTableData extends DataClass
           other.phone == this.phone &&
           other.companyInternalId == this.companyInternalId &&
           other.driverCode == this.driverCode &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.medicalExamExpiry == this.medicalExamExpiry &&
+          other.psychologicalExamExpiry == this.psychologicalExamExpiry &&
+          other.tachographCardExpiry == this.tachographCardExpiry &&
+          other.licenseExpiry == this.licenseExpiry &&
+          other.visaExpiry == this.visaExpiry &&
+          other.workPermitExpiry == this.workPermitExpiry &&
+          other.residenceCardExpiry == this.residenceCardExpiry &&
+          other.driverCertificateExpiry == this.driverCertificateExpiry);
 }
 
 class DriverProfileTableCompanion
@@ -407,6 +787,14 @@ class DriverProfileTableCompanion
   final Value<String?> companyInternalId;
   final Value<String?> driverCode;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> medicalExamExpiry;
+  final Value<DateTime?> psychologicalExamExpiry;
+  final Value<DateTime?> tachographCardExpiry;
+  final Value<DateTime?> licenseExpiry;
+  final Value<DateTime?> visaExpiry;
+  final Value<DateTime?> workPermitExpiry;
+  final Value<DateTime?> residenceCardExpiry;
+  final Value<DateTime?> driverCertificateExpiry;
   final Value<int> rowid;
   const DriverProfileTableCompanion({
     this.key = const Value.absent(),
@@ -417,6 +805,14 @@ class DriverProfileTableCompanion
     this.companyInternalId = const Value.absent(),
     this.driverCode = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.medicalExamExpiry = const Value.absent(),
+    this.psychologicalExamExpiry = const Value.absent(),
+    this.tachographCardExpiry = const Value.absent(),
+    this.licenseExpiry = const Value.absent(),
+    this.visaExpiry = const Value.absent(),
+    this.workPermitExpiry = const Value.absent(),
+    this.residenceCardExpiry = const Value.absent(),
+    this.driverCertificateExpiry = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DriverProfileTableCompanion.insert({
@@ -428,6 +824,14 @@ class DriverProfileTableCompanion
     this.companyInternalId = const Value.absent(),
     this.driverCode = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.medicalExamExpiry = const Value.absent(),
+    this.psychologicalExamExpiry = const Value.absent(),
+    this.tachographCardExpiry = const Value.absent(),
+    this.licenseExpiry = const Value.absent(),
+    this.visaExpiry = const Value.absent(),
+    this.workPermitExpiry = const Value.absent(),
+    this.residenceCardExpiry = const Value.absent(),
+    this.driverCertificateExpiry = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : key = Value(key),
        firstName = Value(firstName),
@@ -441,6 +845,14 @@ class DriverProfileTableCompanion
     Expression<String>? companyInternalId,
     Expression<String>? driverCode,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? medicalExamExpiry,
+    Expression<DateTime>? psychologicalExamExpiry,
+    Expression<DateTime>? tachographCardExpiry,
+    Expression<DateTime>? licenseExpiry,
+    Expression<DateTime>? visaExpiry,
+    Expression<DateTime>? workPermitExpiry,
+    Expression<DateTime>? residenceCardExpiry,
+    Expression<DateTime>? driverCertificateExpiry,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -452,6 +864,18 @@ class DriverProfileTableCompanion
       if (companyInternalId != null) 'company_internal_id': companyInternalId,
       if (driverCode != null) 'driver_code': driverCode,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (medicalExamExpiry != null) 'medical_exam_expiry': medicalExamExpiry,
+      if (psychologicalExamExpiry != null)
+        'psychological_exam_expiry': psychologicalExamExpiry,
+      if (tachographCardExpiry != null)
+        'tachograph_card_expiry': tachographCardExpiry,
+      if (licenseExpiry != null) 'license_expiry': licenseExpiry,
+      if (visaExpiry != null) 'visa_expiry': visaExpiry,
+      if (workPermitExpiry != null) 'work_permit_expiry': workPermitExpiry,
+      if (residenceCardExpiry != null)
+        'residence_card_expiry': residenceCardExpiry,
+      if (driverCertificateExpiry != null)
+        'driver_certificate_expiry': driverCertificateExpiry,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -465,6 +889,14 @@ class DriverProfileTableCompanion
     Value<String?>? companyInternalId,
     Value<String?>? driverCode,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? medicalExamExpiry,
+    Value<DateTime?>? psychologicalExamExpiry,
+    Value<DateTime?>? tachographCardExpiry,
+    Value<DateTime?>? licenseExpiry,
+    Value<DateTime?>? visaExpiry,
+    Value<DateTime?>? workPermitExpiry,
+    Value<DateTime?>? residenceCardExpiry,
+    Value<DateTime?>? driverCertificateExpiry,
     Value<int>? rowid,
   }) {
     return DriverProfileTableCompanion(
@@ -476,6 +908,16 @@ class DriverProfileTableCompanion
       companyInternalId: companyInternalId ?? this.companyInternalId,
       driverCode: driverCode ?? this.driverCode,
       updatedAt: updatedAt ?? this.updatedAt,
+      medicalExamExpiry: medicalExamExpiry ?? this.medicalExamExpiry,
+      psychologicalExamExpiry:
+          psychologicalExamExpiry ?? this.psychologicalExamExpiry,
+      tachographCardExpiry: tachographCardExpiry ?? this.tachographCardExpiry,
+      licenseExpiry: licenseExpiry ?? this.licenseExpiry,
+      visaExpiry: visaExpiry ?? this.visaExpiry,
+      workPermitExpiry: workPermitExpiry ?? this.workPermitExpiry,
+      residenceCardExpiry: residenceCardExpiry ?? this.residenceCardExpiry,
+      driverCertificateExpiry:
+          driverCertificateExpiry ?? this.driverCertificateExpiry,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -507,6 +949,38 @@ class DriverProfileTableCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (medicalExamExpiry.present) {
+      map['medical_exam_expiry'] = Variable<DateTime>(medicalExamExpiry.value);
+    }
+    if (psychologicalExamExpiry.present) {
+      map['psychological_exam_expiry'] = Variable<DateTime>(
+        psychologicalExamExpiry.value,
+      );
+    }
+    if (tachographCardExpiry.present) {
+      map['tachograph_card_expiry'] = Variable<DateTime>(
+        tachographCardExpiry.value,
+      );
+    }
+    if (licenseExpiry.present) {
+      map['license_expiry'] = Variable<DateTime>(licenseExpiry.value);
+    }
+    if (visaExpiry.present) {
+      map['visa_expiry'] = Variable<DateTime>(visaExpiry.value);
+    }
+    if (workPermitExpiry.present) {
+      map['work_permit_expiry'] = Variable<DateTime>(workPermitExpiry.value);
+    }
+    if (residenceCardExpiry.present) {
+      map['residence_card_expiry'] = Variable<DateTime>(
+        residenceCardExpiry.value,
+      );
+    }
+    if (driverCertificateExpiry.present) {
+      map['driver_certificate_expiry'] = Variable<DateTime>(
+        driverCertificateExpiry.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -524,6 +998,14 @@ class DriverProfileTableCompanion
           ..write('companyInternalId: $companyInternalId, ')
           ..write('driverCode: $driverCode, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('medicalExamExpiry: $medicalExamExpiry, ')
+          ..write('psychologicalExamExpiry: $psychologicalExamExpiry, ')
+          ..write('tachographCardExpiry: $tachographCardExpiry, ')
+          ..write('licenseExpiry: $licenseExpiry, ')
+          ..write('visaExpiry: $visaExpiry, ')
+          ..write('workPermitExpiry: $workPermitExpiry, ')
+          ..write('residenceCardExpiry: $residenceCardExpiry, ')
+          ..write('driverCertificateExpiry: $driverCertificateExpiry, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -552,6 +1034,14 @@ typedef $$DriverProfileTableTableCreateCompanionBuilder =
       Value<String?> companyInternalId,
       Value<String?> driverCode,
       Value<DateTime> updatedAt,
+      Value<DateTime?> medicalExamExpiry,
+      Value<DateTime?> psychologicalExamExpiry,
+      Value<DateTime?> tachographCardExpiry,
+      Value<DateTime?> licenseExpiry,
+      Value<DateTime?> visaExpiry,
+      Value<DateTime?> workPermitExpiry,
+      Value<DateTime?> residenceCardExpiry,
+      Value<DateTime?> driverCertificateExpiry,
       Value<int> rowid,
     });
 typedef $$DriverProfileTableTableUpdateCompanionBuilder =
@@ -564,6 +1054,14 @@ typedef $$DriverProfileTableTableUpdateCompanionBuilder =
       Value<String?> companyInternalId,
       Value<String?> driverCode,
       Value<DateTime> updatedAt,
+      Value<DateTime?> medicalExamExpiry,
+      Value<DateTime?> psychologicalExamExpiry,
+      Value<DateTime?> tachographCardExpiry,
+      Value<DateTime?> licenseExpiry,
+      Value<DateTime?> visaExpiry,
+      Value<DateTime?> workPermitExpiry,
+      Value<DateTime?> residenceCardExpiry,
+      Value<DateTime?> driverCertificateExpiry,
       Value<int> rowid,
     });
 
@@ -613,6 +1111,46 @@ class $$DriverProfileTableTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get medicalExamExpiry => $composableBuilder(
+    column: $table.medicalExamExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get psychologicalExamExpiry => $composableBuilder(
+    column: $table.psychologicalExamExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get tachographCardExpiry => $composableBuilder(
+    column: $table.tachographCardExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get licenseExpiry => $composableBuilder(
+    column: $table.licenseExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get visaExpiry => $composableBuilder(
+    column: $table.visaExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get workPermitExpiry => $composableBuilder(
+    column: $table.workPermitExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get residenceCardExpiry => $composableBuilder(
+    column: $table.residenceCardExpiry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get driverCertificateExpiry => $composableBuilder(
+    column: $table.driverCertificateExpiry,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -665,6 +1203,46 @@ class $$DriverProfileTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get medicalExamExpiry => $composableBuilder(
+    column: $table.medicalExamExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get psychologicalExamExpiry => $composableBuilder(
+    column: $table.psychologicalExamExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get tachographCardExpiry => $composableBuilder(
+    column: $table.tachographCardExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get licenseExpiry => $composableBuilder(
+    column: $table.licenseExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get visaExpiry => $composableBuilder(
+    column: $table.visaExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get workPermitExpiry => $composableBuilder(
+    column: $table.workPermitExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get residenceCardExpiry => $composableBuilder(
+    column: $table.residenceCardExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get driverCertificateExpiry => $composableBuilder(
+    column: $table.driverCertificateExpiry,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DriverProfileTableTableAnnotationComposer
@@ -703,6 +1281,46 @@ class $$DriverProfileTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get medicalExamExpiry => $composableBuilder(
+    column: $table.medicalExamExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get psychologicalExamExpiry => $composableBuilder(
+    column: $table.psychologicalExamExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get tachographCardExpiry => $composableBuilder(
+    column: $table.tachographCardExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get licenseExpiry => $composableBuilder(
+    column: $table.licenseExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get visaExpiry => $composableBuilder(
+    column: $table.visaExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get workPermitExpiry => $composableBuilder(
+    column: $table.workPermitExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get residenceCardExpiry => $composableBuilder(
+    column: $table.residenceCardExpiry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get driverCertificateExpiry => $composableBuilder(
+    column: $table.driverCertificateExpiry,
+    builder: (column) => column,
+  );
 }
 
 class $$DriverProfileTableTableTableManager
@@ -753,6 +1371,14 @@ class $$DriverProfileTableTableTableManager
                 Value<String?> companyInternalId = const Value.absent(),
                 Value<String?> driverCode = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> medicalExamExpiry = const Value.absent(),
+                Value<DateTime?> psychologicalExamExpiry = const Value.absent(),
+                Value<DateTime?> tachographCardExpiry = const Value.absent(),
+                Value<DateTime?> licenseExpiry = const Value.absent(),
+                Value<DateTime?> visaExpiry = const Value.absent(),
+                Value<DateTime?> workPermitExpiry = const Value.absent(),
+                Value<DateTime?> residenceCardExpiry = const Value.absent(),
+                Value<DateTime?> driverCertificateExpiry = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DriverProfileTableCompanion(
                 key: key,
@@ -763,6 +1389,14 @@ class $$DriverProfileTableTableTableManager
                 companyInternalId: companyInternalId,
                 driverCode: driverCode,
                 updatedAt: updatedAt,
+                medicalExamExpiry: medicalExamExpiry,
+                psychologicalExamExpiry: psychologicalExamExpiry,
+                tachographCardExpiry: tachographCardExpiry,
+                licenseExpiry: licenseExpiry,
+                visaExpiry: visaExpiry,
+                workPermitExpiry: workPermitExpiry,
+                residenceCardExpiry: residenceCardExpiry,
+                driverCertificateExpiry: driverCertificateExpiry,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -775,6 +1409,14 @@ class $$DriverProfileTableTableTableManager
                 Value<String?> companyInternalId = const Value.absent(),
                 Value<String?> driverCode = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> medicalExamExpiry = const Value.absent(),
+                Value<DateTime?> psychologicalExamExpiry = const Value.absent(),
+                Value<DateTime?> tachographCardExpiry = const Value.absent(),
+                Value<DateTime?> licenseExpiry = const Value.absent(),
+                Value<DateTime?> visaExpiry = const Value.absent(),
+                Value<DateTime?> workPermitExpiry = const Value.absent(),
+                Value<DateTime?> residenceCardExpiry = const Value.absent(),
+                Value<DateTime?> driverCertificateExpiry = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DriverProfileTableCompanion.insert(
                 key: key,
@@ -785,6 +1427,14 @@ class $$DriverProfileTableTableTableManager
                 companyInternalId: companyInternalId,
                 driverCode: driverCode,
                 updatedAt: updatedAt,
+                medicalExamExpiry: medicalExamExpiry,
+                psychologicalExamExpiry: psychologicalExamExpiry,
+                tachographCardExpiry: tachographCardExpiry,
+                licenseExpiry: licenseExpiry,
+                visaExpiry: visaExpiry,
+                workPermitExpiry: workPermitExpiry,
+                residenceCardExpiry: residenceCardExpiry,
+                driverCertificateExpiry: driverCertificateExpiry,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

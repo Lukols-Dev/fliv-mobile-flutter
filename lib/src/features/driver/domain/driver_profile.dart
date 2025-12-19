@@ -6,6 +6,7 @@ class DriverProfile {
     this.phone,
     this.companyInternalId,
     this.driverCode,
+
     this.visaExpiresAt,
     this.drivingLicenseExpiresAt,
     this.workPermitExpiresAt,
@@ -22,6 +23,7 @@ class DriverProfile {
   final String? phone;
   final String? companyInternalId;
   final String? driverCode;
+
   final DateTime? visaExpiresAt;
   final DateTime? drivingLicenseExpiresAt;
   final DateTime? workPermitExpiresAt;

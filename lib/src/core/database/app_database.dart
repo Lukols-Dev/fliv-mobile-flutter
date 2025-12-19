@@ -12,7 +12,49 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    // opcjonalnie: włącz walidację przy starcie (pomaga łapać błędy)
+    // beforeOpen: (details) async {
+    //   await customStatement('PRAGMA foreign_keys = ON');
+    // },
+    onUpgrade: (m, from, to) async {
+      // upgrade z v1 -> v2 (dodajemy kolumny do driverProfileTable)
+      if (from < 2) {
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.medicalExamExpiry,
+        );
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.psychologicalExamExpiry,
+        );
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.tachographCardExpiry,
+        );
+        await m.addColumn(driverProfileTable, driverProfileTable.licenseExpiry);
+        await m.addColumn(driverProfileTable, driverProfileTable.visaExpiry);
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.residenceCardExpiry,
+        );
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.driverCertificateExpiry,
+        );
+      }
+      // upgrade z v2 -> v3 (dodajemy workPermitExpiry)
+      if (from < 3) {
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.workPermitExpiry,
+        );
+      }
+    },
+  );
 
   // --- Driver profile (singleton: key = 'me') ---
 
