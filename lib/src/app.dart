@@ -117,7 +117,11 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         return SupportedLocales.pl;
       },
       themeMode: ThemeMode.light,
-      theme: ThemeData(useMaterial3: true, brightness: Brightness.light),
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
+      ),
     );
   }
 }
