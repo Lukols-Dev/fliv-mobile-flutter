@@ -45,7 +45,7 @@ class ScaffoldWithBottomNav extends StatelessWidget {
                 size: 28,
               ),
               selectedIcon: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Color.fromRGBO(0, 79, 69, 0.10),
@@ -68,7 +68,7 @@ class ScaffoldWithBottomNav extends StatelessWidget {
                 ),
               ),
               selectedIcon: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Color.fromRGBO(0, 79, 69, 0.10),
@@ -91,7 +91,7 @@ class ScaffoldWithBottomNav extends StatelessWidget {
                 size: 28,
               ),
               selectedIcon: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Color.fromRGBO(0, 79, 69, 0.10),
