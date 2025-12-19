@@ -121,6 +121,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refresh,
+          color: const Color(0xFF004F45),
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
           child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
