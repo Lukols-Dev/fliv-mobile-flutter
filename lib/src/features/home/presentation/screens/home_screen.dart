@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:mobile/src/core/network/connectivity_provider.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
@@ -66,7 +65,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final repo = ref.read(driverTransportOrdersRepositoryProvider);
       await repo.assignByZtNumber(ztNumber: zt);
 
-      // Odśwież aktualne zlecenie po przypisaniu
       ref.invalidate(currentDriverOrderProvider);
 
       _ztController.clear();
@@ -87,12 +85,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _refresh() async {
-    // MVP: refresh wszystkiego co widać na home
     ref.invalidate(driverProfileProvider);
     ref.invalidate(currentDriverOrderProvider);
     ref.invalidate(avatarControllerProvider);
 
-    // Poczekaj aż się przeładuje (nie wywalaj refresh-a na error)
     await Future.wait([
       ref.read(driverProfileProvider.future).catchError((_) {}),
       ref.read(currentDriverOrderProvider.future).catchError((_) {}),
@@ -102,8 +98,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isOffline = ref.watch(isOfflineProvider);
-
     final profileAsync = ref.watch(driverProfileProvider);
     final profile = profileAsync.maybeWhen(data: (p) => p, orElse: () => null);
 
@@ -111,8 +105,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? '${profile.firstName} ${profile.lastName}'.trim()
         : '—';
 
-    // Jeśli masz inne pole na ID (np. driverCode), podmień tutaj.
-    // U Ciebie wcześniej było: profile?.driverCode ?? '—'
     final driverId = (profile as dynamic?)?.driverCode as String? ?? '—';
 
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
@@ -138,16 +130,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   // HEADER
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       CircleAvatar(
-                        radius: 24,
+                        radius: 28,
                         backgroundColor: const Color(0xFFE5E7EB),
                         backgroundImage: avatarUrl != null
                             ? NetworkImage(avatarUrl)
                             : null,
                         child: avatarUrl == null
-                            ? const Icon(Icons.person, color: Color(0xFF111827))
+                            ? const Icon(
+                                Icons.person,
+                                color: Color(0xFF111827),
+                                size: 32,
+                              )
                             : null,
                       ),
                       const SizedBox(width: 12),
@@ -162,8 +158,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     'Witaj z powrotem!',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF6B7280),
+                                      fontWeight: FontWeight.w300,
+                                      fontFamily: 'Figtree',
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),
@@ -172,27 +169,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             const SizedBox(height: 2),
                             Text(
                               fullName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF111827),
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Figtree',
+                                color: Colors.black,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'ID: $driverId',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF9CA3AF),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w300,
+                                fontFamily: 'Figtree',
+                                color: Colors.black,
                               ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(999),
@@ -209,7 +212,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   const SizedBox(height: 14),
 
-                  // LOCATION CARD (na MVP statycznie)
+                  // LOCATION CARD
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -241,6 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
+                                  fontFamily: 'Figtree',
                                   color: Color(0xFF6B7280),
                                 ),
                               ),
@@ -250,6 +254,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
+                                  fontFamily: 'Figtree',
                                   color: Color(0xFF111827),
                                 ),
                               ),
@@ -265,9 +270,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const Text(
                     'Aktualne Zlecenie',
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF111827),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Figtree',
+                      color: Colors.black,
                     ),
                   ),
 
@@ -296,6 +302,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
+                              fontFamily: 'Figtree',
                               color: Color(0xFF111827),
                             ),
                           ),
@@ -305,6 +312,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
+                              fontFamily: 'Figtree',
                               color: Color(0xFF6B7280),
                             ),
                           ),
@@ -349,6 +357,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
+                                        fontFamily: 'Figtree',
                                       ),
                                     ),
                             ),
@@ -404,6 +413,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             color: Color(0xFFD1FAE5),
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
+                                            fontFamily: 'Figtree',
                                           ),
                                         ),
                                       ),
@@ -424,6 +434,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             color: Colors.white,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w800,
+                                            fontFamily: 'Figtree',
                                           ),
                                         ),
                                       ),
@@ -438,6 +449,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         color: Colors.white,
                                         fontSize: 18,
                                         fontWeight: FontWeight.w900,
+                                        fontFamily: 'Figtree',
                                       ),
                                     ),
                                   ),
@@ -507,6 +519,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w800,
+                                              fontFamily: 'Figtree',
                                             ),
                                           ),
                                         ],
@@ -573,6 +586,7 @@ class _TimelineRow extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
+                        fontFamily: 'Figtree',
                         color: Color(0xFF111827),
                       ),
                     ),
@@ -582,6 +596,7 @@ class _TimelineRow extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
+                      fontFamily: 'Figtree',
                       color: Color(0xFF9CA3AF),
                     ),
                   ),
@@ -593,6 +608,7 @@ class _TimelineRow extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
+                  fontFamily: 'Figtree',
                   color: Color(0xFF111827),
                 ),
               ),
@@ -602,6 +618,7 @@ class _TimelineRow extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
+                  fontFamily: 'Figtree',
                   color: Color(0xFF6B7280),
                 ),
               ),
