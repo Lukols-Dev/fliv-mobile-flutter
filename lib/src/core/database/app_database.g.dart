@@ -1012,16 +1012,1411 @@ class DriverProfileTableCompanion
   }
 }
 
+class $DriverCurrentOrderTableTable extends DriverCurrentOrderTable
+    with TableInfo<$DriverCurrentOrderTableTable, DriverCurrentOrderTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DriverCurrentOrderTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ztNumberMeta = const VerificationMeta(
+    'ztNumber',
+  );
+  @override
+  late final GeneratedColumn<String> ztNumber = GeneratedColumn<String>(
+    'zt_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fromCountryMeta = const VerificationMeta(
+    'fromCountry',
+  );
+  @override
+  late final GeneratedColumn<String> fromCountry = GeneratedColumn<String>(
+    'from_country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toCountryMeta = const VerificationMeta(
+    'toCountry',
+  );
+  @override
+  late final GeneratedColumn<String> toCountry = GeneratedColumn<String>(
+    'to_country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _loadingDateMeta = const VerificationMeta(
+    'loadingDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> loadingDate = GeneratedColumn<DateTime>(
+    'loading_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    key,
+    id,
+    ztNumber,
+    status,
+    fromCountry,
+    toCountry,
+    loadingDate,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'driver_current_order_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DriverCurrentOrderTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('zt_number')) {
+      context.handle(
+        _ztNumberMeta,
+        ztNumber.isAcceptableOrUnknown(data['zt_number']!, _ztNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ztNumberMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('from_country')) {
+      context.handle(
+        _fromCountryMeta,
+        fromCountry.isAcceptableOrUnknown(
+          data['from_country']!,
+          _fromCountryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('to_country')) {
+      context.handle(
+        _toCountryMeta,
+        toCountry.isAcceptableOrUnknown(data['to_country']!, _toCountryMeta),
+      );
+    }
+    if (data.containsKey('loading_date')) {
+      context.handle(
+        _loadingDateMeta,
+        loadingDate.isAcceptableOrUnknown(
+          data['loading_date']!,
+          _loadingDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  DriverCurrentOrderTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DriverCurrentOrderTableData(
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ztNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}zt_number'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      fromCountry: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_country'],
+      ),
+      toCountry: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_country'],
+      ),
+      loadingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}loading_date'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DriverCurrentOrderTableTable createAlias(String alias) {
+    return $DriverCurrentOrderTableTable(attachedDatabase, alias);
+  }
+}
+
+class DriverCurrentOrderTableData extends DataClass
+    implements Insertable<DriverCurrentOrderTableData> {
+  final String key;
+  final String id;
+  final String ztNumber;
+  final String status;
+  final String? fromCountry;
+  final String? toCountry;
+  final DateTime? loadingDate;
+  final DateTime updatedAt;
+  const DriverCurrentOrderTableData({
+    required this.key,
+    required this.id,
+    required this.ztNumber,
+    required this.status,
+    this.fromCountry,
+    this.toCountry,
+    this.loadingDate,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['id'] = Variable<String>(id);
+    map['zt_number'] = Variable<String>(ztNumber);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || fromCountry != null) {
+      map['from_country'] = Variable<String>(fromCountry);
+    }
+    if (!nullToAbsent || toCountry != null) {
+      map['to_country'] = Variable<String>(toCountry);
+    }
+    if (!nullToAbsent || loadingDate != null) {
+      map['loading_date'] = Variable<DateTime>(loadingDate);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DriverCurrentOrderTableCompanion toCompanion(bool nullToAbsent) {
+    return DriverCurrentOrderTableCompanion(
+      key: Value(key),
+      id: Value(id),
+      ztNumber: Value(ztNumber),
+      status: Value(status),
+      fromCountry: fromCountry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromCountry),
+      toCountry: toCountry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toCountry),
+      loadingDate: loadingDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(loadingDate),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DriverCurrentOrderTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DriverCurrentOrderTableData(
+      key: serializer.fromJson<String>(json['key']),
+      id: serializer.fromJson<String>(json['id']),
+      ztNumber: serializer.fromJson<String>(json['ztNumber']),
+      status: serializer.fromJson<String>(json['status']),
+      fromCountry: serializer.fromJson<String?>(json['fromCountry']),
+      toCountry: serializer.fromJson<String?>(json['toCountry']),
+      loadingDate: serializer.fromJson<DateTime?>(json['loadingDate']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'id': serializer.toJson<String>(id),
+      'ztNumber': serializer.toJson<String>(ztNumber),
+      'status': serializer.toJson<String>(status),
+      'fromCountry': serializer.toJson<String?>(fromCountry),
+      'toCountry': serializer.toJson<String?>(toCountry),
+      'loadingDate': serializer.toJson<DateTime?>(loadingDate),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DriverCurrentOrderTableData copyWith({
+    String? key,
+    String? id,
+    String? ztNumber,
+    String? status,
+    Value<String?> fromCountry = const Value.absent(),
+    Value<String?> toCountry = const Value.absent(),
+    Value<DateTime?> loadingDate = const Value.absent(),
+    DateTime? updatedAt,
+  }) => DriverCurrentOrderTableData(
+    key: key ?? this.key,
+    id: id ?? this.id,
+    ztNumber: ztNumber ?? this.ztNumber,
+    status: status ?? this.status,
+    fromCountry: fromCountry.present ? fromCountry.value : this.fromCountry,
+    toCountry: toCountry.present ? toCountry.value : this.toCountry,
+    loadingDate: loadingDate.present ? loadingDate.value : this.loadingDate,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DriverCurrentOrderTableData copyWithCompanion(
+    DriverCurrentOrderTableCompanion data,
+  ) {
+    return DriverCurrentOrderTableData(
+      key: data.key.present ? data.key.value : this.key,
+      id: data.id.present ? data.id.value : this.id,
+      ztNumber: data.ztNumber.present ? data.ztNumber.value : this.ztNumber,
+      status: data.status.present ? data.status.value : this.status,
+      fromCountry: data.fromCountry.present
+          ? data.fromCountry.value
+          : this.fromCountry,
+      toCountry: data.toCountry.present ? data.toCountry.value : this.toCountry,
+      loadingDate: data.loadingDate.present
+          ? data.loadingDate.value
+          : this.loadingDate,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DriverCurrentOrderTableData(')
+          ..write('key: $key, ')
+          ..write('id: $id, ')
+          ..write('ztNumber: $ztNumber, ')
+          ..write('status: $status, ')
+          ..write('fromCountry: $fromCountry, ')
+          ..write('toCountry: $toCountry, ')
+          ..write('loadingDate: $loadingDate, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    key,
+    id,
+    ztNumber,
+    status,
+    fromCountry,
+    toCountry,
+    loadingDate,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DriverCurrentOrderTableData &&
+          other.key == this.key &&
+          other.id == this.id &&
+          other.ztNumber == this.ztNumber &&
+          other.status == this.status &&
+          other.fromCountry == this.fromCountry &&
+          other.toCountry == this.toCountry &&
+          other.loadingDate == this.loadingDate &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DriverCurrentOrderTableCompanion
+    extends UpdateCompanion<DriverCurrentOrderTableData> {
+  final Value<String> key;
+  final Value<String> id;
+  final Value<String> ztNumber;
+  final Value<String> status;
+  final Value<String?> fromCountry;
+  final Value<String?> toCountry;
+  final Value<DateTime?> loadingDate;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const DriverCurrentOrderTableCompanion({
+    this.key = const Value.absent(),
+    this.id = const Value.absent(),
+    this.ztNumber = const Value.absent(),
+    this.status = const Value.absent(),
+    this.fromCountry = const Value.absent(),
+    this.toCountry = const Value.absent(),
+    this.loadingDate = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DriverCurrentOrderTableCompanion.insert({
+    required String key,
+    required String id,
+    required String ztNumber,
+    required String status,
+    this.fromCountry = const Value.absent(),
+    this.toCountry = const Value.absent(),
+    this.loadingDate = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : key = Value(key),
+       id = Value(id),
+       ztNumber = Value(ztNumber),
+       status = Value(status);
+  static Insertable<DriverCurrentOrderTableData> custom({
+    Expression<String>? key,
+    Expression<String>? id,
+    Expression<String>? ztNumber,
+    Expression<String>? status,
+    Expression<String>? fromCountry,
+    Expression<String>? toCountry,
+    Expression<DateTime>? loadingDate,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (id != null) 'id': id,
+      if (ztNumber != null) 'zt_number': ztNumber,
+      if (status != null) 'status': status,
+      if (fromCountry != null) 'from_country': fromCountry,
+      if (toCountry != null) 'to_country': toCountry,
+      if (loadingDate != null) 'loading_date': loadingDate,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DriverCurrentOrderTableCompanion copyWith({
+    Value<String>? key,
+    Value<String>? id,
+    Value<String>? ztNumber,
+    Value<String>? status,
+    Value<String?>? fromCountry,
+    Value<String?>? toCountry,
+    Value<DateTime?>? loadingDate,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return DriverCurrentOrderTableCompanion(
+      key: key ?? this.key,
+      id: id ?? this.id,
+      ztNumber: ztNumber ?? this.ztNumber,
+      status: status ?? this.status,
+      fromCountry: fromCountry ?? this.fromCountry,
+      toCountry: toCountry ?? this.toCountry,
+      loadingDate: loadingDate ?? this.loadingDate,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ztNumber.present) {
+      map['zt_number'] = Variable<String>(ztNumber.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (fromCountry.present) {
+      map['from_country'] = Variable<String>(fromCountry.value);
+    }
+    if (toCountry.present) {
+      map['to_country'] = Variable<String>(toCountry.value);
+    }
+    if (loadingDate.present) {
+      map['loading_date'] = Variable<DateTime>(loadingDate.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DriverCurrentOrderTableCompanion(')
+          ..write('key: $key, ')
+          ..write('id: $id, ')
+          ..write('ztNumber: $ztNumber, ')
+          ..write('status: $status, ')
+          ..write('fromCountry: $fromCountry, ')
+          ..write('toCountry: $toCountry, ')
+          ..write('loadingDate: $loadingDate, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
+    with TableInfo<$DriverOrderDetailsTableTable, DriverOrderDetailsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DriverOrderDetailsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ztNumberMeta = const VerificationMeta(
+    'ztNumber',
+  );
+  @override
+  late final GeneratedColumn<String> ztNumber = GeneratedColumn<String>(
+    'zt_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _vehiclePlateMeta = const VerificationMeta(
+    'vehiclePlate',
+  );
+  @override
+  late final GeneratedColumn<String> vehiclePlate = GeneratedColumn<String>(
+    'vehicle_plate',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _trailerPlateMeta = const VerificationMeta(
+    'trailerPlate',
+  );
+  @override
+  late final GeneratedColumn<String> trailerPlate = GeneratedColumn<String>(
+    'trailer_plate',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _clientNameMeta = const VerificationMeta(
+    'clientName',
+  );
+  @override
+  late final GeneratedColumn<String> clientName = GeneratedColumn<String>(
+    'client_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fromCountryMeta = const VerificationMeta(
+    'fromCountry',
+  );
+  @override
+  late final GeneratedColumn<String> fromCountry = GeneratedColumn<String>(
+    'from_country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toCountryMeta = const VerificationMeta(
+    'toCountry',
+  );
+  @override
+  late final GeneratedColumn<String> toCountry = GeneratedColumn<String>(
+    'to_country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cargoWeightKgMeta = const VerificationMeta(
+    'cargoWeightKg',
+  );
+  @override
+  late final GeneratedColumn<int> cargoWeightKg = GeneratedColumn<int>(
+    'cargo_weight_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _loadingDateMeta = const VerificationMeta(
+    'loadingDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> loadingDate = GeneratedColumn<DateTime>(
+    'loading_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cargoDescriptionMeta = const VerificationMeta(
+    'cargoDescription',
+  );
+  @override
+  late final GeneratedColumn<String> cargoDescription = GeneratedColumn<String>(
+    'cargo_description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _temperatureSensitiveMeta =
+      const VerificationMeta('temperatureSensitive');
+  @override
+  late final GeneratedColumn<bool> temperatureSensitive = GeneratedColumn<bool>(
+    'temperature_sensitive',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("temperature_sensitive" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ztNumber,
+    status,
+    vehiclePlate,
+    trailerPlate,
+    clientName,
+    fromCountry,
+    toCountry,
+    cargoWeightKg,
+    loadingDate,
+    cargoDescription,
+    temperatureSensitive,
+    notes,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'driver_order_details_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DriverOrderDetailsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('zt_number')) {
+      context.handle(
+        _ztNumberMeta,
+        ztNumber.isAcceptableOrUnknown(data['zt_number']!, _ztNumberMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('vehicle_plate')) {
+      context.handle(
+        _vehiclePlateMeta,
+        vehiclePlate.isAcceptableOrUnknown(
+          data['vehicle_plate']!,
+          _vehiclePlateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('trailer_plate')) {
+      context.handle(
+        _trailerPlateMeta,
+        trailerPlate.isAcceptableOrUnknown(
+          data['trailer_plate']!,
+          _trailerPlateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('client_name')) {
+      context.handle(
+        _clientNameMeta,
+        clientName.isAcceptableOrUnknown(data['client_name']!, _clientNameMeta),
+      );
+    }
+    if (data.containsKey('from_country')) {
+      context.handle(
+        _fromCountryMeta,
+        fromCountry.isAcceptableOrUnknown(
+          data['from_country']!,
+          _fromCountryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('to_country')) {
+      context.handle(
+        _toCountryMeta,
+        toCountry.isAcceptableOrUnknown(data['to_country']!, _toCountryMeta),
+      );
+    }
+    if (data.containsKey('cargo_weight_kg')) {
+      context.handle(
+        _cargoWeightKgMeta,
+        cargoWeightKg.isAcceptableOrUnknown(
+          data['cargo_weight_kg']!,
+          _cargoWeightKgMeta,
+        ),
+      );
+    }
+    if (data.containsKey('loading_date')) {
+      context.handle(
+        _loadingDateMeta,
+        loadingDate.isAcceptableOrUnknown(
+          data['loading_date']!,
+          _loadingDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cargo_description')) {
+      context.handle(
+        _cargoDescriptionMeta,
+        cargoDescription.isAcceptableOrUnknown(
+          data['cargo_description']!,
+          _cargoDescriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('temperature_sensitive')) {
+      context.handle(
+        _temperatureSensitiveMeta,
+        temperatureSensitive.isAcceptableOrUnknown(
+          data['temperature_sensitive']!,
+          _temperatureSensitiveMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DriverOrderDetailsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DriverOrderDetailsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ztNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}zt_number'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      ),
+      vehiclePlate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_plate'],
+      ),
+      trailerPlate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trailer_plate'],
+      ),
+      clientName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_name'],
+      ),
+      fromCountry: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_country'],
+      ),
+      toCountry: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_country'],
+      ),
+      cargoWeightKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cargo_weight_kg'],
+      ),
+      loadingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}loading_date'],
+      ),
+      cargoDescription: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cargo_description'],
+      ),
+      temperatureSensitive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}temperature_sensitive'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DriverOrderDetailsTableTable createAlias(String alias) {
+    return $DriverOrderDetailsTableTable(attachedDatabase, alias);
+  }
+}
+
+class DriverOrderDetailsTableData extends DataClass
+    implements Insertable<DriverOrderDetailsTableData> {
+  final String id;
+  final String? ztNumber;
+  final String? status;
+  final String? vehiclePlate;
+  final String? trailerPlate;
+  final String? clientName;
+  final String? fromCountry;
+  final String? toCountry;
+  final int? cargoWeightKg;
+  final DateTime? loadingDate;
+  final String? cargoDescription;
+  final bool? temperatureSensitive;
+  final String? notes;
+  final DateTime updatedAt;
+  const DriverOrderDetailsTableData({
+    required this.id,
+    this.ztNumber,
+    this.status,
+    this.vehiclePlate,
+    this.trailerPlate,
+    this.clientName,
+    this.fromCountry,
+    this.toCountry,
+    this.cargoWeightKg,
+    this.loadingDate,
+    this.cargoDescription,
+    this.temperatureSensitive,
+    this.notes,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || ztNumber != null) {
+      map['zt_number'] = Variable<String>(ztNumber);
+    }
+    if (!nullToAbsent || status != null) {
+      map['status'] = Variable<String>(status);
+    }
+    if (!nullToAbsent || vehiclePlate != null) {
+      map['vehicle_plate'] = Variable<String>(vehiclePlate);
+    }
+    if (!nullToAbsent || trailerPlate != null) {
+      map['trailer_plate'] = Variable<String>(trailerPlate);
+    }
+    if (!nullToAbsent || clientName != null) {
+      map['client_name'] = Variable<String>(clientName);
+    }
+    if (!nullToAbsent || fromCountry != null) {
+      map['from_country'] = Variable<String>(fromCountry);
+    }
+    if (!nullToAbsent || toCountry != null) {
+      map['to_country'] = Variable<String>(toCountry);
+    }
+    if (!nullToAbsent || cargoWeightKg != null) {
+      map['cargo_weight_kg'] = Variable<int>(cargoWeightKg);
+    }
+    if (!nullToAbsent || loadingDate != null) {
+      map['loading_date'] = Variable<DateTime>(loadingDate);
+    }
+    if (!nullToAbsent || cargoDescription != null) {
+      map['cargo_description'] = Variable<String>(cargoDescription);
+    }
+    if (!nullToAbsent || temperatureSensitive != null) {
+      map['temperature_sensitive'] = Variable<bool>(temperatureSensitive);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DriverOrderDetailsTableCompanion toCompanion(bool nullToAbsent) {
+    return DriverOrderDetailsTableCompanion(
+      id: Value(id),
+      ztNumber: ztNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ztNumber),
+      status: status == null && nullToAbsent
+          ? const Value.absent()
+          : Value(status),
+      vehiclePlate: vehiclePlate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(vehiclePlate),
+      trailerPlate: trailerPlate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trailerPlate),
+      clientName: clientName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clientName),
+      fromCountry: fromCountry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromCountry),
+      toCountry: toCountry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toCountry),
+      cargoWeightKg: cargoWeightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cargoWeightKg),
+      loadingDate: loadingDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(loadingDate),
+      cargoDescription: cargoDescription == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cargoDescription),
+      temperatureSensitive: temperatureSensitive == null && nullToAbsent
+          ? const Value.absent()
+          : Value(temperatureSensitive),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DriverOrderDetailsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DriverOrderDetailsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      ztNumber: serializer.fromJson<String?>(json['ztNumber']),
+      status: serializer.fromJson<String?>(json['status']),
+      vehiclePlate: serializer.fromJson<String?>(json['vehiclePlate']),
+      trailerPlate: serializer.fromJson<String?>(json['trailerPlate']),
+      clientName: serializer.fromJson<String?>(json['clientName']),
+      fromCountry: serializer.fromJson<String?>(json['fromCountry']),
+      toCountry: serializer.fromJson<String?>(json['toCountry']),
+      cargoWeightKg: serializer.fromJson<int?>(json['cargoWeightKg']),
+      loadingDate: serializer.fromJson<DateTime?>(json['loadingDate']),
+      cargoDescription: serializer.fromJson<String?>(json['cargoDescription']),
+      temperatureSensitive: serializer.fromJson<bool?>(
+        json['temperatureSensitive'],
+      ),
+      notes: serializer.fromJson<String?>(json['notes']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ztNumber': serializer.toJson<String?>(ztNumber),
+      'status': serializer.toJson<String?>(status),
+      'vehiclePlate': serializer.toJson<String?>(vehiclePlate),
+      'trailerPlate': serializer.toJson<String?>(trailerPlate),
+      'clientName': serializer.toJson<String?>(clientName),
+      'fromCountry': serializer.toJson<String?>(fromCountry),
+      'toCountry': serializer.toJson<String?>(toCountry),
+      'cargoWeightKg': serializer.toJson<int?>(cargoWeightKg),
+      'loadingDate': serializer.toJson<DateTime?>(loadingDate),
+      'cargoDescription': serializer.toJson<String?>(cargoDescription),
+      'temperatureSensitive': serializer.toJson<bool?>(temperatureSensitive),
+      'notes': serializer.toJson<String?>(notes),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DriverOrderDetailsTableData copyWith({
+    String? id,
+    Value<String?> ztNumber = const Value.absent(),
+    Value<String?> status = const Value.absent(),
+    Value<String?> vehiclePlate = const Value.absent(),
+    Value<String?> trailerPlate = const Value.absent(),
+    Value<String?> clientName = const Value.absent(),
+    Value<String?> fromCountry = const Value.absent(),
+    Value<String?> toCountry = const Value.absent(),
+    Value<int?> cargoWeightKg = const Value.absent(),
+    Value<DateTime?> loadingDate = const Value.absent(),
+    Value<String?> cargoDescription = const Value.absent(),
+    Value<bool?> temperatureSensitive = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    DateTime? updatedAt,
+  }) => DriverOrderDetailsTableData(
+    id: id ?? this.id,
+    ztNumber: ztNumber.present ? ztNumber.value : this.ztNumber,
+    status: status.present ? status.value : this.status,
+    vehiclePlate: vehiclePlate.present ? vehiclePlate.value : this.vehiclePlate,
+    trailerPlate: trailerPlate.present ? trailerPlate.value : this.trailerPlate,
+    clientName: clientName.present ? clientName.value : this.clientName,
+    fromCountry: fromCountry.present ? fromCountry.value : this.fromCountry,
+    toCountry: toCountry.present ? toCountry.value : this.toCountry,
+    cargoWeightKg: cargoWeightKg.present
+        ? cargoWeightKg.value
+        : this.cargoWeightKg,
+    loadingDate: loadingDate.present ? loadingDate.value : this.loadingDate,
+    cargoDescription: cargoDescription.present
+        ? cargoDescription.value
+        : this.cargoDescription,
+    temperatureSensitive: temperatureSensitive.present
+        ? temperatureSensitive.value
+        : this.temperatureSensitive,
+    notes: notes.present ? notes.value : this.notes,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DriverOrderDetailsTableData copyWithCompanion(
+    DriverOrderDetailsTableCompanion data,
+  ) {
+    return DriverOrderDetailsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      ztNumber: data.ztNumber.present ? data.ztNumber.value : this.ztNumber,
+      status: data.status.present ? data.status.value : this.status,
+      vehiclePlate: data.vehiclePlate.present
+          ? data.vehiclePlate.value
+          : this.vehiclePlate,
+      trailerPlate: data.trailerPlate.present
+          ? data.trailerPlate.value
+          : this.trailerPlate,
+      clientName: data.clientName.present
+          ? data.clientName.value
+          : this.clientName,
+      fromCountry: data.fromCountry.present
+          ? data.fromCountry.value
+          : this.fromCountry,
+      toCountry: data.toCountry.present ? data.toCountry.value : this.toCountry,
+      cargoWeightKg: data.cargoWeightKg.present
+          ? data.cargoWeightKg.value
+          : this.cargoWeightKg,
+      loadingDate: data.loadingDate.present
+          ? data.loadingDate.value
+          : this.loadingDate,
+      cargoDescription: data.cargoDescription.present
+          ? data.cargoDescription.value
+          : this.cargoDescription,
+      temperatureSensitive: data.temperatureSensitive.present
+          ? data.temperatureSensitive.value
+          : this.temperatureSensitive,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DriverOrderDetailsTableData(')
+          ..write('id: $id, ')
+          ..write('ztNumber: $ztNumber, ')
+          ..write('status: $status, ')
+          ..write('vehiclePlate: $vehiclePlate, ')
+          ..write('trailerPlate: $trailerPlate, ')
+          ..write('clientName: $clientName, ')
+          ..write('fromCountry: $fromCountry, ')
+          ..write('toCountry: $toCountry, ')
+          ..write('cargoWeightKg: $cargoWeightKg, ')
+          ..write('loadingDate: $loadingDate, ')
+          ..write('cargoDescription: $cargoDescription, ')
+          ..write('temperatureSensitive: $temperatureSensitive, ')
+          ..write('notes: $notes, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ztNumber,
+    status,
+    vehiclePlate,
+    trailerPlate,
+    clientName,
+    fromCountry,
+    toCountry,
+    cargoWeightKg,
+    loadingDate,
+    cargoDescription,
+    temperatureSensitive,
+    notes,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DriverOrderDetailsTableData &&
+          other.id == this.id &&
+          other.ztNumber == this.ztNumber &&
+          other.status == this.status &&
+          other.vehiclePlate == this.vehiclePlate &&
+          other.trailerPlate == this.trailerPlate &&
+          other.clientName == this.clientName &&
+          other.fromCountry == this.fromCountry &&
+          other.toCountry == this.toCountry &&
+          other.cargoWeightKg == this.cargoWeightKg &&
+          other.loadingDate == this.loadingDate &&
+          other.cargoDescription == this.cargoDescription &&
+          other.temperatureSensitive == this.temperatureSensitive &&
+          other.notes == this.notes &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DriverOrderDetailsTableCompanion
+    extends UpdateCompanion<DriverOrderDetailsTableData> {
+  final Value<String> id;
+  final Value<String?> ztNumber;
+  final Value<String?> status;
+  final Value<String?> vehiclePlate;
+  final Value<String?> trailerPlate;
+  final Value<String?> clientName;
+  final Value<String?> fromCountry;
+  final Value<String?> toCountry;
+  final Value<int?> cargoWeightKg;
+  final Value<DateTime?> loadingDate;
+  final Value<String?> cargoDescription;
+  final Value<bool?> temperatureSensitive;
+  final Value<String?> notes;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const DriverOrderDetailsTableCompanion({
+    this.id = const Value.absent(),
+    this.ztNumber = const Value.absent(),
+    this.status = const Value.absent(),
+    this.vehiclePlate = const Value.absent(),
+    this.trailerPlate = const Value.absent(),
+    this.clientName = const Value.absent(),
+    this.fromCountry = const Value.absent(),
+    this.toCountry = const Value.absent(),
+    this.cargoWeightKg = const Value.absent(),
+    this.loadingDate = const Value.absent(),
+    this.cargoDescription = const Value.absent(),
+    this.temperatureSensitive = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DriverOrderDetailsTableCompanion.insert({
+    required String id,
+    this.ztNumber = const Value.absent(),
+    this.status = const Value.absent(),
+    this.vehiclePlate = const Value.absent(),
+    this.trailerPlate = const Value.absent(),
+    this.clientName = const Value.absent(),
+    this.fromCountry = const Value.absent(),
+    this.toCountry = const Value.absent(),
+    this.cargoWeightKg = const Value.absent(),
+    this.loadingDate = const Value.absent(),
+    this.cargoDescription = const Value.absent(),
+    this.temperatureSensitive = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<DriverOrderDetailsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? ztNumber,
+    Expression<String>? status,
+    Expression<String>? vehiclePlate,
+    Expression<String>? trailerPlate,
+    Expression<String>? clientName,
+    Expression<String>? fromCountry,
+    Expression<String>? toCountry,
+    Expression<int>? cargoWeightKg,
+    Expression<DateTime>? loadingDate,
+    Expression<String>? cargoDescription,
+    Expression<bool>? temperatureSensitive,
+    Expression<String>? notes,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ztNumber != null) 'zt_number': ztNumber,
+      if (status != null) 'status': status,
+      if (vehiclePlate != null) 'vehicle_plate': vehiclePlate,
+      if (trailerPlate != null) 'trailer_plate': trailerPlate,
+      if (clientName != null) 'client_name': clientName,
+      if (fromCountry != null) 'from_country': fromCountry,
+      if (toCountry != null) 'to_country': toCountry,
+      if (cargoWeightKg != null) 'cargo_weight_kg': cargoWeightKg,
+      if (loadingDate != null) 'loading_date': loadingDate,
+      if (cargoDescription != null) 'cargo_description': cargoDescription,
+      if (temperatureSensitive != null)
+        'temperature_sensitive': temperatureSensitive,
+      if (notes != null) 'notes': notes,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DriverOrderDetailsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? ztNumber,
+    Value<String?>? status,
+    Value<String?>? vehiclePlate,
+    Value<String?>? trailerPlate,
+    Value<String?>? clientName,
+    Value<String?>? fromCountry,
+    Value<String?>? toCountry,
+    Value<int?>? cargoWeightKg,
+    Value<DateTime?>? loadingDate,
+    Value<String?>? cargoDescription,
+    Value<bool?>? temperatureSensitive,
+    Value<String?>? notes,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return DriverOrderDetailsTableCompanion(
+      id: id ?? this.id,
+      ztNumber: ztNumber ?? this.ztNumber,
+      status: status ?? this.status,
+      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      trailerPlate: trailerPlate ?? this.trailerPlate,
+      clientName: clientName ?? this.clientName,
+      fromCountry: fromCountry ?? this.fromCountry,
+      toCountry: toCountry ?? this.toCountry,
+      cargoWeightKg: cargoWeightKg ?? this.cargoWeightKg,
+      loadingDate: loadingDate ?? this.loadingDate,
+      cargoDescription: cargoDescription ?? this.cargoDescription,
+      temperatureSensitive: temperatureSensitive ?? this.temperatureSensitive,
+      notes: notes ?? this.notes,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ztNumber.present) {
+      map['zt_number'] = Variable<String>(ztNumber.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (vehiclePlate.present) {
+      map['vehicle_plate'] = Variable<String>(vehiclePlate.value);
+    }
+    if (trailerPlate.present) {
+      map['trailer_plate'] = Variable<String>(trailerPlate.value);
+    }
+    if (clientName.present) {
+      map['client_name'] = Variable<String>(clientName.value);
+    }
+    if (fromCountry.present) {
+      map['from_country'] = Variable<String>(fromCountry.value);
+    }
+    if (toCountry.present) {
+      map['to_country'] = Variable<String>(toCountry.value);
+    }
+    if (cargoWeightKg.present) {
+      map['cargo_weight_kg'] = Variable<int>(cargoWeightKg.value);
+    }
+    if (loadingDate.present) {
+      map['loading_date'] = Variable<DateTime>(loadingDate.value);
+    }
+    if (cargoDescription.present) {
+      map['cargo_description'] = Variable<String>(cargoDescription.value);
+    }
+    if (temperatureSensitive.present) {
+      map['temperature_sensitive'] = Variable<bool>(temperatureSensitive.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DriverOrderDetailsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('ztNumber: $ztNumber, ')
+          ..write('status: $status, ')
+          ..write('vehiclePlate: $vehiclePlate, ')
+          ..write('trailerPlate: $trailerPlate, ')
+          ..write('clientName: $clientName, ')
+          ..write('fromCountry: $fromCountry, ')
+          ..write('toCountry: $toCountry, ')
+          ..write('cargoWeightKg: $cargoWeightKg, ')
+          ..write('loadingDate: $loadingDate, ')
+          ..write('cargoDescription: $cargoDescription, ')
+          ..write('temperatureSensitive: $temperatureSensitive, ')
+          ..write('notes: $notes, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $DriverProfileTableTable driverProfileTable =
       $DriverProfileTableTable(this);
+  late final $DriverCurrentOrderTableTable driverCurrentOrderTable =
+      $DriverCurrentOrderTableTable(this);
+  late final $DriverOrderDetailsTableTable driverOrderDetailsTable =
+      $DriverOrderDetailsTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [driverProfileTable];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    driverProfileTable,
+    driverCurrentOrderTable,
+    driverOrderDetailsTable,
+  ];
 }
 
 typedef $$DriverProfileTableTableCreateCompanionBuilder =
@@ -1466,10 +2861,706 @@ typedef $$DriverProfileTableTableProcessedTableManager =
       DriverProfileTableData,
       PrefetchHooks Function()
     >;
+typedef $$DriverCurrentOrderTableTableCreateCompanionBuilder =
+    DriverCurrentOrderTableCompanion Function({
+      required String key,
+      required String id,
+      required String ztNumber,
+      required String status,
+      Value<String?> fromCountry,
+      Value<String?> toCountry,
+      Value<DateTime?> loadingDate,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$DriverCurrentOrderTableTableUpdateCompanionBuilder =
+    DriverCurrentOrderTableCompanion Function({
+      Value<String> key,
+      Value<String> id,
+      Value<String> ztNumber,
+      Value<String> status,
+      Value<String?> fromCountry,
+      Value<String?> toCountry,
+      Value<DateTime?> loadingDate,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$DriverCurrentOrderTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DriverCurrentOrderTableTable> {
+  $$DriverCurrentOrderTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ztNumber => $composableBuilder(
+    column: $table.ztNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromCountry => $composableBuilder(
+    column: $table.fromCountry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toCountry => $composableBuilder(
+    column: $table.toCountry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get loadingDate => $composableBuilder(
+    column: $table.loadingDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DriverCurrentOrderTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DriverCurrentOrderTableTable> {
+  $$DriverCurrentOrderTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ztNumber => $composableBuilder(
+    column: $table.ztNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromCountry => $composableBuilder(
+    column: $table.fromCountry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toCountry => $composableBuilder(
+    column: $table.toCountry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get loadingDate => $composableBuilder(
+    column: $table.loadingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DriverCurrentOrderTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DriverCurrentOrderTableTable> {
+  $$DriverCurrentOrderTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ztNumber =>
+      $composableBuilder(column: $table.ztNumber, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get fromCountry => $composableBuilder(
+    column: $table.fromCountry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get toCountry =>
+      $composableBuilder(column: $table.toCountry, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get loadingDate => $composableBuilder(
+    column: $table.loadingDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DriverCurrentOrderTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DriverCurrentOrderTableTable,
+          DriverCurrentOrderTableData,
+          $$DriverCurrentOrderTableTableFilterComposer,
+          $$DriverCurrentOrderTableTableOrderingComposer,
+          $$DriverCurrentOrderTableTableAnnotationComposer,
+          $$DriverCurrentOrderTableTableCreateCompanionBuilder,
+          $$DriverCurrentOrderTableTableUpdateCompanionBuilder,
+          (
+            DriverCurrentOrderTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $DriverCurrentOrderTableTable,
+              DriverCurrentOrderTableData
+            >,
+          ),
+          DriverCurrentOrderTableData,
+          PrefetchHooks Function()
+        > {
+  $$DriverCurrentOrderTableTableTableManager(
+    _$AppDatabase db,
+    $DriverCurrentOrderTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DriverCurrentOrderTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DriverCurrentOrderTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DriverCurrentOrderTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> key = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> ztNumber = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> fromCountry = const Value.absent(),
+                Value<String?> toCountry = const Value.absent(),
+                Value<DateTime?> loadingDate = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DriverCurrentOrderTableCompanion(
+                key: key,
+                id: id,
+                ztNumber: ztNumber,
+                status: status,
+                fromCountry: fromCountry,
+                toCountry: toCountry,
+                loadingDate: loadingDate,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String key,
+                required String id,
+                required String ztNumber,
+                required String status,
+                Value<String?> fromCountry = const Value.absent(),
+                Value<String?> toCountry = const Value.absent(),
+                Value<DateTime?> loadingDate = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DriverCurrentOrderTableCompanion.insert(
+                key: key,
+                id: id,
+                ztNumber: ztNumber,
+                status: status,
+                fromCountry: fromCountry,
+                toCountry: toCountry,
+                loadingDate: loadingDate,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DriverCurrentOrderTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DriverCurrentOrderTableTable,
+      DriverCurrentOrderTableData,
+      $$DriverCurrentOrderTableTableFilterComposer,
+      $$DriverCurrentOrderTableTableOrderingComposer,
+      $$DriverCurrentOrderTableTableAnnotationComposer,
+      $$DriverCurrentOrderTableTableCreateCompanionBuilder,
+      $$DriverCurrentOrderTableTableUpdateCompanionBuilder,
+      (
+        DriverCurrentOrderTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $DriverCurrentOrderTableTable,
+          DriverCurrentOrderTableData
+        >,
+      ),
+      DriverCurrentOrderTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$DriverOrderDetailsTableTableCreateCompanionBuilder =
+    DriverOrderDetailsTableCompanion Function({
+      required String id,
+      Value<String?> ztNumber,
+      Value<String?> status,
+      Value<String?> vehiclePlate,
+      Value<String?> trailerPlate,
+      Value<String?> clientName,
+      Value<String?> fromCountry,
+      Value<String?> toCountry,
+      Value<int?> cargoWeightKg,
+      Value<DateTime?> loadingDate,
+      Value<String?> cargoDescription,
+      Value<bool?> temperatureSensitive,
+      Value<String?> notes,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$DriverOrderDetailsTableTableUpdateCompanionBuilder =
+    DriverOrderDetailsTableCompanion Function({
+      Value<String> id,
+      Value<String?> ztNumber,
+      Value<String?> status,
+      Value<String?> vehiclePlate,
+      Value<String?> trailerPlate,
+      Value<String?> clientName,
+      Value<String?> fromCountry,
+      Value<String?> toCountry,
+      Value<int?> cargoWeightKg,
+      Value<DateTime?> loadingDate,
+      Value<String?> cargoDescription,
+      Value<bool?> temperatureSensitive,
+      Value<String?> notes,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$DriverOrderDetailsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DriverOrderDetailsTableTable> {
+  $$DriverOrderDetailsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ztNumber => $composableBuilder(
+    column: $table.ztNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehiclePlate => $composableBuilder(
+    column: $table.vehiclePlate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trailerPlate => $composableBuilder(
+    column: $table.trailerPlate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clientName => $composableBuilder(
+    column: $table.clientName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromCountry => $composableBuilder(
+    column: $table.fromCountry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toCountry => $composableBuilder(
+    column: $table.toCountry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cargoWeightKg => $composableBuilder(
+    column: $table.cargoWeightKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get loadingDate => $composableBuilder(
+    column: $table.loadingDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cargoDescription => $composableBuilder(
+    column: $table.cargoDescription,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get temperatureSensitive => $composableBuilder(
+    column: $table.temperatureSensitive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DriverOrderDetailsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DriverOrderDetailsTableTable> {
+  $$DriverOrderDetailsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ztNumber => $composableBuilder(
+    column: $table.ztNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehiclePlate => $composableBuilder(
+    column: $table.vehiclePlate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trailerPlate => $composableBuilder(
+    column: $table.trailerPlate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get clientName => $composableBuilder(
+    column: $table.clientName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromCountry => $composableBuilder(
+    column: $table.fromCountry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toCountry => $composableBuilder(
+    column: $table.toCountry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cargoWeightKg => $composableBuilder(
+    column: $table.cargoWeightKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get loadingDate => $composableBuilder(
+    column: $table.loadingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cargoDescription => $composableBuilder(
+    column: $table.cargoDescription,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get temperatureSensitive => $composableBuilder(
+    column: $table.temperatureSensitive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DriverOrderDetailsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DriverOrderDetailsTableTable> {
+  $$DriverOrderDetailsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ztNumber =>
+      $composableBuilder(column: $table.ztNumber, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get vehiclePlate => $composableBuilder(
+    column: $table.vehiclePlate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get trailerPlate => $composableBuilder(
+    column: $table.trailerPlate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get clientName => $composableBuilder(
+    column: $table.clientName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fromCountry => $composableBuilder(
+    column: $table.fromCountry,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get toCountry =>
+      $composableBuilder(column: $table.toCountry, builder: (column) => column);
+
+  GeneratedColumn<int> get cargoWeightKg => $composableBuilder(
+    column: $table.cargoWeightKg,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get loadingDate => $composableBuilder(
+    column: $table.loadingDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cargoDescription => $composableBuilder(
+    column: $table.cargoDescription,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get temperatureSensitive => $composableBuilder(
+    column: $table.temperatureSensitive,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DriverOrderDetailsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DriverOrderDetailsTableTable,
+          DriverOrderDetailsTableData,
+          $$DriverOrderDetailsTableTableFilterComposer,
+          $$DriverOrderDetailsTableTableOrderingComposer,
+          $$DriverOrderDetailsTableTableAnnotationComposer,
+          $$DriverOrderDetailsTableTableCreateCompanionBuilder,
+          $$DriverOrderDetailsTableTableUpdateCompanionBuilder,
+          (
+            DriverOrderDetailsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $DriverOrderDetailsTableTable,
+              DriverOrderDetailsTableData
+            >,
+          ),
+          DriverOrderDetailsTableData,
+          PrefetchHooks Function()
+        > {
+  $$DriverOrderDetailsTableTableTableManager(
+    _$AppDatabase db,
+    $DriverOrderDetailsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DriverOrderDetailsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DriverOrderDetailsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DriverOrderDetailsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> ztNumber = const Value.absent(),
+                Value<String?> status = const Value.absent(),
+                Value<String?> vehiclePlate = const Value.absent(),
+                Value<String?> trailerPlate = const Value.absent(),
+                Value<String?> clientName = const Value.absent(),
+                Value<String?> fromCountry = const Value.absent(),
+                Value<String?> toCountry = const Value.absent(),
+                Value<int?> cargoWeightKg = const Value.absent(),
+                Value<DateTime?> loadingDate = const Value.absent(),
+                Value<String?> cargoDescription = const Value.absent(),
+                Value<bool?> temperatureSensitive = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DriverOrderDetailsTableCompanion(
+                id: id,
+                ztNumber: ztNumber,
+                status: status,
+                vehiclePlate: vehiclePlate,
+                trailerPlate: trailerPlate,
+                clientName: clientName,
+                fromCountry: fromCountry,
+                toCountry: toCountry,
+                cargoWeightKg: cargoWeightKg,
+                loadingDate: loadingDate,
+                cargoDescription: cargoDescription,
+                temperatureSensitive: temperatureSensitive,
+                notes: notes,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> ztNumber = const Value.absent(),
+                Value<String?> status = const Value.absent(),
+                Value<String?> vehiclePlate = const Value.absent(),
+                Value<String?> trailerPlate = const Value.absent(),
+                Value<String?> clientName = const Value.absent(),
+                Value<String?> fromCountry = const Value.absent(),
+                Value<String?> toCountry = const Value.absent(),
+                Value<int?> cargoWeightKg = const Value.absent(),
+                Value<DateTime?> loadingDate = const Value.absent(),
+                Value<String?> cargoDescription = const Value.absent(),
+                Value<bool?> temperatureSensitive = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DriverOrderDetailsTableCompanion.insert(
+                id: id,
+                ztNumber: ztNumber,
+                status: status,
+                vehiclePlate: vehiclePlate,
+                trailerPlate: trailerPlate,
+                clientName: clientName,
+                fromCountry: fromCountry,
+                toCountry: toCountry,
+                cargoWeightKg: cargoWeightKg,
+                loadingDate: loadingDate,
+                cargoDescription: cargoDescription,
+                temperatureSensitive: temperatureSensitive,
+                notes: notes,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DriverOrderDetailsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DriverOrderDetailsTableTable,
+      DriverOrderDetailsTableData,
+      $$DriverOrderDetailsTableTableFilterComposer,
+      $$DriverOrderDetailsTableTableOrderingComposer,
+      $$DriverOrderDetailsTableTableAnnotationComposer,
+      $$DriverOrderDetailsTableTableCreateCompanionBuilder,
+      $$DriverOrderDetailsTableTableUpdateCompanionBuilder,
+      (
+        DriverOrderDetailsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $DriverOrderDetailsTableTable,
+          DriverOrderDetailsTableData
+        >,
+      ),
+      DriverOrderDetailsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$DriverProfileTableTableTableManager get driverProfileTable =>
       $$DriverProfileTableTableTableManager(_db, _db.driverProfileTable);
+  $$DriverCurrentOrderTableTableTableManager get driverCurrentOrderTable =>
+      $$DriverCurrentOrderTableTableTableManager(
+        _db,
+        _db.driverCurrentOrderTable,
+      );
+  $$DriverOrderDetailsTableTableTableManager get driverOrderDetailsTable =>
+      $$DriverOrderDetailsTableTableTableManager(
+        _db,
+        _db.driverOrderDetailsTable,
+      );
 }
