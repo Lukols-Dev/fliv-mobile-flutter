@@ -223,15 +223,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Row(
                       children: [
                         Container(
-                          width: 38,
-                          height: 38,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6F5),
-                            borderRadius: BorderRadius.circular(12),
+                            color: const Color.fromRGBO(0, 79, 69, 0.10),
+                            borderRadius: BorderRadius.circular(28),
                           ),
                           child: const Icon(
                             Icons.location_on_outlined,
-                            color: Color(0xFF0F4D46),
+                            size: 24,
+                            color: Color(0xFF004F45),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -242,20 +243,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               Text(
                                 'Obecna lokalizacja',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                  fontSize: 11,
                                   fontFamily: 'Figtree',
-                                  color: Color(0xFF6B7280),
+                                  fontWeight: FontWeight.w300,
                                 ),
                               ),
                               SizedBox(height: 2),
                               Text(
                                 'Warszawa, Chmielna 44/2',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
+                                  color: Colors.black,
+                                  fontSize: 13,
                                   fontFamily: 'Figtree',
-                                  color: Color(0xFF111827),
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.50,
+                                  letterSpacing: -0.08,
                                 ),
                               ),
                             ],
@@ -265,7 +268,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 38),
 
                   const Text(
                     'Aktualne Zlecenie',
@@ -277,7 +280,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
                   if (currentOrderAsync.isLoading)
                     const Center(
@@ -388,14 +391,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(14),
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment(0.50, 0.00),
-                                  end: Alignment(0.50, 1.00),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                   colors: [
                                     Color(0xFF004F45),
                                     Color(0xFF005A4D),
+                                    Color(0xFF006B5C),
                                   ],
+                                  stops: [0.0, 0.5, 1.0],
                                 ),
                                 borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(18),
@@ -410,10 +415,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         child: Text(
                                           'Numer zlecenia',
                                           style: TextStyle(
-                                            color: Color(0xFFD1FAE5),
+                                            color: Colors.white,
                                             fontSize: 12,
-                                            fontWeight: FontWeight.w600,
                                             fontFamily: 'Figtree',
+                                            fontWeight: FontWeight.w400,
                                           ),
                                         ),
                                       ),
@@ -428,14 +433,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             999,
                                           ),
                                         ),
-                                        child: Text(
-                                          _statusLabel(currentOrder.status),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            fontFamily: 'Figtree',
-                                          ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 6,
+                                              height: 6,
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              _statusLabel(currentOrder.status),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontFamily: 'Figtree',
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -448,8 +467,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
-                                        fontWeight: FontWeight.w900,
                                         fontFamily: 'Figtree',
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
                                   ),
@@ -466,7 +485,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: Column(
                                 children: [
                                   _TimelineRow(
-                                    color: const Color(0xFF10B981),
+                                    color: const Color(0xFF004F45),
                                     title: 'Punkt załadunku',
                                     subtitle1: currentOrder.fromCountry,
                                     subtitle2: '',
@@ -511,15 +530,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         children: const [
                                           Icon(
                                             Icons.near_me_outlined,
-                                            size: 18,
+                                            size: 24,
                                           ),
                                           SizedBox(width: 10),
                                           Text(
                                             'Otwórz nawigację',
                                             style: TextStyle(
+                                              color: Colors.white,
                                               fontSize: 16,
-                                              fontWeight: FontWeight.w800,
                                               fontFamily: 'Figtree',
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                         ],
@@ -570,7 +590,18 @@ class _TimelineRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            Container(width: 2, height: 34, color: const Color(0xFFE5E7EB)),
+            Container(
+              width: 2,
+              height: 34,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [color, color.withValues(alpha: 0.0)],
+                  stops: const [0.0, 0.8],
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(width: 10),
@@ -584,20 +615,20 @@ class _TimelineRow extends StatelessWidget {
                     child: Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF709470),
+                        fontSize: 11,
                         fontFamily: 'Figtree',
-                        color: Color(0xFF111827),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                   Text(
                     date,
                     style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF99A1AE),
+                      fontSize: 10,
                       fontFamily: 'Figtree',
-                      color: Color(0xFF9CA3AF),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -606,20 +637,20 @@ class _TimelineRow extends StatelessWidget {
               Text(
                 subtitle1,
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF0A0A0A),
+                  fontSize: 14,
                   fontFamily: 'Figtree',
-                  color: Color(0xFF111827),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle2,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF99A1AE),
+                  fontSize: 10,
                   fontFamily: 'Figtree',
-                  color: Color(0xFF6B7280),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

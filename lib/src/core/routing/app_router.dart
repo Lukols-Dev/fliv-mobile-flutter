@@ -95,6 +95,20 @@ final GoRouter appRouter = GoRouter(
       path: AppRoute.addDocument.path,
       builder: (context, state) => const AddDocumentScreen(),
     ),
+    GoRoute(
+      path: AppRoute.account.path,
+      builder: (context, state) => const AccountScreen(),
+      routes: [
+        GoRoute(
+          path: 'your-data',
+          builder: (context, state) => const YourDataScreen(),
+        ),
+        GoRoute(
+          path: 'driver-data',
+          builder: (context, state) => const DriverDataScreen(),
+        ),
+      ],
+    ),
 
     // APP (bottom nav z zachowaniem stanu tabów)
     StatefulShellRoute.indexedStack(
@@ -107,18 +121,6 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoute.home.path,
               builder: (context, state) => const HomeScreen(),
-            ),
-            GoRoute(
-              path: AppRoute.account.path,
-              builder: (context, state) => const AccountScreen(),
-            ),
-            GoRoute(
-              path: AppRoute.yourData.path,
-              builder: (context, state) => const YourDataScreen(),
-            ),
-            GoRoute(
-              path: AppRoute.driverData.path,
-              builder: (context, state) => const DriverDataScreen(),
             ),
           ],
         ),
