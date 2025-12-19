@@ -125,7 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F8),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refresh,
@@ -167,28 +167,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ),
                                 ),
-                                if (isOffline)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFFF7ED),
-                                      borderRadius: BorderRadius.circular(999),
-                                      border: Border.all(
-                                        color: const Color(0xFFFED7AA),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Offline',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF9A3412),
-                                      ),
-                                    ),
-                                  ),
                               ],
                             ),
                             const SizedBox(height: 2),
@@ -221,8 +199,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           border: Border.all(color: const Color(0xFFE5E7EB)),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.person_outline, size: 20),
-                          color: const Color(0xFF111827),
+                          icon: const Icon(Icons.settings_outlined, size: 20),
+                          color: const Color.fromARGB(255, 0, 0, 0),
                           onPressed: () => context.push('/account'),
                         ),
                       ),
