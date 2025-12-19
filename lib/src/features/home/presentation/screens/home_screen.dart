@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:mobile/src/core/network/connectivity_provider.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
@@ -63,7 +65,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final repo = ref.read(driverTransportOrdersRepositoryProvider);
       await repo.assignByZtNumber(ztNumber: zt);
+
+      // Odśwież aktualne zlecenie po przypisaniu
       ref.invalidate(currentDriverOrderProvider);
+
       _ztController.clear();
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -81,251 +86,225 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  Future<void> _refresh() async {
+    // MVP: refresh wszystkiego co widać na home
+    ref.invalidate(driverProfileProvider);
+    ref.invalidate(currentDriverOrderProvider);
+    ref.invalidate(avatarControllerProvider);
+
+    // Poczekaj aż się przeładuje (nie wywalaj refresh-a na error)
+    await Future.wait([
+      ref.read(driverProfileProvider.future).catchError((_) {}),
+      ref.read(currentDriverOrderProvider.future).catchError((_) {}),
+      ref.read(avatarControllerProvider.future).catchError((_) {}),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isOffline = ref.watch(isOfflineProvider);
+
     final profileAsync = ref.watch(driverProfileProvider);
     final profile = profileAsync.maybeWhen(data: (p) => p, orElse: () => null);
+
     final fullName = profile != null
         ? '${profile.firstName} ${profile.lastName}'.trim()
         : '—';
-    final driverId = profile?.driverCode ?? '—';
+
+    // Jeśli masz inne pole na ID (np. driverCode), podmień tutaj.
+    // U Ciebie wcześniej było: profile?.driverCode ?? '—'
+    final driverId = (profile as dynamic?)?.driverCode as String? ?? '—';
+
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
     final currentOrder = currentOrderAsync.maybeWhen(
       data: (o) => o,
       orElse: () => null,
     );
+
     final avatarAsync = ref.watch(avatarControllerProvider);
     final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // HEADER
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: const Color(0xFFE5E7EB),
-                      backgroundImage: avatarUrl != null
-                          ? NetworkImage(avatarUrl)
-                          : null,
-                      child: avatarUrl == null
-                          ? const Icon(Icons.person, color: Color(0xFF111827))
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Witaj z powrotem!',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            fullName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'ID: $driverId',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF9CA3AF),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.person_outline, size: 20),
-                        color: const Color(0xFF111827),
-                        onPressed: () {
-                          context.push('/account');
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                // LOCATION CARD
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: Row(
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // HEADER
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6F5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.location_on_outlined,
-                          color: Color(0xFF0F4D46),
-                        ),
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: const Color(0xFFE5E7EB),
+                        backgroundImage: avatarUrl != null
+                            ? NetworkImage(avatarUrl)
+                            : null,
+                        child: avatarUrl == null
+                            ? const Icon(Icons.person, color: Color(0xFF111827))
+                            : null,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Obecna lokalizacja',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF6B7280),
-                              ),
+                          children: [
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    'Witaj z powrotem!',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ),
+                                if (isOffline)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF7ED),
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: const Color(0xFFFED7AA),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Offline',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF9A3412),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
-                              'Warszawa, Chmielna 44/2',
-                              style: TextStyle(
-                                fontSize: 14,
+                              fullName,
+                              style: const TextStyle(
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: Color(0xFF111827),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'ID: $driverId',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF9CA3AF),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.person_outline, size: 20),
+                          color: const Color(0xFF111827),
+                          onPressed: () => context.push('/account'),
+                        ),
+                      ),
                     ],
                   ),
-                ),
 
-                const SizedBox(height: 18),
+                  const SizedBox(height: 14),
 
-                const Text(
-                  'Aktualne Zlecenie',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF111827),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                if (currentOrderAsync.isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                else if (currentOrder == null)
+                  // LOCATION CARD (na MVP statycznie)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: const Color(0xFFE5E7EB)),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: Row(
                       children: [
-                        const Text(
-                          'Brak przypisanego zlecenia',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF111827),
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6F5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.location_on_outlined,
+                            color: Color(0xFF0F4D46),
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Aby przypisać zlecenie, wpisz numer ZT otrzymany od dyspozytora.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _ztController,
-                          textInputAction: TextInputAction.done,
-                          decoration: InputDecoration(
-                            hintText: 'np. ZT-123456',
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5DC),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          height: 52,
-                          child: FilledButton(
-                            onPressed: _isAssigning
-                                ? null
-                                : () => _assignOrder(context),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F4D46),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Obecna lokalizacja',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF6B7280),
+                                ),
                               ),
-                            ),
-                            child: _isAssigning
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Przypisz zlecenie',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Warszawa, Chmielna 44/2',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  )
-                else
-                  InkWell(
-                    onTap: () => context.push('/orders/${currentOrder.id}'),
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  const Text(
+                    'Aktualne Zlecenie',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  if (currentOrderAsync.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (currentOrder == null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(18),
@@ -334,127 +313,218 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF0F4D46),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(18),
-                                topRight: Radius.circular(18),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    const Expanded(
-                                      child: Text(
-                                        'Numer zlecenia',
-                                        style: TextStyle(
-                                          color: Color(0xFFD1FAE5),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFEF4444),
-                                        borderRadius: BorderRadius.circular(
-                                          999,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        _statusLabel(currentOrder.status),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    '#${currentOrder.ztNumber}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          const Text(
+                            'Brak przypisanego zlecenia',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF111827),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                            child: Column(
-                              children: [
-                                _TimelineRow(
-                                  color: const Color(0xFF10B981),
-                                  title: 'Punkt załadunku',
-                                  subtitle1: currentOrder.fromCountry,
-                                  subtitle2: '',
-                                  date: _formatLoadingDate(
-                                    currentOrder.loadingDate,
-                                  ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Aby przypisać zlecenie, wpisz numer ZT otrzymany od dyspozytora.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          TextField(
+                            controller: _ztController,
+                            textInputAction: TextInputAction.done,
+                            decoration: InputDecoration(
+                              hintText: 'np. ZT-123456',
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5DC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 52,
+                            child: FilledButton(
+                              onPressed: _isAssigning
+                                  ? null
+                                  : () => _assignOrder(context),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF0F4D46),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
-                                const SizedBox(height: 10),
-                                _TimelineRow(
-                                  color: const Color(0xFFEF4444),
-                                  title: 'Punkt rozładunku',
-                                  subtitle1: currentOrder.toCountry,
-                                  subtitle2: '',
-                                  date: '—',
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  height: 54,
-                                  width: double.infinity,
-                                  child: FilledButton(
-                                    onPressed: () {
-                                      // TODO: Implement open navigation
-                                    },
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0F4D46),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: _isAssigning
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Przypisz zlecenie',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.near_me_outlined, size: 18),
-                                        SizedBox(width: 10),
-                                        Text(
-                                          'Otwórz nawigację',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ],
                       ),
+                    )
+                  else
+                    InkWell(
+                      onTap: () => context.push('/orders/${currentOrder.id}'),
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF0F4D46),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(18),
+                                  topRight: Radius.circular(18),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Expanded(
+                                        child: Text(
+                                          'Numer zlecenia',
+                                          style: TextStyle(
+                                            color: Color(0xFFD1FAE5),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEF4444),
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _statusLabel(currentOrder.status),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      '#${currentOrder.ztNumber}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                14,
+                                12,
+                                14,
+                                12,
+                              ),
+                              child: Column(
+                                children: [
+                                  _TimelineRow(
+                                    color: const Color(0xFF10B981),
+                                    title: 'Punkt załadunku',
+                                    subtitle1: currentOrder.fromCountry,
+                                    subtitle2: '',
+                                    date: _formatLoadingDate(
+                                      currentOrder.loadingDate,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _TimelineRow(
+                                    color: const Color(0xFFEF4444),
+                                    title: 'Punkt rozładunku',
+                                    subtitle1: currentOrder.toCountry,
+                                    subtitle2: '',
+                                    date: '—',
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    height: 54,
+                                    width: double.infinity,
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        // TODO: Implement open navigation
+                                      },
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF0F4D46,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(
+                                            Icons.near_me_outlined,
+                                            size: 18,
+                                          ),
+                                          SizedBox(width: 10),
+                                          Text(
+                                            'Otwórz nawigację',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
