@@ -8,6 +8,8 @@ class TransportOrderDocumentDto {
     this.sizeBytes,
     this.originalFilename,
     this.description,
+    this.title,
+    this.createdAt,
   });
 
   final String id;
@@ -16,6 +18,8 @@ class TransportOrderDocumentDto {
   final int? sizeBytes;
   final String? originalFilename;
   final String? description;
+  final String? title;
+  final DateTime? createdAt;
 
   factory TransportOrderDocumentDto.fromJson(Map<String, dynamic> json) {
     int? parseInt(dynamic v) {
@@ -26,6 +30,13 @@ class TransportOrderDocumentDto {
       return null;
     }
 
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      if (v is DateTime) return v;
+      if (v is String) return DateTime.tryParse(v);
+      return null;
+    }
+
     return TransportOrderDocumentDto(
       id: json['id'] as String,
       url: json['url'] as String,
@@ -33,6 +44,8 @@ class TransportOrderDocumentDto {
       sizeBytes: parseInt(json['sizeBytes']),
       originalFilename: json['originalFilename'] as String?,
       description: json['description'] as String?,
+      title: json['title'] as String?,
+      createdAt: parseDate(json['createdAt']),
     );
   }
 
@@ -43,5 +56,7 @@ class TransportOrderDocumentDto {
     sizeBytes: sizeBytes,
     originalFilename: originalFilename,
     description: description,
+    title: title,
+    createdAt: createdAt,
   );
 }

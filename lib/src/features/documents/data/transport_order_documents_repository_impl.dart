@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/dio_provider.dart';
@@ -28,5 +30,19 @@ class TransportOrderDocumentsRepositoryImpl
   }) async {
     final items = await _api.listForOrder(orderId: orderId);
     return items.map((e) => e.toDomain()).toList();
+  }
+
+  @override
+  Future<TransportOrderDocument> uploadForOrder({
+    required String orderId,
+    required File file,
+    required String title,
+  }) async {
+    final dto = await _api.uploadForOrder(
+      orderId: orderId,
+      file: file,
+      title: title,
+    );
+    return dto.toDomain();
   }
 }

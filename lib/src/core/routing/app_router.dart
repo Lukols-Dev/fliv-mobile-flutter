@@ -92,8 +92,11 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: AppRoute.addDocument.path,
-      builder: (context, state) => const AddDocumentScreen(),
+      path: '/documents/add',
+      builder: (context, state) {
+        final orderId = state.uri.queryParameters['orderId'] ?? '';
+        return AddDocumentScreen(orderId: orderId);
+      },
     ),
     GoRoute(
       path: AppRoute.account.path,

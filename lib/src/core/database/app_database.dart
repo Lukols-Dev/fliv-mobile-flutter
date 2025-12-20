@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:mobile/src/features/documents/domain/local_document_status.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'tables/driver_profile_table.dart';
 import 'tables/driver_current_order_table.dart';
 import 'tables/driver_order_details_table.dart';
+import 'tables/driver_order_document_table.dart';
 
 part 'app_database.g.dart';
 
@@ -15,13 +17,14 @@ part 'app_database.g.dart';
     DriverProfileTable,
     DriverCurrentOrderTable,
     DriverOrderDetailsTable,
+    DriverOrderDocumentTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -64,6 +67,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) {
         await m.createTable(driverCurrentOrderTable);
         await m.createTable(driverOrderDetailsTable);
+      }
+      if (from < 5) {
+        await m.createTable(driverOrderDocumentTable);
       }
     },
   );
@@ -131,6 +137,68 @@ class AppDatabase extends _$AppDatabase {
   Future<void> clearAllOrders() async {
     await delete(driverCurrentOrderTable).go();
     await delete(driverOrderDetailsTable).go();
+  }
+
+  // --- DOCUMENTS ---
+  Stream<List<DriverOrderDocumentTableData>> watchDocumentsForOrder(
+    String orderId,
+  ) =>
+      (select(driverOrderDocumentTable)
+            ..where((t) => t.orderId.equals(orderId))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .watch();
+
+  Future<List<DriverOrderDocumentTableData>> getDocumentsForOrder(
+    String orderId,
+  ) =>
+      (select(driverOrderDocumentTable)
+            ..where((t) => t.orderId.equals(orderId))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .get();
+
+  Future<DriverOrderDocumentTableData?> getDocumentByLocalId(String localId) =>
+      (select(
+        driverOrderDocumentTable,
+      )..where((t) => t.localId.equals(localId))).getSingleOrNull();
+
+  Future<void> deleteDocumentByLocalId(String localId) async {
+    await (delete(
+      driverOrderDocumentTable,
+    )..where((t) => t.localId.equals(localId))).go();
+  }
+
+  Future<void> upsertDocument(DriverOrderDocumentTableCompanion row) async {
+    await into(driverOrderDocumentTable).insertOnConflictUpdate(row);
+  }
+
+  Future<void> updateDocumentStatus({
+    required String localId,
+    required LocalDocumentStatus status,
+    String? remoteId,
+    String? remoteUrl,
+    String? lastError,
+  }) async {
+    await (update(
+      driverOrderDocumentTable,
+    )..where((t) => t.localId.equals(localId))).write(
+      DriverOrderDocumentTableCompanion(
+        status: Value(status),
+        remoteId: Value(remoteId),
+        remoteUrl: Value(remoteUrl),
+        lastError: Value(lastError),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> clearDocumentsForOrder(String orderId) async {
+    await (delete(
+      driverOrderDocumentTable,
+    )..where((t) => t.orderId.equals(orderId))).go();
+  }
+
+  Future<void> clearAllDocuments() async {
+    await delete(driverOrderDocumentTable).go();
   }
 }
 

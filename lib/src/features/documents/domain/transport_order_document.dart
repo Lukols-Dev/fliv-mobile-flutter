@@ -6,6 +6,8 @@ class TransportOrderDocument {
     this.sizeBytes,
     this.originalFilename,
     this.description,
+    this.title,
+    this.createdAt,
   });
 
   final String id;
@@ -14,4 +16,6 @@ class TransportOrderDocument {
   final int? sizeBytes;
   final String? originalFilename;
   final String? description;
+  final String? title;
+  final DateTime? createdAt;
 }
