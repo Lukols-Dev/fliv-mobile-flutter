@@ -1,14 +1,47 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/core/network/connectivity_provider.dart';
+import 'package:mobile/src/features/documents/application/local_transport_order_documents_provider.dart';
+import 'package:mobile/src/features/documents/application/transport_order_documents_controller.dart';
 import 'package:mobile/src/features/documents/application/transport_order_documents_provider.dart';
+import 'package:mobile/src/features/documents/domain/local_document_status.dart';
 import 'package:mobile/src/features/documents/domain/transport_order_document.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 
 enum DocumentFilter { all, synchronized, local }
 
-enum DocumentStatus { synchronized, localOnly, syncing }
+enum DocumentStatusUi { synchronized, localOnly, syncing, failed }
+
+class _DocItem {
+  const _DocItem({
+    required this.title,
+    required this.subtitle,
+    required this.status,
+    this.localId,
+    this.localPath,
+    this.remoteId,
+    this.remoteUrl,
+    this.lastError,
+  });
+
+  final String title;
+  final String subtitle;
+  final DocumentStatusUi status;
+
+  final String? localId;
+  final String? localPath;
+
+  final String? remoteId;
+  final String? remoteUrl;
+
+  final String? lastError;
+
+  bool get isLocal => localId != null;
+}
 
 class DocumentsScreen extends ConsumerStatefulWidget {
   const DocumentsScreen({super.key, this.orderId, this.ztNumber});
@@ -23,42 +56,58 @@ class DocumentsScreen extends ConsumerStatefulWidget {
 class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   DocumentFilter _selectedFilter = DocumentFilter.all;
 
-  String _documentTitle(TransportOrderDocument doc) {
-    final description = doc.description?.trim();
-    if (description != null && description.isNotEmpty) return description;
-    final filename = doc.originalFilename?.trim();
-    if (filename != null && filename.isNotEmpty) return filename;
-    return 'Dokument';
+  String _subtitleFromCreatedAt(DateTime? dt) {
+    if (dt == null) return '-';
+    final d = dt.toLocal();
+    final dd = d.day.toString().padLeft(2, '0');
+    final mm = d.month.toString().padLeft(2, '0');
+    final yyyy = d.year.toString();
+    final hh = d.hour.toString().padLeft(2, '0');
+    final min = d.minute.toString().padLeft(2, '0');
+    return '$dd.$mm.$yyyy • $hh:$min';
   }
 
-  String _documentSubtitle(TransportOrderDocument doc) {
-    final mime = doc.mimeType.trim();
-    final size = doc.sizeBytes;
-    if (mime.isNotEmpty && size != null) {
-      return '$mime • $size B';
+  DocumentStatusUi _mapLocalStatus(LocalDocumentStatus s) {
+    switch (s) {
+      case LocalDocumentStatus.localOnly:
+        return DocumentStatusUi.localOnly;
+      case LocalDocumentStatus.uploading:
+        return DocumentStatusUi.syncing;
+      case LocalDocumentStatus.synced:
+        return DocumentStatusUi.synchronized;
+      case LocalDocumentStatus.failed:
+        return DocumentStatusUi.failed;
     }
-    if (mime.isNotEmpty) return mime;
-    return '-';
   }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+
+    final isOffline = ref.watch(isOfflineProvider);
+
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
     final currentOrder = currentOrderAsync.maybeWhen(
       data: (o) => o,
       orElse: () => null,
     );
+
     final resolvedOrderId = widget.orderId ?? currentOrder?.id;
     final resolvedZtLabel = (widget.ztNumber?.trim().isNotEmpty ?? false)
         ? widget.ztNumber!.trim()
         : (currentOrder?.ztNumber ?? '');
+
     final hasResolvedOrder =
         resolvedOrderId != null && resolvedOrderId.isNotEmpty;
 
+    Future<void> refresh() async {
+      if (!hasResolvedOrder) return;
+      ref.invalidate(transportOrderDocumentsProvider(resolvedOrderId));
+      // lokalne leci streamem, nie trzeba invalidate
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F8),
-      appBar: null,
       body: SafeArea(
         child: Column(
           children: [
@@ -87,30 +136,171 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+                  if (isOffline)
+                    const Text(
+                      'Offline: możesz dodawać dokumenty lokalnie i synchronizować później.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
 
-                  // FILTERS (only when we have an order)
-                  if (hasResolvedOrder)
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final orderId = resolvedOrderId;
-                        if (orderId.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        final docsAsync = ref.watch(
-                          transportOrderDocumentsProvider(orderId),
-                        );
-                        final docs = docsAsync.maybeWhen(
-                          data: (d) => d,
-                          orElse: () => const [],
-                        );
+                  if (hasResolvedOrder) ...[
+                    // Filtry na podstawie scalonej listy (wyliczane niżej)
+                    const SizedBox(height: 6),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
 
-                        final allCount = docs.length;
-                        final syncedCount =
-                            docs.length; // server docs == synced
-                        final localCount = 0;
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  // Jeśli wejście z dolnej nawigacji i brak przypisanego ZT – pokaż info
+                  if (widget.orderId == null) {
+                    if (currentOrderAsync.isLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF004F45),
+                        ),
+                      );
+                    }
+                    if (currentOrder == null) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Brak przypisanego ZT',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  }
 
-                        return Row(
+                  if (!hasResolvedOrder) return const SizedBox.shrink();
+
+                  final orderId = resolvedOrderId;
+                  final localAsync = ref.watch(
+                    localOrderDocumentsProvider(orderId),
+                  );
+
+                  final remoteAsync = isOffline
+                      ? const AsyncValue.data(<TransportOrderDocument>[])
+                      : ref.watch(transportOrderDocumentsProvider(orderId));
+
+                  final localRows = localAsync.maybeWhen(
+                    data: (d) => d,
+                    orElse: () => const [],
+                  );
+                  final remoteDocs = remoteAsync.maybeWhen(
+                    data: (d) => d,
+                    orElse: () => const [],
+                  );
+
+                  // de-dupe: jeśli lokalny ma remoteId i serwer też go ma, nie pokazuj serwerowego
+                  final localRemoteIds = localRows
+                      .map((r) => r.remoteId)
+                      .whereType<String>()
+                      .toSet();
+
+                  final remoteUnique = remoteDocs
+                      .where((d) => !localRemoteIds.contains(d.id))
+                      .toList();
+
+                  final localItems = localRows.map((r) {
+                    final statusUi = _mapLocalStatus(r.status);
+                    return _DocItem(
+                      title: r.title,
+                      subtitle: _subtitleFromCreatedAt(r.createdAt),
+                      status: statusUi,
+                      localId: r.localId,
+                      localPath: r.localPath,
+                      remoteId: r.remoteId,
+                      remoteUrl: r.remoteUrl,
+                      lastError: r.lastError,
+                    );
+                  }).toList();
+
+                  final remoteItems = remoteUnique.map((d) {
+                    final title = (d.title?.trim().isNotEmpty ?? false)
+                        ? d.title!.trim()
+                        : (d.description?.trim().isNotEmpty ?? false)
+                        ? d.description!.trim()
+                        : (d.originalFilename?.trim().isNotEmpty ?? false)
+                        ? d.originalFilename!.trim()
+                        : 'Dokument';
+
+                    return _DocItem(
+                      title: title,
+                      subtitle: _subtitleFromCreatedAt(d.createdAt),
+                      status: DocumentStatusUi.synchronized,
+                      remoteId: d.id,
+                      remoteUrl: d.url,
+                    );
+                  }).toList();
+
+                  final allItems = [...localItems, ...remoteItems];
+
+                  final filtered = switch (_selectedFilter) {
+                    DocumentFilter.all => allItems,
+                    DocumentFilter.synchronized =>
+                      allItems
+                          .where(
+                            (i) => i.status == DocumentStatusUi.synchronized,
+                          )
+                          .toList(),
+                    DocumentFilter.local =>
+                      allItems
+                          .where(
+                            (i) => i.status != DocumentStatusUi.synchronized,
+                          )
+                          .toList(),
+                  };
+
+                  final allCount = allItems.length;
+                  final syncedCount = allItems
+                      .where((i) => i.status == DocumentStatusUi.synchronized)
+                      .length;
+                  final localCount = allItems
+                      .where((i) => i.status != DocumentStatusUi.synchronized)
+                      .length;
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Row(
                           children: [
                             Expanded(
                               child: _FilterChip(
@@ -150,122 +340,82 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                               ),
                             ),
                           ],
-                        );
-                      },
-                    ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // DOCUMENTS LIST
-            Expanded(
-              child: Builder(
-                builder: (context) {
-                  // When screen is opened from bottom nav (no orderId):
-                  // - if no current order => show "assign ZT" window
-                  if (widget.orderId == null) {
-                    if (currentOrderAsync.isLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF004F45),
                         ),
-                      );
-                    }
-                    if (currentOrder == null) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFE5E7EB)),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: const [
-                              Text(
-                                'Brak przypisanego ZT',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF111827),
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                              Text(
-                                'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF6B7280),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                  }
-
-                  if (!hasResolvedOrder) {
-                    return const SizedBox.shrink();
-                  }
-
-                  final orderId = resolvedOrderId;
-                  if (orderId.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  final docsAsync = ref.watch(
-                    transportOrderDocumentsProvider(orderId),
-                  );
-
-                  return docsAsync.when(
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF004F45),
                       ),
-                    ),
-                    error: (e, _) =>
-                        Center(child: Text('Błąd pobierania dokumentów: $e')),
-                    data: (docs) {
-                      if (docs.isEmpty) {
-                        return const Center(
-                          child: Text('Dodaj pierwszy dokument do zlecenia.'),
-                        );
-                      }
+                      const SizedBox(height: 12),
 
-                      final filtered = switch (_selectedFilter) {
-                        DocumentFilter.all => docs,
-                        DocumentFilter.synchronized => docs,
-                        DocumentFilter.local => const [],
-                      };
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: refresh,
+                          child: filtered.isEmpty
+                              ? ListView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  children: const [
+                                    SizedBox(height: 140),
+                                    Center(
+                                      child: Text(
+                                        'Brak dokumentów. Dodaj pierwszy dokument.',
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : ListView.separated(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                  ),
+                                  itemCount: filtered.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    final item = filtered[index];
+                                    return _DocumentCard(
+                                      item: item,
+                                      isOffline: isOffline,
+                                      onSync: (item.localId == null)
+                                          ? null
+                                          : () async {
+                                              try {
+                                                await ref
+                                                    .read(
+                                                      orderDocumentsControllerProvider
+                                                          .notifier,
+                                                    )
+                                                    .syncDocument(
+                                                      localId: item.localId!,
+                                                      orderId: orderId,
+                                                    );
+                                              } catch (e) {
+                                                if (!context.mounted) return;
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(content: Text('$e')),
+                                                );
+                                              }
+                                            },
+                                      t: t,
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
 
-                      if (filtered.isEmpty) {
-                        return const Center(
-                          child: Text('Brak dokumentów w tym filtrze.'),
-                        );
-                      }
-
-                      return ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final doc = filtered[index];
-                          return _DocumentCard(
-                            title: _documentTitle(doc),
-                            date: _documentSubtitle(doc),
-                            status: DocumentStatus.synchronized,
-                            t: t,
-                          );
-                        },
-                      );
-                    },
+                      if (!isOffline && remoteAsync.hasError)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                          child: Text(
+                            'Nie udało się pobrać dokumentów z serwera. Lokalna lista działa.\n${remoteAsync.error}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ),
+                    ],
                   );
                 },
               ),
@@ -275,9 +425,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: hasResolvedOrder
-            ? () {
-                context.push('/documents/add');
-              }
+            ? () => context.push(
+                '/documents/add?orderId=${Uri.encodeComponent(resolvedOrderId)}',
+              )
             : null,
         backgroundColor: const Color(0xFF0F4D46),
         child: const Icon(Icons.add, color: Colors.white),
@@ -345,16 +495,45 @@ class _FilterChip extends StatelessWidget {
 
 class _DocumentCard extends StatelessWidget {
   const _DocumentCard({
-    required this.title,
-    required this.date,
-    required this.status,
+    required this.item,
+    required this.isOffline,
+    required this.onSync,
     required this.t,
   });
 
-  final String title;
-  final String date;
-  final DocumentStatus status;
+  final _DocItem item;
+  final bool isOffline;
+  final VoidCallback? onSync;
   final AppLocalizations t;
+
+  void _openPreview(BuildContext context) {
+    final localPath = item.localPath?.trim();
+    final remoteUrl = item.remoteUrl?.trim();
+
+    if (localPath != null && localPath.isNotEmpty) {
+      final f = File(localPath);
+      if (f.existsSync()) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => _DocumentImagePreviewScreen(
+              title: item.title,
+              filePath: localPath,
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (remoteUrl != null && remoteUrl.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              _DocumentImagePreviewScreen(title: item.title, url: remoteUrl),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -362,22 +541,43 @@ class _DocumentCard extends StatelessWidget {
     IconData statusIcon;
     String statusText;
 
-    switch (status) {
-      case DocumentStatus.synchronized:
+    switch (item.status) {
+      case DocumentStatusUi.synchronized:
         statusColor = const Color(0xFF10B981);
         statusIcon = Icons.check_circle_outline;
         statusText = t.documents_status_synchronized;
         break;
-      case DocumentStatus.localOnly:
+      case DocumentStatusUi.localOnly:
         statusColor = const Color(0xFFFF6B35);
         statusIcon = Icons.eco_outlined;
         statusText = t.documents_status_local_only;
         break;
-      case DocumentStatus.syncing:
+      case DocumentStatusUi.syncing:
         statusColor = const Color(0xFF3B82F6);
         statusIcon = Icons.sync;
         statusText = t.documents_status_syncing;
         break;
+      case DocumentStatusUi.failed:
+        statusColor = const Color(0xFFEF4444);
+        statusIcon = Icons.error_outline;
+        statusText = 'Błąd synchronizacji';
+        break;
+    }
+
+    final canSync =
+        !isOffline &&
+        (item.status == DocumentStatusUi.localOnly ||
+            item.status == DocumentStatusUi.failed);
+
+    Widget? thumb;
+    if (item.localPath != null && item.localPath!.isNotEmpty) {
+      final f = File(item.localPath!);
+      if (f.existsSync()) {
+        thumb = ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(f, width: 48, height: 48, fit: BoxFit.cover),
+        );
+      }
     }
 
     return Container(
@@ -389,48 +589,54 @@ class _DocumentCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // DOCUMENT ICON
-          Stack(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6F5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.description_outlined,
-                  color: Color(0xFF0F4D46),
-                  size: 24,
-                ),
-              ),
-              Positioned(
-                right: -2,
-                bottom: -2,
-                child: Container(
-                  width: 20,
-                  height: 20,
+          InkWell(
+            onTap:
+                (thumb != null || (item.remoteUrl?.trim().isNotEmpty ?? false))
+                ? () => _openPreview(context)
+                : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: statusColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    color: const Color(0xFFEFF6F5),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(statusIcon, size: 12, color: Colors.white),
+                  child:
+                      thumb ??
+                      const Icon(
+                        Icons.description_outlined,
+                        color: Color(0xFF0F4D46),
+                        size: 24,
+                      ),
                 ),
-              ),
-            ],
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Icon(statusIcon, size: 12, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
-
           const SizedBox(width: 12),
 
-          // DOCUMENT INFO
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  item.title,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -439,7 +645,7 @@ class _DocumentCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  date,
+                  item.subtitle,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -451,20 +657,109 @@ class _DocumentCard extends StatelessWidget {
                   children: [
                     Icon(statusIcon, size: 14, color: statusColor),
                     const SizedBox(width: 4),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
+                    Expanded(
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
+                        ),
                       ),
                     ),
                   ],
                 ),
+                if ((item.lastError ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    item.lastError!.trim(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
+
+          if (item.status == DocumentStatusUi.syncing)
+            const Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (canSync)
+            IconButton(
+              tooltip: 'Synchronizuj',
+              onPressed: onSync,
+              icon: const Icon(Icons.cloud_upload_outlined),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _DocumentImagePreviewScreen extends StatelessWidget {
+  const _DocumentImagePreviewScreen({
+    required this.title,
+    this.filePath,
+    this.url,
+  });
+
+  final String title;
+  final String? filePath;
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+
+    final local = filePath?.trim();
+    if (local != null && local.isNotEmpty) {
+      child = Image.file(File(local), fit: BoxFit.contain);
+    } else {
+      final u = url?.trim() ?? '';
+      child = Image.network(
+        u,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Center(
+            child: Text(
+              'Nie udało się załadować podglądu.\n$error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        },
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
+        },
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: InteractiveViewer(minScale: 0.8, maxScale: 4.0, child: child),
+        ),
       ),
     );
   }

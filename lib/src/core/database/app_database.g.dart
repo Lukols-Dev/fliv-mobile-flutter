@@ -2399,6 +2399,734 @@ class DriverOrderDetailsTableCompanion
   }
 }
 
+class $DriverOrderDocumentTableTable extends DriverOrderDocumentTable
+    with
+        TableInfo<
+          $DriverOrderDocumentTableTable,
+          DriverOrderDocumentTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DriverOrderDocumentTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta = const VerificationMeta(
+    'localId',
+  );
+  @override
+  late final GeneratedColumn<String> localId = GeneratedColumn<String>(
+    'local_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _orderIdMeta = const VerificationMeta(
+    'orderId',
+  );
+  @override
+  late final GeneratedColumn<String> orderId = GeneratedColumn<String>(
+    'order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 255,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
+    'mimeType',
+  );
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+    'mime_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<LocalDocumentStatus, int> status =
+      GeneratedColumn<int>(
+        'status',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<LocalDocumentStatus>(
+        $DriverOrderDocumentTableTable.$converterstatus,
+      );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remoteUrlMeta = const VerificationMeta(
+    'remoteUrl',
+  );
+  @override
+  late final GeneratedColumn<String> remoteUrl = GeneratedColumn<String>(
+    'remote_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    localId,
+    orderId,
+    title,
+    localPath,
+    mimeType,
+    sizeBytes,
+    status,
+    remoteId,
+    remoteUrl,
+    lastError,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'driver_order_document_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DriverOrderDocumentTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(
+        _localIdMeta,
+        localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localIdMeta);
+    }
+    if (data.containsKey('order_id')) {
+      context.handle(
+        _orderIdMeta,
+        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localPathMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(
+        _mimeTypeMeta,
+        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mimeTypeMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sizeBytesMeta);
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('remote_url')) {
+      context.handle(
+        _remoteUrlMeta,
+        remoteUrl.isAcceptableOrUnknown(data['remote_url']!, _remoteUrlMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  DriverOrderDocumentTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DriverOrderDocumentTableData(
+      localId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_id'],
+      )!,
+      orderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      )!,
+      mimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime_type'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      )!,
+      status: $DriverOrderDocumentTableTable.$converterstatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}status'],
+        )!,
+      ),
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
+      remoteUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_url'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DriverOrderDocumentTableTable createAlias(String alias) {
+    return $DriverOrderDocumentTableTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<LocalDocumentStatus, int, int> $converterstatus =
+      const EnumIndexConverter<LocalDocumentStatus>(LocalDocumentStatus.values);
+}
+
+class DriverOrderDocumentTableData extends DataClass
+    implements Insertable<DriverOrderDocumentTableData> {
+  final String localId;
+  final String orderId;
+  final String title;
+  final String localPath;
+  final String mimeType;
+  final int sizeBytes;
+  final LocalDocumentStatus status;
+  final String? remoteId;
+  final String? remoteUrl;
+  final String? lastError;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const DriverOrderDocumentTableData({
+    required this.localId,
+    required this.orderId,
+    required this.title,
+    required this.localPath,
+    required this.mimeType,
+    required this.sizeBytes,
+    required this.status,
+    this.remoteId,
+    this.remoteUrl,
+    this.lastError,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<String>(localId);
+    map['order_id'] = Variable<String>(orderId);
+    map['title'] = Variable<String>(title);
+    map['local_path'] = Variable<String>(localPath);
+    map['mime_type'] = Variable<String>(mimeType);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    {
+      map['status'] = Variable<int>(
+        $DriverOrderDocumentTableTable.$converterstatus.toSql(status),
+      );
+    }
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    if (!nullToAbsent || remoteUrl != null) {
+      map['remote_url'] = Variable<String>(remoteUrl);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DriverOrderDocumentTableCompanion toCompanion(bool nullToAbsent) {
+    return DriverOrderDocumentTableCompanion(
+      localId: Value(localId),
+      orderId: Value(orderId),
+      title: Value(title),
+      localPath: Value(localPath),
+      mimeType: Value(mimeType),
+      sizeBytes: Value(sizeBytes),
+      status: Value(status),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      remoteUrl: remoteUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteUrl),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DriverOrderDocumentTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DriverOrderDocumentTableData(
+      localId: serializer.fromJson<String>(json['localId']),
+      orderId: serializer.fromJson<String>(json['orderId']),
+      title: serializer.fromJson<String>(json['title']),
+      localPath: serializer.fromJson<String>(json['localPath']),
+      mimeType: serializer.fromJson<String>(json['mimeType']),
+      sizeBytes: serializer.fromJson<int>(json['sizeBytes']),
+      status: $DriverOrderDocumentTableTable.$converterstatus.fromJson(
+        serializer.fromJson<int>(json['status']),
+      ),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      remoteUrl: serializer.fromJson<String?>(json['remoteUrl']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<String>(localId),
+      'orderId': serializer.toJson<String>(orderId),
+      'title': serializer.toJson<String>(title),
+      'localPath': serializer.toJson<String>(localPath),
+      'mimeType': serializer.toJson<String>(mimeType),
+      'sizeBytes': serializer.toJson<int>(sizeBytes),
+      'status': serializer.toJson<int>(
+        $DriverOrderDocumentTableTable.$converterstatus.toJson(status),
+      ),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'remoteUrl': serializer.toJson<String?>(remoteUrl),
+      'lastError': serializer.toJson<String?>(lastError),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DriverOrderDocumentTableData copyWith({
+    String? localId,
+    String? orderId,
+    String? title,
+    String? localPath,
+    String? mimeType,
+    int? sizeBytes,
+    LocalDocumentStatus? status,
+    Value<String?> remoteId = const Value.absent(),
+    Value<String?> remoteUrl = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => DriverOrderDocumentTableData(
+    localId: localId ?? this.localId,
+    orderId: orderId ?? this.orderId,
+    title: title ?? this.title,
+    localPath: localPath ?? this.localPath,
+    mimeType: mimeType ?? this.mimeType,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    status: status ?? this.status,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    remoteUrl: remoteUrl.present ? remoteUrl.value : this.remoteUrl,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DriverOrderDocumentTableData copyWithCompanion(
+    DriverOrderDocumentTableCompanion data,
+  ) {
+    return DriverOrderDocumentTableData(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      title: data.title.present ? data.title.value : this.title,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      status: data.status.present ? data.status.value : this.status,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      remoteUrl: data.remoteUrl.present ? data.remoteUrl.value : this.remoteUrl,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DriverOrderDocumentTableData(')
+          ..write('localId: $localId, ')
+          ..write('orderId: $orderId, ')
+          ..write('title: $title, ')
+          ..write('localPath: $localPath, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('status: $status, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('remoteUrl: $remoteUrl, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    localId,
+    orderId,
+    title,
+    localPath,
+    mimeType,
+    sizeBytes,
+    status,
+    remoteId,
+    remoteUrl,
+    lastError,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DriverOrderDocumentTableData &&
+          other.localId == this.localId &&
+          other.orderId == this.orderId &&
+          other.title == this.title &&
+          other.localPath == this.localPath &&
+          other.mimeType == this.mimeType &&
+          other.sizeBytes == this.sizeBytes &&
+          other.status == this.status &&
+          other.remoteId == this.remoteId &&
+          other.remoteUrl == this.remoteUrl &&
+          other.lastError == this.lastError &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DriverOrderDocumentTableCompanion
+    extends UpdateCompanion<DriverOrderDocumentTableData> {
+  final Value<String> localId;
+  final Value<String> orderId;
+  final Value<String> title;
+  final Value<String> localPath;
+  final Value<String> mimeType;
+  final Value<int> sizeBytes;
+  final Value<LocalDocumentStatus> status;
+  final Value<String?> remoteId;
+  final Value<String?> remoteUrl;
+  final Value<String?> lastError;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const DriverOrderDocumentTableCompanion({
+    this.localId = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.status = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DriverOrderDocumentTableCompanion.insert({
+    required String localId,
+    required String orderId,
+    required String title,
+    required String localPath,
+    required String mimeType,
+    required int sizeBytes,
+    required LocalDocumentStatus status,
+    this.remoteId = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : localId = Value(localId),
+       orderId = Value(orderId),
+       title = Value(title),
+       localPath = Value(localPath),
+       mimeType = Value(mimeType),
+       sizeBytes = Value(sizeBytes),
+       status = Value(status);
+  static Insertable<DriverOrderDocumentTableData> custom({
+    Expression<String>? localId,
+    Expression<String>? orderId,
+    Expression<String>? title,
+    Expression<String>? localPath,
+    Expression<String>? mimeType,
+    Expression<int>? sizeBytes,
+    Expression<int>? status,
+    Expression<String>? remoteId,
+    Expression<String>? remoteUrl,
+    Expression<String>? lastError,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (orderId != null) 'order_id': orderId,
+      if (title != null) 'title': title,
+      if (localPath != null) 'local_path': localPath,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (status != null) 'status': status,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (remoteUrl != null) 'remote_url': remoteUrl,
+      if (lastError != null) 'last_error': lastError,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DriverOrderDocumentTableCompanion copyWith({
+    Value<String>? localId,
+    Value<String>? orderId,
+    Value<String>? title,
+    Value<String>? localPath,
+    Value<String>? mimeType,
+    Value<int>? sizeBytes,
+    Value<LocalDocumentStatus>? status,
+    Value<String?>? remoteId,
+    Value<String?>? remoteUrl,
+    Value<String?>? lastError,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return DriverOrderDocumentTableCompanion(
+      localId: localId ?? this.localId,
+      orderId: orderId ?? this.orderId,
+      title: title ?? this.title,
+      localPath: localPath ?? this.localPath,
+      mimeType: mimeType ?? this.mimeType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      status: status ?? this.status,
+      remoteId: remoteId ?? this.remoteId,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
+      lastError: lastError ?? this.lastError,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<String>(localId.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<String>(orderId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<int>(
+        $DriverOrderDocumentTableTable.$converterstatus.toSql(status.value),
+      );
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (remoteUrl.present) {
+      map['remote_url'] = Variable<String>(remoteUrl.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DriverOrderDocumentTableCompanion(')
+          ..write('localId: $localId, ')
+          ..write('orderId: $orderId, ')
+          ..write('title: $title, ')
+          ..write('localPath: $localPath, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('status: $status, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('remoteUrl: $remoteUrl, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2408,6 +3136,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $DriverCurrentOrderTableTable(this);
   late final $DriverOrderDetailsTableTable driverOrderDetailsTable =
       $DriverOrderDetailsTableTable(this);
+  late final $DriverOrderDocumentTableTable driverOrderDocumentTable =
+      $DriverOrderDocumentTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2416,6 +3146,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     driverProfileTable,
     driverCurrentOrderTable,
     driverOrderDetailsTable,
+    driverOrderDocumentTable,
   ];
 }
 
@@ -3547,6 +4278,359 @@ typedef $$DriverOrderDetailsTableTableProcessedTableManager =
       DriverOrderDetailsTableData,
       PrefetchHooks Function()
     >;
+typedef $$DriverOrderDocumentTableTableCreateCompanionBuilder =
+    DriverOrderDocumentTableCompanion Function({
+      required String localId,
+      required String orderId,
+      required String title,
+      required String localPath,
+      required String mimeType,
+      required int sizeBytes,
+      required LocalDocumentStatus status,
+      Value<String?> remoteId,
+      Value<String?> remoteUrl,
+      Value<String?> lastError,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$DriverOrderDocumentTableTableUpdateCompanionBuilder =
+    DriverOrderDocumentTableCompanion Function({
+      Value<String> localId,
+      Value<String> orderId,
+      Value<String> title,
+      Value<String> localPath,
+      Value<String> mimeType,
+      Value<int> sizeBytes,
+      Value<LocalDocumentStatus> status,
+      Value<String?> remoteId,
+      Value<String?> remoteUrl,
+      Value<String?> lastError,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$DriverOrderDocumentTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DriverOrderDocumentTableTable> {
+  $$DriverOrderDocumentTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<LocalDocumentStatus, LocalDocumentStatus, int>
+  get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DriverOrderDocumentTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DriverOrderDocumentTableTable> {
+  $$DriverOrderDocumentTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DriverOrderDocumentTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DriverOrderDocumentTableTable> {
+  $$DriverOrderDocumentTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get orderId =>
+      $composableBuilder(column: $table.orderId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<LocalDocumentStatus, int> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteUrl =>
+      $composableBuilder(column: $table.remoteUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DriverOrderDocumentTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DriverOrderDocumentTableTable,
+          DriverOrderDocumentTableData,
+          $$DriverOrderDocumentTableTableFilterComposer,
+          $$DriverOrderDocumentTableTableOrderingComposer,
+          $$DriverOrderDocumentTableTableAnnotationComposer,
+          $$DriverOrderDocumentTableTableCreateCompanionBuilder,
+          $$DriverOrderDocumentTableTableUpdateCompanionBuilder,
+          (
+            DriverOrderDocumentTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $DriverOrderDocumentTableTable,
+              DriverOrderDocumentTableData
+            >,
+          ),
+          DriverOrderDocumentTableData,
+          PrefetchHooks Function()
+        > {
+  $$DriverOrderDocumentTableTableTableManager(
+    _$AppDatabase db,
+    $DriverOrderDocumentTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DriverOrderDocumentTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DriverOrderDocumentTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DriverOrderDocumentTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> localId = const Value.absent(),
+                Value<String> orderId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> localPath = const Value.absent(),
+                Value<String> mimeType = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<LocalDocumentStatus> status = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<String?> remoteUrl = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DriverOrderDocumentTableCompanion(
+                localId: localId,
+                orderId: orderId,
+                title: title,
+                localPath: localPath,
+                mimeType: mimeType,
+                sizeBytes: sizeBytes,
+                status: status,
+                remoteId: remoteId,
+                remoteUrl: remoteUrl,
+                lastError: lastError,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String localId,
+                required String orderId,
+                required String title,
+                required String localPath,
+                required String mimeType,
+                required int sizeBytes,
+                required LocalDocumentStatus status,
+                Value<String?> remoteId = const Value.absent(),
+                Value<String?> remoteUrl = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DriverOrderDocumentTableCompanion.insert(
+                localId: localId,
+                orderId: orderId,
+                title: title,
+                localPath: localPath,
+                mimeType: mimeType,
+                sizeBytes: sizeBytes,
+                status: status,
+                remoteId: remoteId,
+                remoteUrl: remoteUrl,
+                lastError: lastError,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DriverOrderDocumentTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DriverOrderDocumentTableTable,
+      DriverOrderDocumentTableData,
+      $$DriverOrderDocumentTableTableFilterComposer,
+      $$DriverOrderDocumentTableTableOrderingComposer,
+      $$DriverOrderDocumentTableTableAnnotationComposer,
+      $$DriverOrderDocumentTableTableCreateCompanionBuilder,
+      $$DriverOrderDocumentTableTableUpdateCompanionBuilder,
+      (
+        DriverOrderDocumentTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $DriverOrderDocumentTableTable,
+          DriverOrderDocumentTableData
+        >,
+      ),
+      DriverOrderDocumentTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3562,5 +4646,10 @@ class $AppDatabaseManager {
       $$DriverOrderDetailsTableTableTableManager(
         _db,
         _db.driverOrderDetailsTable,
+      );
+  $$DriverOrderDocumentTableTableTableManager get driverOrderDocumentTable =>
+      $$DriverOrderDocumentTableTableTableManager(
+        _db,
+        _db.driverOrderDocumentTable,
       );
 }

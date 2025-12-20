@@ -1,10 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/core/network/connectivity_provider.dart';
+import 'package:mobile/src/features/documents/application/transport_order_documents_controller.dart';
 
 class AddDocumentScreen extends ConsumerStatefulWidget {
-  const AddDocumentScreen({super.key});
+  const AddDocumentScreen({super.key, required this.orderId});
+
+  final String orderId;
 
   @override
   ConsumerState<AddDocumentScreen> createState() => _AddDocumentScreenState();
@@ -12,7 +19,10 @@ class AddDocumentScreen extends ConsumerStatefulWidget {
 
 class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
   final _nameController = TextEditingController();
-  String? _selectedImagePath;
+  final _picker = ImagePicker();
+
+  XFile? _picked;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -20,11 +30,103 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    // TODO: Implement image picker
-    setState(() {
-      _selectedImagePath = 'placeholder';
-    });
+  Future<void> _pickImage(ImageSource source) async {
+    final picked = await _picker.pickImage(source: source, imageQuality: 95);
+    if (picked == null) return;
+    if (!mounted) return;
+    setState(() => _picked = picked);
+  }
+
+  Future<void> _showPickSourceSheet() async {
+    if (_submitting) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.camera_alt_outlined,
+                    color: Color(0xFF0F4D46),
+                  ),
+                  title: const Text('Zrób zdjęcie'),
+                  onTap: () => Navigator.of(context).pop(ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library_outlined,
+                    color: Color(0xFF0F4D46),
+                  ),
+                  title: const Text('Wybierz z galerii'),
+                  onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (source == null) return;
+    await _pickImage(source);
+  }
+
+  Future<void> _submit() async {
+    final title = _nameController.text.trim();
+    if (_picked == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Wybierz zdjęcie.')));
+      return;
+    }
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Podaj nazwę dokumentu.')));
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      await ref
+          .read(orderDocumentsControllerProvider.notifier)
+          .addDocument(
+            orderId: widget.orderId,
+            pickedImage: _picked!,
+            title: title,
+            tryUploadImmediately: true,
+          );
+
+      if (!mounted) return;
+      final offline = ref.read(isOfflineProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            offline
+                ? 'Dodano lokalnie. Zsynchronizujesz później.'
+                : 'Dodano dokument.',
+          ),
+        ),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -60,8 +162,6 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 8),
-
-                      // TITLE
                       Text(
                         t.documents_add_title,
                         style: const TextStyle(
@@ -70,10 +170,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                           color: Color(0xFF111827),
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
-                      // SUBTITLE
                       Text(
                         t.documents_add_subtitle,
                         style: const TextStyle(
@@ -82,114 +179,101 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                           color: Color(0xFF6B7280),
                         ),
                       ),
-
                       const SizedBox(height: 32),
 
-                      // PHOTO SECTION
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.documents_add_photo_label,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
+                      Text(
+                        t.documents_add_photo_label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: _submitting ? null : _showPickSourceSheet,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFF111827),
+                              width: 1,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: _pickImage,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: double.infinity,
-                              height: 200,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: const Color(0xFF111827),
-                                  width: 1,
-                                ),
-                              ),
-                              child: _selectedImagePath == null
-                                  ? Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.camera_alt_outlined,
-                                          size: 48,
-                                          color: Color(0xFF0F4D46),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          t.documents_add_photo_hint,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                            color: Color(0xFF111827),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          t.documents_add_photo_max_size,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w400,
-                                            color: Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : const Center(
-                                      child: Icon(
-                                        Icons.check_circle,
-                                        size: 48,
-                                        color: Color(0xFF10B981),
+                          child: _picked == null
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 48,
+                                      color: Color(0xFF0F4D46),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      t.documents_add_photo_hint,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF111827),
                                       ),
                                     ),
-                            ),
-                          ),
-                        ],
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      t.documents_add_photo_max_size,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(_picked!.path),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                        ),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // DOCUMENT NAME SECTION
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.documents_add_name_label,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
-                            ),
+                      Text(
+                        t.documents_add_name_label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _nameController,
+                        enabled: !_submitting,
+                        decoration: InputDecoration(
+                          hintText: t.documents_add_name_hint,
+                          hintStyle: const TextStyle(
+                            color: Color(0xFF9CA3AF),
+                            fontSize: 16,
                           ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              hintText: t.documents_add_name_hint,
-                              hintStyle: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 16,
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFFF5F5DC),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
+                          filled: true,
+                          fillColor: const Color(0xFFF5F5DC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
-                        ],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 24),
@@ -199,7 +283,6 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
               ),
             ),
 
-            // ADD BUTTON - Fixed at bottom
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
@@ -218,10 +301,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                   width: double.infinity,
                   height: 56,
                   child: FilledButton(
-                    onPressed: () {
-                      // TODO: Implement add document logic
-                      context.pop();
-                    },
+                    onPressed: _submitting ? null : _submit,
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF0F4D46),
                       foregroundColor: Colors.white,
@@ -229,13 +309,22 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: Text(
-                      t.documents_add_button,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            t.documents_add_button,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 ),
               ),
