@@ -100,7 +100,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
 
     setState(() => _submitting = true);
     try {
-      await ref
+      final uploaded = await ref
           .read(orderDocumentsControllerProvider.notifier)
           .addDocument(
             orderId: widget.orderId,
@@ -110,13 +110,12 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
           );
 
       if (!mounted) return;
-      final offline = ref.read(isOfflineProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            offline
-                ? 'Dodano lokalnie. Zsynchronizujesz później.'
-                : 'Dodano dokument.',
+            uploaded
+                ? 'Dodano dokument.'
+                : 'Dodano lokalnie. Zsynchronizujesz później.',
           ),
         ),
       );

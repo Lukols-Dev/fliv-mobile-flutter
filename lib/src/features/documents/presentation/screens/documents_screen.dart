@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,6 +57,26 @@ class DocumentsScreen extends ConsumerStatefulWidget {
 class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   DocumentFilter _selectedFilter = DocumentFilter.all;
 
+  bool _isOfflineLikeRemoteError(Object? e) {
+    if (e is DioException) {
+      switch (e.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return true;
+        case DioExceptionType.unknown:
+          return e.error is SocketException;
+        case DioExceptionType.badCertificate:
+        case DioExceptionType.badResponse:
+        case DioExceptionType.cancel:
+          return false;
+      }
+    }
+    if (e is SocketException) return true;
+    return false;
+  }
+
   String _subtitleFromCreatedAt(DateTime? dt) {
     if (dt == null) return '-';
     final d = dt.toLocal();
@@ -76,7 +97,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       case LocalDocumentStatus.synced:
         return DocumentStatusUi.synchronized;
       case LocalDocumentStatus.failed:
-        return DocumentStatusUi.failed;
+        return DocumentStatusUi.localOnly;
     }
   }
 
@@ -252,7 +273,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   // if local has remoteUrl that matches a remote document url, update local.remoteId to remote.id
                   if (!isOffline &&
                       remoteAsync.hasValue &&
-                      remoteDocs.isNotEmpty &&
+                      // remoteDocs.isNotEmpty &&
                       localRows.isNotEmpty) {
                     final remoteByUrl = <String, TransportOrderDocument>{
                       for (final d in remoteDocs) d.url.trim(): d,
@@ -611,7 +632,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
                           child: Text(
-                            'Nie udało się pobrać dokumentów z serwera. Lokalna lista działa.\n${remoteAsync.error}',
+                            _isOfflineLikeRemoteError(remoteAsync.error)
+                                ? 'Brak połączenia z serwerem. Możesz dodawać dokumenty lokalnie i zsynchronizować później.'
+                                : 'Nie udało się pobrać dokumentów z serwera. Lokalna lista działa.\n${remoteAsync.error}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
