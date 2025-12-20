@@ -94,6 +94,74 @@ class OrderDocumentsController extends Notifier<void> {
     await _uploadOne(localId: localId, repo: repo, localDs: localDs);
   }
 
+  /// Used to heal older local rows where remoteId stored a different id (e.g. Document.id)
+  /// by re-linking them to the server OrderDocument.id when we can match by URL.
+  Future<void> linkRemoteToLocal({
+    required String localId,
+    required String remoteId,
+    required String remoteUrl,
+  }) async {
+    final localDs = ref.read(orderDocumentsLocalDataSourceProvider);
+    await localDs.setRemoteLink(
+      localId: localId,
+      remoteId: remoteId,
+      remoteUrl: remoteUrl,
+    );
+  }
+
+  Future<void> markLocalOnly({
+    required String localId,
+  }) async {
+    final localDs = ref.read(orderDocumentsLocalDataSourceProvider);
+    await localDs.clearRemoteLink(
+      localId: localId,
+      status: LocalDocumentStatus.localOnly,
+    );
+  }
+
+  Future<void> deleteLocalDocument({
+    required String localId,
+    bool deleteFile = true,
+  }) async {
+    final localDs = ref.read(orderDocumentsLocalDataSourceProvider);
+    final row = await localDs.getByLocalId(localId);
+    if (row == null) return;
+
+    if (deleteFile) {
+      final p = row.localPath.trim();
+      if (p.isNotEmpty) {
+        try {
+          final f = File(p);
+          if (await f.exists()) await f.delete();
+        } catch (_) {
+          // ignore
+        }
+      }
+    }
+
+    await localDs.deleteByLocalId(localId);
+  }
+
+  Future<void> deleteRemoteDocument({
+    required String orderId,
+    required String orderDocumentId,
+  }) async {
+    if (ref.read(isOfflineProvider)) {
+      throw Exception('Brak internetu. Nie można usunąć dokumentu z serwera.');
+    }
+    final repo = ref.read(transportOrderDocumentsRepositoryProvider);
+    await repo.deleteForOrder(orderId: orderId, orderDocumentId: orderDocumentId);
+  }
+
+  Future<void> deleteLocalAndRemote({
+    required String orderId,
+    required String localId,
+    required String orderDocumentId,
+  }) async {
+    await deleteRemoteDocument(orderId: orderId, orderDocumentId: orderDocumentId);
+    await deleteLocalDocument(localId: localId, deleteFile: true);
+  }
+
   Future<void> _uploadOne({
     required String localId,
     required OrderDocumentsLocalDataSource localDs,

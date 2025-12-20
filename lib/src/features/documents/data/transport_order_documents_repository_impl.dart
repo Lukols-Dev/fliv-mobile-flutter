@@ -45,4 +45,15 @@ class TransportOrderDocumentsRepositoryImpl
     );
     return dto.toDomain();
   }
+
+  @override
+  Future<void> deleteForOrder({
+    required String orderId,
+    required String orderDocumentId,
+  }) async {
+    await _api.deleteForOrder(
+      orderId: orderId,
+      orderDocumentId: orderDocumentId,
+    );
+  }
 }

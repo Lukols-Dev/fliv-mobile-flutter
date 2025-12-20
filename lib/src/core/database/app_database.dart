@@ -183,9 +183,42 @@ class AppDatabase extends _$AppDatabase {
     )..where((t) => t.localId.equals(localId))).write(
       DriverOrderDocumentTableCompanion(
         status: Value(status),
+        remoteId: remoteId == null ? const Value.absent() : Value(remoteId),
+        remoteUrl: remoteUrl == null ? const Value.absent() : Value(remoteUrl),
+        lastError: Value(lastError),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> updateDocumentRemoteLink({
+    required String localId,
+    required String remoteId,
+    required String remoteUrl,
+  }) async {
+    await (update(
+      driverOrderDocumentTable,
+    )..where((t) => t.localId.equals(localId))).write(
+      DriverOrderDocumentTableCompanion(
         remoteId: Value(remoteId),
         remoteUrl: Value(remoteUrl),
-        lastError: Value(lastError),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> clearDocumentRemoteLink({
+    required String localId,
+    required LocalDocumentStatus status,
+  }) async {
+    await (update(
+      driverOrderDocumentTable,
+    )..where((t) => t.localId.equals(localId))).write(
+      DriverOrderDocumentTableCompanion(
+        status: Value(status),
+        remoteId: const Value(null),
+        remoteUrl: const Value(null),
+        lastError: const Value(null),
         updatedAt: Value(DateTime.now()),
       ),
     );
