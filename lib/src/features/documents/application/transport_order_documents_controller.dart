@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:drift/drift.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile/src/core/database/app_database.dart';
@@ -7,6 +8,7 @@ import 'package:mobile/src/core/network/connectivity_provider.dart';
 import 'package:mobile/src/features/documents/data/transport_order_documents_file_store.dart';
 import 'package:mobile/src/features/documents/data/transport_order_documents_local_data_source.dart';
 import 'package:mobile/src/features/documents/data/transport_order_documents_repository_impl.dart';
+import 'package:mobile/src/features/documents/application/transport_order_documents_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../domain/local_document_status.dart';
@@ -25,7 +27,9 @@ class OrderDocumentsController extends Notifier<void> {
   @override
   void build() {}
 
-  Future<void> addDocument({
+  /// Returns `true` if the document was uploaded immediately,
+  /// `false` if it was saved locally (offline / server unavailable / tryUploadImmediately=false).
+  Future<bool> addDocument({
     required String orderId,
     required XFile pickedImage,
     required String title,
@@ -76,10 +80,15 @@ class OrderDocumentsController extends Notifier<void> {
     );
 
     // 3) opcjonalnie spróbuj wysłać od razu (jeśli online)
-    if (!tryUploadImmediately) return;
-    if (ref.read(isOfflineProvider)) return;
+    if (!tryUploadImmediately) return false;
+    if (ref.read(isOfflineProvider)) return false;
 
-    await _uploadOne(localId: localId, repo: repo, localDs: localDs);
+    return await _uploadOne(
+      localId: localId,
+      repo: repo,
+      localDs: localDs,
+      swallowNetworkErrors: true,
+    );
   }
 
   Future<void> syncDocument({
@@ -92,6 +101,26 @@ class OrderDocumentsController extends Notifier<void> {
     final localDs = ref.read(orderDocumentsLocalDataSourceProvider);
     final repo = ref.read(transportOrderDocumentsRepositoryProvider);
     await _uploadOne(localId: localId, repo: repo, localDs: localDs);
+  }
+
+  bool _isOfflineLikeUploadError(Object e) {
+    if (e is DioException) {
+      switch (e.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return true;
+        case DioExceptionType.unknown:
+          return e.error is SocketException;
+        case DioExceptionType.badCertificate:
+        case DioExceptionType.badResponse:
+        case DioExceptionType.cancel:
+          return false;
+      }
+    }
+    if (e is SocketException) return true;
+    return false;
   }
 
   /// Used to heal older local rows where remoteId stored a different id (e.g. Document.id)
@@ -109,9 +138,7 @@ class OrderDocumentsController extends Notifier<void> {
     );
   }
 
-  Future<void> markLocalOnly({
-    required String localId,
-  }) async {
+  Future<void> markLocalOnly({required String localId}) async {
     final localDs = ref.read(orderDocumentsLocalDataSourceProvider);
     await localDs.clearRemoteLink(
       localId: localId,
@@ -150,7 +177,10 @@ class OrderDocumentsController extends Notifier<void> {
       throw Exception('Brak internetu. Nie można usunąć dokumentu z serwera.');
     }
     final repo = ref.read(transportOrderDocumentsRepositoryProvider);
-    await repo.deleteForOrder(orderId: orderId, orderDocumentId: orderDocumentId);
+    await repo.deleteForOrder(
+      orderId: orderId,
+      orderDocumentId: orderDocumentId,
+    );
   }
 
   Future<void> deleteLocalAndRemote({
@@ -158,22 +188,26 @@ class OrderDocumentsController extends Notifier<void> {
     required String localId,
     required String orderDocumentId,
   }) async {
-    await deleteRemoteDocument(orderId: orderId, orderDocumentId: orderDocumentId);
+    await deleteRemoteDocument(
+      orderId: orderId,
+      orderDocumentId: orderDocumentId,
+    );
     await deleteLocalDocument(localId: localId, deleteFile: true);
   }
 
-  Future<void> _uploadOne({
+  Future<bool> _uploadOne({
     required String localId,
     required OrderDocumentsLocalDataSource localDs,
     required dynamic
     repo, // TransportOrderDocumentsRepository (jeśli masz import interfejsu, daj typ)
+    bool swallowNetworkErrors = false,
   }) async {
     final row = await localDs.getByLocalId(localId);
-    if (row == null) return;
+    if (row == null) return false;
 
     // Jeśli już synced lub upload w toku – nie rób nic
-    if (row.status == LocalDocumentStatus.synced) return;
-    if (row.status == LocalDocumentStatus.uploading) return;
+    if (row.status == LocalDocumentStatus.synced) return true;
+    if (row.status == LocalDocumentStatus.uploading) return false;
 
     // Brak lokalnego pliku = nie da się wysłać
     if (row.localPath.trim().isEmpty) {
@@ -182,7 +216,7 @@ class OrderDocumentsController extends Notifier<void> {
         status: LocalDocumentStatus.failed,
         lastError: 'Missing localPath',
       );
-      return;
+      return false;
     }
 
     await localDs.setStatus(
@@ -192,24 +226,39 @@ class OrderDocumentsController extends Notifier<void> {
     );
 
     try {
-      final uploaded = await repo.uploadForOrder(
+      await repo.uploadForOrder(
         orderId: row.orderId,
         file: File(row.localPath),
         title: row.title,
       );
 
-      await localDs.setStatus(
-        localId: localId,
-        status: LocalDocumentStatus.synced,
-        remoteId: uploaded.id,
-        remoteUrl: uploaded.url,
-        lastError: null,
-      );
+      // Po udanym uploadzie traktujemy lokalny dokument jako cache offline:
+      // usuń lokalny plik + rekord (żeby na liście został tylko dokument z serwera).
+      await deleteLocalDocument(localId: localId, deleteFile: true);
+
+      // Odśwież listę z serwera, żeby dokument pojawił się natychmiast jako zdalny.
+      ref.invalidate(transportOrderDocumentsProvider(row.orderId));
+      return true;
     } catch (e) {
+      if (_isOfflineLikeUploadError(e)) {
+        // Brak połączenia / timeout: dokument zostaje lokalnie, bez technicznych błędów w UI.
+        await localDs.setStatus(
+          localId: localId,
+          status: LocalDocumentStatus.localOnly,
+          lastError: null,
+        );
+        if (swallowNetworkErrors) return false;
+        throw Exception(
+          'Brak połączenia z serwerem. Dokument pozostaje lokalnie.',
+        );
+      }
+
+      // Zostaw jako lokalny (żeby dalej był dostępny) i pokaż ewentualnie szczegóły w lastError,
+      // ale nie przełączaj UI w "błąd synchronizacji".
       await localDs.setStatus(
         localId: localId,
-        status: LocalDocumentStatus.failed,
-        lastError: e.toString(),
+        status: LocalDocumentStatus.localOnly,
+        lastError: 'Nie udało się zsynchronizować. Spróbuj ponownie.',
       );
       rethrow;
     }
