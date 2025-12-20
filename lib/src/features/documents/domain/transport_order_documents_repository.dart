@@ -8,4 +8,9 @@ abstract class TransportOrderDocumentsRepository {
     required File file,
     required String title,
   });
+
+  Future<void> deleteForOrder({
+    required String orderId,
+    required String orderDocumentId,
+  });
 }

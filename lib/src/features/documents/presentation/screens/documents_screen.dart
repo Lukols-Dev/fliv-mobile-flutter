@@ -233,10 +233,72 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       .map((r) => r.remoteId)
                       .whereType<String>()
                       .toSet();
+                  final localRemoteUrls = localRows
+                      .map((r) => r.remoteUrl)
+                      .whereType<String>()
+                      .map((s) => s.trim())
+                      .where((s) => s.isNotEmpty)
+                      .toSet();
 
                   final remoteUnique = remoteDocs
-                      .where((d) => !localRemoteIds.contains(d.id))
+                      .where(
+                        (d) =>
+                            !localRemoteIds.contains(d.id) &&
+                            !localRemoteUrls.contains(d.url.trim()),
+                      )
                       .toList();
+
+                  // Heal legacy rows (when upload endpoint returned Document.id instead of OrderDocument.id):
+                  // if local has remoteUrl that matches a remote document url, update local.remoteId to remote.id
+                  if (!isOffline &&
+                      remoteAsync.hasValue &&
+                      remoteDocs.isNotEmpty &&
+                      localRows.isNotEmpty) {
+                    final remoteByUrl = <String, TransportOrderDocument>{
+                      for (final d in remoteDocs) d.url.trim(): d,
+                    };
+                    final remoteIds = remoteDocs.map((d) => d.id).toSet();
+                    final remoteUrls = remoteDocs
+                        .map((d) => d.url.trim())
+                        .toSet();
+                    for (final r in localRows) {
+                      final localId = r.localId;
+                      final rUrl = (r.remoteUrl ?? '').trim();
+                      if (localId.isEmpty) continue;
+
+                      // Reconcile "synced" rows that were deleted on server:
+                      // If local says synced but server no longer has this remoteId/url, downgrade to localOnly.
+                      if (r.status == LocalDocumentStatus.synced) {
+                        final rid = (r.remoteId ?? '').trim();
+                        final hasOnServer =
+                            (rid.isNotEmpty && remoteIds.contains(rid)) ||
+                            (rUrl.isNotEmpty && remoteUrls.contains(rUrl));
+                        if (!hasOnServer) {
+                          Future.microtask(() {
+                            ref
+                                .read(orderDocumentsControllerProvider.notifier)
+                                .markLocalOnly(localId: localId);
+                          });
+                          continue;
+                        }
+                      }
+
+                      // Heal legacy id mismatch (Document.id stored as remoteId)
+                      if (rUrl.isEmpty) continue;
+                      final match = remoteByUrl[rUrl];
+                      if (match == null) continue;
+                      if (r.remoteId == match.id) continue;
+                      Future.microtask(() {
+                        ref
+                            .read(orderDocumentsControllerProvider.notifier)
+                            .linkRemoteToLocal(
+                              localId: localId,
+                              remoteId: match.id,
+                              remoteUrl: match.url,
+                            );
+                      });
+                    }
+                  }
 
                   final localItems = localRows.map((r) {
                     final statusUi = _mapLocalStatus(r.status);
@@ -371,31 +433,173 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                       const SizedBox(height: 12),
                                   itemBuilder: (context, index) {
                                     final item = filtered[index];
+                                    Future<bool> confirmDelete(
+                                      String message,
+                                    ) async {
+                                      final ok = await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text('Usuń dokument'),
+                                          content: Text(message),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(false),
+                                              child: const Text('Anuluj'),
+                                            ),
+                                            FilledButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(true),
+                                              child: const Text('Usuń'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      return ok == true;
+                                    }
+
+                                    final canSync =
+                                        !isOffline &&
+                                        (item.status ==
+                                                DocumentStatusUi.localOnly ||
+                                            item.status ==
+                                                DocumentStatusUi.failed);
+                                    final isBusy =
+                                        item.status == DocumentStatusUi.syncing;
+
+                                    final onSync =
+                                        (item.localId == null || !canSync)
+                                        ? null
+                                        : () async {
+                                            try {
+                                              await ref
+                                                  .read(
+                                                    orderDocumentsControllerProvider
+                                                        .notifier,
+                                                  )
+                                                  .syncDocument(
+                                                    localId: item.localId!,
+                                                    orderId: orderId,
+                                                  );
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(content: Text('$e')),
+                                              );
+                                            }
+                                          };
+
+                                    final onDeleteLocal =
+                                        (item.localId == null || isBusy)
+                                        ? null
+                                        : () async {
+                                            if (!await confirmDelete(
+                                              'Usunąć dokument lokalnie z telefonu?',
+                                            ))
+                                              return;
+                                            try {
+                                              await ref
+                                                  .read(
+                                                    orderDocumentsControllerProvider
+                                                        .notifier,
+                                                  )
+                                                  .deleteLocalDocument(
+                                                    localId: item.localId!,
+                                                    deleteFile: true,
+                                                  );
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(content: Text('$e')),
+                                              );
+                                            }
+                                          };
+
+                                    final onDeleteRemote =
+                                        (item.remoteId == null ||
+                                            isBusy ||
+                                            isOffline)
+                                        ? null
+                                        : () async {
+                                            if (!await confirmDelete(
+                                              'Usunąć dokument z serwera?',
+                                            ))
+                                              return;
+                                            try {
+                                              await ref
+                                                  .read(
+                                                    orderDocumentsControllerProvider
+                                                        .notifier,
+                                                  )
+                                                  .deleteRemoteDocument(
+                                                    orderId: orderId,
+                                                    orderDocumentId:
+                                                        item.remoteId!,
+                                                  );
+                                              ref.invalidate(
+                                                transportOrderDocumentsProvider(
+                                                  orderId,
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(content: Text('$e')),
+                                              );
+                                            }
+                                          };
+
+                                    final onDeleteBoth =
+                                        (item.localId != null &&
+                                            item.remoteId != null &&
+                                            !isBusy &&
+                                            !isOffline)
+                                        ? () async {
+                                            if (!await confirmDelete(
+                                              'Usunąć dokument lokalnie i na serwerze?',
+                                            ))
+                                              return;
+                                            try {
+                                              await ref
+                                                  .read(
+                                                    orderDocumentsControllerProvider
+                                                        .notifier,
+                                                  )
+                                                  .deleteLocalAndRemote(
+                                                    orderId: orderId,
+                                                    localId: item.localId!,
+                                                    orderDocumentId:
+                                                        item.remoteId!,
+                                                  );
+                                              ref.invalidate(
+                                                transportOrderDocumentsProvider(
+                                                  orderId,
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(content: Text('$e')),
+                                              );
+                                            }
+                                          }
+                                        : null;
+
                                     return _DocumentCard(
                                       item: item,
                                       isOffline: isOffline,
-                                      onSync: (item.localId == null)
-                                          ? null
-                                          : () async {
-                                              try {
-                                                await ref
-                                                    .read(
-                                                      orderDocumentsControllerProvider
-                                                          .notifier,
-                                                    )
-                                                    .syncDocument(
-                                                      localId: item.localId!,
-                                                      orderId: orderId,
-                                                    );
-                                              } catch (e) {
-                                                if (!context.mounted) return;
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(content: Text('$e')),
-                                                );
-                                              }
-                                            },
+                                      onSync: onSync,
+                                      onDeleteLocal: onDeleteLocal,
+                                      onDeleteRemote: onDeleteRemote,
+                                      onDeleteBoth: onDeleteBoth,
                                       t: t,
                                     );
                                   },
@@ -498,13 +702,91 @@ class _DocumentCard extends StatelessWidget {
     required this.item,
     required this.isOffline,
     required this.onSync,
+    required this.onDeleteLocal,
+    required this.onDeleteRemote,
+    required this.onDeleteBoth,
     required this.t,
   });
 
   final _DocItem item;
   final bool isOffline;
   final VoidCallback? onSync;
+  final VoidCallback? onDeleteLocal;
+  final VoidCallback? onDeleteRemote;
+  final VoidCallback? onDeleteBoth;
   final AppLocalizations t;
+
+  Future<void> _showActionsSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onSync != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.cloud_upload_outlined,
+                      color: Color(0xFF0F4D46),
+                    ),
+                    title: const Text('Synchronizuj'),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      onSync?.call();
+                    },
+                  ),
+                if (onDeleteBoth != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Usuń lokalnie i na serwerze'),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      onDeleteBoth?.call();
+                    },
+                  ),
+                if (onDeleteRemote != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.cloud_off_outlined,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Usuń z serwera'),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      onDeleteRemote?.call();
+                    },
+                  ),
+                if (onDeleteLocal != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Usuń lokalnie'),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      onDeleteLocal?.call();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _openPreview(BuildContext context) {
     final localPath = item.localPath?.trim();
@@ -568,6 +850,13 @@ class _DocumentCard extends StatelessWidget {
         !isOffline &&
         (item.status == DocumentStatusUi.localOnly ||
             item.status == DocumentStatusUi.failed);
+    final isBusy = item.status == DocumentStatusUi.syncing;
+    final hasAnyActions =
+        (canSync && onSync != null) ||
+        (!isBusy &&
+            (onDeleteLocal != null ||
+                onDeleteRemote != null ||
+                onDeleteBoth != null));
 
     Widget? thumb;
     if (item.localPath != null && item.localPath!.isNotEmpty) {
@@ -695,11 +984,11 @@ class _DocumentCard extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             )
-          else if (canSync)
+          else if (hasAnyActions)
             IconButton(
-              tooltip: 'Synchronizuj',
-              onPressed: onSync,
-              icon: const Icon(Icons.cloud_upload_outlined),
+              tooltip: 'Opcje',
+              onPressed: () => _showActionsSheet(context),
+              icon: const Icon(Icons.more_vert),
             ),
         ],
       ),

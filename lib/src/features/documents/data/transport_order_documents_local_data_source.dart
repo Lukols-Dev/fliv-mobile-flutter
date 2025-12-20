@@ -21,6 +21,24 @@ class OrderDocumentsLocalDataSource {
   Future<void> upsert(DriverOrderDocumentTableCompanion row) =>
       _db.upsertDocument(row);
 
+  Future<void> deleteByLocalId(String localId) =>
+      _db.deleteDocumentByLocalId(localId);
+
+  Future<void> setRemoteLink({
+    required String localId,
+    required String remoteId,
+    required String remoteUrl,
+  }) => _db.updateDocumentRemoteLink(
+    localId: localId,
+    remoteId: remoteId,
+    remoteUrl: remoteUrl,
+  );
+
+  Future<void> clearRemoteLink({
+    required String localId,
+    required LocalDocumentStatus status,
+  }) => _db.clearDocumentRemoteLink(localId: localId, status: status);
+
   Future<void> setStatus({
     required String localId,
     required LocalDocumentStatus status,

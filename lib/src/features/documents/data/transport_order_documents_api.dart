@@ -72,4 +72,13 @@ class TransportOrderDocumentsApi {
 
     return TransportOrderDocumentDto.fromJson(res.data as Map<String, dynamic>);
   }
+
+  Future<void> deleteForOrder({
+    required String orderId,
+    required String orderDocumentId,
+  }) async {
+    await _dio.delete(
+      '/api/v1/driver/transport-orders/$orderId/documents/$orderDocumentId',
+    );
+  }
 }
