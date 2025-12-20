@@ -124,7 +124,6 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     Future<void> refresh() async {
       if (!hasResolvedOrder) return;
       ref.invalidate(transportOrderDocumentsProvider(resolvedOrderId));
-      // lokalne leci streamem, nie trzeba invalidate
     }
 
     return Scaffold(
@@ -576,51 +575,12 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                             }
                                           };
 
-                                    final onDeleteBoth =
-                                        (item.localId != null &&
-                                            item.remoteId != null &&
-                                            !isBusy &&
-                                            !isOffline)
-                                        ? () async {
-                                            if (!await confirmDelete(
-                                              'Usunąć dokument lokalnie i na serwerze?',
-                                            ))
-                                              return;
-                                            try {
-                                              await ref
-                                                  .read(
-                                                    orderDocumentsControllerProvider
-                                                        .notifier,
-                                                  )
-                                                  .deleteLocalAndRemote(
-                                                    orderId: orderId,
-                                                    localId: item.localId!,
-                                                    orderDocumentId:
-                                                        item.remoteId!,
-                                                  );
-                                              ref.invalidate(
-                                                transportOrderDocumentsProvider(
-                                                  orderId,
-                                                ),
-                                              );
-                                            } catch (e) {
-                                              if (!context.mounted) return;
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(content: Text('$e')),
-                                              );
-                                            }
-                                          }
-                                        : null;
-
                                     return _DocumentCard(
                                       item: item,
                                       isOffline: isOffline,
                                       onSync: onSync,
                                       onDeleteLocal: onDeleteLocal,
                                       onDeleteRemote: onDeleteRemote,
-                                      onDeleteBoth: onDeleteBoth,
                                       t: t,
                                     );
                                   },
@@ -633,8 +593,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                           padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
                           child: Text(
                             _isOfflineLikeRemoteError(remoteAsync.error)
-                                ? 'Brak połączenia z serwerem. Możesz dodawać dokumenty lokalnie i zsynchronizować później.'
-                                : 'Nie udało się pobrać dokumentów z serwera. Lokalna lista działa.\n${remoteAsync.error}',
+                                ? 'Jesteś offline. Możesz dodawać dokumenty lokalnie i zsynchronizować później.'
+                                : 'Nie udało się pobrać dokumentów z serwera.\n${remoteAsync.error}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -651,6 +611,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        shape: const CircleBorder(),
         onPressed: hasResolvedOrder
             ? () => context.push(
                 '/documents/add?orderId=${Uri.encodeComponent(resolvedOrderId)}',
@@ -727,7 +688,6 @@ class _DocumentCard extends StatelessWidget {
     required this.onSync,
     required this.onDeleteLocal,
     required this.onDeleteRemote,
-    required this.onDeleteBoth,
     required this.t,
   });
 
@@ -736,7 +696,6 @@ class _DocumentCard extends StatelessWidget {
   final VoidCallback? onSync;
   final VoidCallback? onDeleteLocal;
   final VoidCallback? onDeleteRemote;
-  final VoidCallback? onDeleteBoth;
   final AppLocalizations t;
 
   Future<void> _showActionsSheet(BuildContext context) async {
@@ -767,25 +726,13 @@ class _DocumentCard extends StatelessWidget {
                       onSync?.call();
                     },
                   ),
-                if (onDeleteBoth != null)
-                  ListTile(
-                    leading: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.red,
-                    ),
-                    title: const Text('Usuń lokalnie i na serwerze'),
-                    onTap: () {
-                      Navigator.of(ctx).pop();
-                      onDeleteBoth?.call();
-                    },
-                  ),
                 if (onDeleteRemote != null)
                   ListTile(
                     leading: const Icon(
                       Icons.cloud_off_outlined,
                       color: Colors.red,
                     ),
-                    title: const Text('Usuń z serwera'),
+                    title: const Text('Usuń'),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onDeleteRemote?.call();
@@ -797,7 +744,7 @@ class _DocumentCard extends StatelessWidget {
                       Icons.delete_outline,
                       color: Colors.red,
                     ),
-                    title: const Text('Usuń lokalnie'),
+                    title: const Text('Usuń'),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onDeleteLocal?.call();
@@ -843,28 +790,34 @@ class _DocumentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color statusColor;
-    IconData statusIcon;
+    IconData statusBadgeIcon;
+    IconData statusRowIcon;
     String statusText;
 
     switch (item.status) {
       case DocumentStatusUi.synchronized:
         statusColor = const Color(0xFF10B981);
-        statusIcon = Icons.check_circle_outline;
+        // Badge on thumbnail: cloud + check. Row icon: check next to text.
+        statusBadgeIcon = Icons.cloud_done_outlined;
+        statusRowIcon = Icons.check_circle_outline;
         statusText = t.documents_status_synchronized;
         break;
       case DocumentStatusUi.localOnly:
         statusColor = const Color(0xFFFF6B35);
-        statusIcon = Icons.eco_outlined;
+        statusBadgeIcon = Icons.cloud_off_outlined;
+        statusRowIcon = Icons.cloud_off_outlined;
         statusText = t.documents_status_local_only;
         break;
       case DocumentStatusUi.syncing:
         statusColor = const Color(0xFF3B82F6);
-        statusIcon = Icons.sync;
+        statusBadgeIcon = Icons.sync;
+        statusRowIcon = Icons.sync;
         statusText = t.documents_status_syncing;
         break;
       case DocumentStatusUi.failed:
         statusColor = const Color(0xFFEF4444);
-        statusIcon = Icons.error_outline;
+        statusBadgeIcon = Icons.error_outline;
+        statusRowIcon = Icons.error_outline;
         statusText = 'Błąd synchronizacji';
         break;
     }
@@ -876,10 +829,7 @@ class _DocumentCard extends StatelessWidget {
     final isBusy = item.status == DocumentStatusUi.syncing;
     final hasAnyActions =
         (canSync && onSync != null) ||
-        (!isBusy &&
-            (onDeleteLocal != null ||
-                onDeleteRemote != null ||
-                onDeleteBoth != null));
+        (!isBusy && (onDeleteLocal != null || onDeleteRemote != null));
 
     Widget? thumb;
     if (item.localPath != null && item.localPath!.isNotEmpty) {
@@ -891,6 +841,38 @@ class _DocumentCard extends StatelessWidget {
         );
       }
     }
+    thumb ??= (() {
+      final u = (item.remoteUrl ?? '').trim();
+      if (u.isEmpty) return null;
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          u,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(
+                Icons.description_outlined,
+                color: Color(0xFF0F4D46),
+                size: 24,
+              ),
+            );
+          },
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return const Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
+          },
+        ),
+      );
+    })();
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -935,7 +917,7 @@ class _DocumentCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: Icon(statusIcon, size: 12, color: Colors.white),
+                    child: Icon(statusBadgeIcon, size: 12, color: Colors.white),
                   ),
                 ),
               ],
@@ -965,21 +947,34 @@ class _DocumentCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(statusIcon, size: 14, color: statusColor),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        statusText,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusRowIcon, size: 14, color: statusColor),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          statusText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 if ((item.lastError ?? '').trim().isNotEmpty) ...[
                   const SizedBox(height: 6),

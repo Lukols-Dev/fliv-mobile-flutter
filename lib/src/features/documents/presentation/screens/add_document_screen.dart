@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
-import 'package:mobile/src/core/network/connectivity_provider.dart';
 import 'package:mobile/src/features/documents/application/transport_order_documents_controller.dart';
 
 class AddDocumentScreen extends ConsumerStatefulWidget {
@@ -112,11 +111,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            uploaded
-                ? 'Dodano dokument.'
-                : 'Dodano lokalnie. Zsynchronizujesz później.',
-          ),
+          content: Text(uploaded ? 'Dodano dokument.' : 'Dodano lokalnie.'),
         ),
       );
       context.pop();
