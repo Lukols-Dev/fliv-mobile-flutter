@@ -127,7 +127,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F8),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -656,7 +656,7 @@ class _FilterChip extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: isSelected
                     ? const Color(0xFF111827)
