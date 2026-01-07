@@ -52,6 +52,8 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Ta aplikacja potrzebuje dostępu do galerii, aby wybierać zdjęcia dokumentów.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-<string>Potrzebujemy dostępu do zapisu, aby zapisać zdjęcia dokumentów.</string>
+    <string>Potrzebujemy dostępu do zapisu, aby zapisać zdjęcia dokumentów.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+    <string>Potrzebujemy lokalizacji, aby pokazać Twoją pozycję na mapie.</string>
 	</dict>
 </plist>

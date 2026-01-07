@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:mobile/src/core/location/location_controller.dart';
+import 'package:mobile/src/core/location/geocoding_providers.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
@@ -89,10 +91,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(currentDriverOrderProvider);
     ref.invalidate(avatarControllerProvider);
 
-    await Future.wait([
-      ref.read(driverProfileProvider.future).catchError((_) {}),
-      ref.read(currentDriverOrderProvider.future).catchError((_) {}),
-      ref.read(avatarControllerProvider.future).catchError((_) {}),
+    await Future.wait<void>([
+      ref.read(driverProfileProvider.future).then((_) {}).catchError((_) {}),
+      ref
+          .read(currentDriverOrderProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      ref.read(avatarControllerProvider.future).then((_) {}).catchError((_) {}),
+      // User initiated refresh: ok to request location permission if needed.
+      ref
+          .read(locationControllerProvider.notifier)
+          .getCurrent()
+          .then((_) {})
+          .catchError((_) {}),
     ]);
   }
 
@@ -105,7 +116,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? '${profile.firstName} ${profile.lastName}'.trim()
         : '—';
 
-    final driverId = (profile as dynamic?)?.driverCode as String? ?? '—';
+    final driverId = profile != null
+        ? ((profile as dynamic).driverCode as String? ?? '—')
+        : '—';
 
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
     final currentOrder = currentOrderAsync.maybeWhen(
@@ -115,6 +128,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final avatarAsync = ref.watch(avatarControllerProvider);
     final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
+
+    final locationAsync = ref.watch(locationControllerProvider);
+    final loc = locationAsync.asData?.value;
+    final cityStreetAsync = loc == null
+        ? const AsyncValue<String?>.data(null)
+        : ref.watch(locationCityStreetProvider(loc));
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -248,11 +267,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Expanded(
+                              Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    const Text(
                                       'Obecna lokalizacja',
                                       style: TextStyle(
                                         color: Colors.black,
@@ -263,7 +282,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      'Warszawa, Chmielna 44/2',
+                                      () {
+                                        if (locationAsync.isLoading) {
+                                          return 'Pobieranie lokalizacji…';
+                                        }
+
+                                        return locationAsync.when(
+                                          data: (loc) {
+                                            if (loc == null) {
+                                              return 'Kliknij odśwież, aby pobrać';
+                                            }
+
+                                            if (cityStreetAsync.isLoading) {
+                                              return 'Ustalanie adresu…';
+                                            }
+
+                                            return cityStreetAsync.when(
+                                              data: (v) =>
+                                                  (v == null || v.isEmpty)
+                                                  ? 'Nie udało się ustalić adresu'
+                                                  : v,
+                                              loading: () =>
+                                                  'Ustalanie adresu…',
+                                              error: (e, _) =>
+                                                  'Nie udało się ustalić adresu',
+                                            );
+                                          },
+                                          loading: () =>
+                                              'Pobieranie lokalizacji…',
+                                          error: (e, _) =>
+                                              'Nie udało się pobrać',
+                                        );
+                                      }(),
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontSize: 13,
@@ -275,6 +325,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ],
                                 ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                tooltip: 'Odśwież lokalizację',
+                                icon: const Icon(Icons.refresh_rounded),
+                                color: const Color(0xFF004F45),
+                                onPressed: () async {
+                                  try {
+                                    await ref
+                                        .read(
+                                          locationControllerProvider.notifier,
+                                        )
+                                        .getCurrent();
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Lokalizacja: $e'),
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ],
                           ),
