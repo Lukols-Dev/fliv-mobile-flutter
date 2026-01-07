@@ -23,7 +23,7 @@ class RouteScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Material(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: Colors.white,
                   shape: const CircleBorder(),
                   elevation: 2,
                   child: IconButton(
