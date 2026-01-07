@@ -112,6 +112,12 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+    // ROUTE MAP FULLSCREEN (outside bottom nav)
+    GoRoute(
+      path: AppRoute.route.path,
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const RouteScreen(),
+    ),
 
     // APP (bottom nav z zachowaniem stanu tabów)
     StatefulShellRoute.indexedStack(
