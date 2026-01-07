@@ -58,6 +58,14 @@ class AccountScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F4D46)),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -67,7 +75,7 @@ class AccountScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 8),
 
                       // PROFILE HEADER
                       Column(
@@ -143,7 +151,8 @@ class AccountScreen extends ConsumerWidget {
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF111827),
+                              fontFamily: 'Figtree',
+                              color: Colors.black,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -153,7 +162,8 @@ class AccountScreen extends ConsumerWidget {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF6B7280),
+                              fontFamily: 'Figtree',
+                              color: Colors.black,
                             ),
                           ),
                         ],
@@ -163,7 +173,7 @@ class AccountScreen extends ConsumerWidget {
 
                       // PROFILE USER SECTION
                       _SectionHeader(
-                        icon: Icons.person_outline,
+                        icon: Icons.person_outlined,
                         title: t.profile_user_profile,
                       ),
                       const SizedBox(height: 8),
@@ -210,7 +220,13 @@ class AccountScreen extends ConsumerWidget {
                                   children: [
                                     for (final l in SupportedLocales.all)
                                       ListTile(
-                                        title: Text(SupportedLocales.label(l)),
+                                        title: Text(
+                                          SupportedLocales.label(l),
+                                          style: const TextStyle(
+                                            fontFamily: 'Figtree',
+                                            color: Colors.black,
+                                          ),
+                                        ),
                                         trailing:
                                             l.languageCode ==
                                                 currentLocale.languageCode
@@ -285,6 +301,7 @@ class AccountScreen extends ConsumerWidget {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
+                              fontFamily: 'Figtree',
                             ),
                           ),
                         ),
@@ -313,16 +330,17 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF6B7280)),
-        const SizedBox(width: 8),
         Text(
           title,
           style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF6B7280),
+            fontSize: 24,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Figtree',
+            color: Colors.black,
           ),
         ),
+        const SizedBox(width: 8),
+        Icon(icon, size: 24, color: Colors.black),
       ],
     );
   }
@@ -340,7 +358,7 @@ class _ProfileListItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
             Expanded(
@@ -348,12 +366,13 @@ class _ProfileListItem extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF111827),
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Figtree',
+                  color: Colors.black,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF), size: 20),
+            const Icon(Icons.chevron_right, color: Colors.black, size: 20),
           ],
         ),
       ),
