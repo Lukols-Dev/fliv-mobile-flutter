@@ -73,7 +73,7 @@ class OrderDetailsScreen extends ConsumerWidget {
     final id = orderId;
     if (id == null || id.trim().isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -90,14 +90,19 @@ class OrderDetailsScreen extends ConsumerWidget {
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(child: Text('Brak ID zlecenia')),
+        body: const Center(
+          child: Text(
+            'Brak ID zlecenia',
+            style: TextStyle(fontFamily: 'Figtree'),
+          ),
+        ),
       );
     }
 
     final detailsAsync = ref.watch(driverOrderDetailsProvider(id));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F8),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -116,7 +121,12 @@ class OrderDetailsScreen extends ConsumerWidget {
       ),
       body: detailsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Błąd pobierania zlecenia: $e')),
+        error: (e, _) => Center(
+          child: Text(
+            'Błąd pobierania zlecenia: $e',
+            style: const TextStyle(fontFamily: 'Figtree'),
+          ),
+        ),
         data: (details) {
           final statusLabel = _statusLabel(t, details.status);
           final statusColor = _statusColor(details.status);
@@ -146,6 +156,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                       fontSize: 28,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF111827),
+                                      fontFamily: 'Figtree',
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -155,6 +166,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       color: Color(0xFF6B7280),
+                                      fontFamily: 'Figtree',
                                     ),
                                   ),
                                 ],
@@ -175,6 +187,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                   color: Colors.white,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
+                                  fontFamily: 'Figtree',
                                 ),
                               ),
                             ),
@@ -195,6 +208,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF111827),
+                                  fontFamily: 'Figtree',
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -281,6 +295,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                               fontWeight: FontWeight.w400,
                               color: Color(0xFF111827),
                               height: 1.5,
+                              fontFamily: 'Figtree',
                             ),
                           ),
                         ),
@@ -334,6 +349,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
+                                  fontFamily: 'Figtree',
                                 ),
                               ),
                             ],
@@ -371,6 +387,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
+                                  fontFamily: 'Figtree',
                                 ),
                               ),
                             ],
@@ -413,6 +430,7 @@ class _InfoCard extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: Color(0xFF10B981),
+              fontFamily: 'Figtree',
             ),
           ),
           const SizedBox(height: 12),
@@ -442,6 +460,7 @@ class _InfoRow extends StatelessWidget {
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Color(0xFF6B7280),
+              fontFamily: 'Figtree',
             ),
           ),
         ),
@@ -453,6 +472,7 @@ class _InfoRow extends StatelessWidget {
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Color(0xFF111827),
+              fontFamily: 'Figtree',
             ),
             textAlign: TextAlign.right,
           ),
@@ -513,6 +533,7 @@ class _RoutePoint extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF111827),
+                        fontFamily: 'Figtree',
                       ),
                     ),
                   ),
@@ -522,6 +543,7 @@ class _RoutePoint extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF9CA3AF),
+                      fontFamily: 'Figtree',
                     ),
                   ),
                 ],
@@ -533,6 +555,7 @@ class _RoutePoint extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF111827),
+                  fontFamily: 'Figtree',
                 ),
               ),
               const SizedBox(height: 2),
@@ -542,6 +565,7 @@ class _RoutePoint extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: Color(0xFF6B7280),
+                  fontFamily: 'Figtree',
                 ),
               ),
               const SizedBox(height: 6),
@@ -561,6 +585,7 @@ class _RoutePoint extends StatelessWidget {
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: statusColor,
+                      fontFamily: 'Figtree',
                     ),
                   ),
                 ],

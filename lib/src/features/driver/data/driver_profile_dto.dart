@@ -8,6 +8,7 @@ class DriverProfileDto {
     this.phone,
     this.companyInternalId,
     this.driverCode,
+
     this.visaExpiresAt,
     this.drivingLicenseExpiresAt,
     this.workPermitExpiresAt,
@@ -24,6 +25,7 @@ class DriverProfileDto {
   final String? phone;
   final String? companyInternalId;
   final String? driverCode;
+
   final DateTime? visaExpiresAt;
   final DateTime? drivingLicenseExpiresAt;
   final DateTime? workPermitExpiresAt;
@@ -52,6 +54,7 @@ class DriverProfileDto {
       email: json['email'] as String?,
       companyInternalId: dp['companyInternalId'] as String?,
       driverCode: dp['driverCode'] as String?,
+
       visaExpiresAt: parseDate(dp['visaExpiresAt']),
       drivingLicenseExpiresAt: parseDate(dp['drivingLicenseExpiresAt']),
       workPermitExpiresAt: parseDate(dp['workPermitExpiresAt']),
@@ -70,6 +73,7 @@ class DriverProfileDto {
     phone: phone,
     companyInternalId: companyInternalId,
     driverCode: driverCode,
+
     visaExpiresAt: visaExpiresAt,
     drivingLicenseExpiresAt: drivingLicenseExpiresAt,
     workPermitExpiresAt: workPermitExpiresAt,
