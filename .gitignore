@@ -54,3 +54,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# HERE SDK binaries (do not commit)
+# Ignore HERE SDK vendored files, keep only README
+plugins/here_sdk/**
+!plugins/here_sdk/
+!plugins/here_sdk/README.md
