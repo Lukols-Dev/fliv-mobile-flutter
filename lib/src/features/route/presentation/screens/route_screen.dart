@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:here_sdk/core.dart';
 import 'package:here_sdk/mapview.dart';
 
+import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
+
+final routeMapControllerProvider =
+    ChangeNotifierProvider.autoDispose<RouteMapController>((ref) {
+      final c = RouteMapController(ref);
+      ref.onDispose(c.dispose);
+      return c;
+    });
 
 class RouteScreen extends ConsumerWidget {
   const RouteScreen({super.key});
@@ -12,18 +22,30 @@ class RouteScreen extends ConsumerWidget {
   static const _sheetInitial = 0.18;
   static const _sheetMax = 0.55;
 
+  String _formatKm(int meters) => (meters / 1000).toStringAsFixed(1);
+  String _formatMin(Duration d) => '${(d.inSeconds / 60).round()} min';
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(routeMapControllerProvider);
 
+    final currentOrderAsync = ref.watch(currentDriverOrderProvider);
+    final currentOrder = currentOrderAsync.asData?.value;
+    final hasOrder = currentOrder != null;
+
     final screenH = MediaQuery.of(context).size.height;
-    final bottomPaddingForFab = (screenH * _sheetInitial) + 16;
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+    final bottomPaddingForFab = (screenH * _sheetInitial) + 16 + bottomSafe;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          HereMap(onMapCreated: controller.onMapCreated),
+          HereMap(
+            onMapCreated: (map) {
+              controller.onMapCreated(map);
+            },
+          ),
 
           // BACK
           SafeArea(
@@ -45,14 +67,13 @@ class RouteScreen extends ConsumerWidget {
             ),
           ),
 
-          // DRAGGABLE BOTTOM SHEET - od samego dołu + działa drag
+          // DRAGGABLE SHEET
           DraggableScrollableSheet(
             minChildSize: _sheetMin,
             initialChildSize: _sheetInitial,
             maxChildSize: _sheetMax,
-            // ważne: nie dokładaj SafeArea na wrapperze, bo odsunie od dołu
             builder: (context, scrollController) {
-              final bottomInset = MediaQuery.of(context).padding.bottom;
+              final route = controller.currentRoute;
 
               return Container(
                 decoration: const BoxDecoration(
@@ -66,44 +87,161 @@ class RouteScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: ListView(
+                child: SingleChildScrollView(
                   controller: scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(18, 10, 18, 22 + bottomInset),
-                  children: const [
-                    // drag handle
-                    Align(alignment: Alignment.center, child: _DragHandle()),
-                    SizedBox(height: 14),
+                  physics: const ClampingScrollPhysics(),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + bottomSafe),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 44,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE5E7EB),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Nawigacja',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w300,
+                            fontFamily: 'Figtree',
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
 
-                    Text(
-                      'Aktualne zlecenie',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w300,
-                        fontFamily: 'Figtree',
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                    SizedBox(height: 4),
+                        if (!hasOrder) ...[
+                          const Text(
+                            'Brak przypisanego aktualnie zlecenia.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Figtree',
+                              color: Color(0xFF111827),
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Figtree',
+                              color: Color(0xFF6B7280),
+                              height: 1.35,
+                            ),
+                          ),
+                        ] else ...[
+                          Text(
+                            'Zlecenie #${currentOrder!.ztNumber}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'Figtree',
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
 
-                    Text(
-                      'Brak przypisanego aktualnie zlecenia',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Figtree',
-                        color: Color(0xFF111827),
-                        height: 1.2,
-                      ),
+                          if (route != null) ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _InfoChip(
+                                    label: 'Dystans',
+                                    value:
+                                        '${_formatKm(route.lengthInMeters)} km',
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _InfoChip(
+                                    label: 'Czas',
+                                    value: _formatMin(route.duration),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                          ] else ...[
+                            const Text(
+                              'Trasa: jeszcze nie wyznaczona.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Figtree',
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          SizedBox(
+                            height: 54,
+                            child: FilledButton(
+                              onPressed: () async {
+                                // 1) Punkty od dyspozytora (P1..Pn)
+                                // TODO: Podmień na swoje pola z currentOrder.
+                                // Musisz zwrócić listę punktów w kolejności przejazdu:
+                                // np. [zaladunek, rozladunek] + ewentualne punkty po drodze.
+                                final stops = <GeoCoordinates>[
+                                  // GeoCoordinates(currentOrder.pickupLat, currentOrder.pickupLon),
+                                  // GeoCoordinates(currentOrder.deliveryLat, currentOrder.deliveryLon),
+                                ];
+
+                                if (stops.isEmpty) return;
+
+                                // 2) START zawsze z GPS kierowcy
+                                await controller.buildRouteFromDriverToStops(
+                                  stops: stops,
+                                );
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF0F4D46),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                elevation: 2,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.play_arrow_rounded, size: 24),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Wyznacz trasę',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: 'Figtree',
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 220),
+                      ],
                     ),
-                    SizedBox(height: 220),
-                  ],
+                  ),
                 ),
               );
             },
           ),
 
-          // CENTER BUTTON (bottom-right, above the sheet)
+          // CENTER BUTTON
           SafeArea(
             child: Align(
               alignment: Alignment.bottomRight,
@@ -137,22 +275,44 @@ class RouteScreen extends ConsumerWidget {
   }
 }
 
-class _DragHandle extends StatelessWidget {
-  const _DragHandle();
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 18,
-      child: Center(
-        child: Container(
-          width: 44,
-          height: 5,
-          decoration: BoxDecoration(
-            color: Color(0xFFE5E7EB),
-            borderRadius: BorderRadius.all(Radius.circular(999)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Figtree',
+              color: Color(0xFF6B7280),
+            ),
           ),
-        ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Figtree',
+              color: Color(0xFF111827),
+            ),
+          ),
+        ],
       ),
     );
   }
