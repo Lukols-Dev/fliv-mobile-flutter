@@ -10,9 +10,7 @@ import 'package:mobile/src/features/route/presentation/controllers/route_map_con
 
 final routeMapControllerProvider =
     ChangeNotifierProvider.autoDispose<RouteMapController>((ref) {
-      final c = RouteMapController(ref);
-      ref.onDispose(c.dispose);
-      return c;
+      return RouteMapController(ref);
     });
 
 class RouteScreen extends ConsumerWidget {
@@ -24,6 +22,15 @@ class RouteScreen extends ConsumerWidget {
 
   String _formatKm(int meters) => (meters / 1000).toStringAsFixed(1);
   String _formatMin(Duration d) => '${(d.inSeconds / 60).round()} min';
+
+  List<GeoCoordinates> _exampleStopsFromDispatcher() {
+    // TODO: tutaj będzie umieszczana wartość z api, jak juz będę mieć lokalizacje punktów.
+    // Docelowo: [zaladunek, rozladunek, ...punktyPoDrodze]
+    return <GeoCoordinates>[
+      GeoCoordinates(37.4064, -122.406417), // Poznań
+      GeoCoordinates(37.1079, -122.406417), // Wrocław
+    ];
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,15 +44,18 @@ class RouteScreen extends ConsumerWidget {
     final bottomSafe = MediaQuery.of(context).padding.bottom;
     final bottomPaddingForFab = (screenH * _sheetInitial) + 16 + bottomSafe;
 
+    final route = controller.currentRoute;
+
+    // stan przycisków:
+    final canCalculate =
+        hasOrder; // możesz też uzależnić od "czy order ma punkty"
+    final canStart = controller.canStartNavigation;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          HereMap(
-            onMapCreated: (map) {
-              controller.onMapCreated(map);
-            },
-          ),
+          HereMap(onMapCreated: controller.onMapCreated),
 
           // BACK
           SafeArea(
@@ -73,8 +83,6 @@ class RouteScreen extends ConsumerWidget {
             initialChildSize: _sheetInitial,
             maxChildSize: _sheetMax,
             builder: (context, scrollController) {
-              final route = controller.currentRoute;
-
               return Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -107,6 +115,7 @@ class RouteScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 14),
+
                         const Text(
                           'Nawigacja',
                           style: TextStyle(
@@ -142,7 +151,7 @@ class RouteScreen extends ConsumerWidget {
                           ),
                         ] else ...[
                           Text(
-                            'Zlecenie #${currentOrder!.ztNumber}',
+                            'Zlecenie #${currentOrder.ztNumber}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -185,25 +194,29 @@ class RouteScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                           ],
 
+                          // GŁÓWNY PRZYCISK:
+                          // - jeśli trasy nie ma -> "Wyznacz trasę"
+                          // - jeśli trasa jest -> "Rozpocznij trasę" (toggle: start/stop)
                           SizedBox(
                             height: 54,
                             child: FilledButton(
                               onPressed: () async {
-                                // 1) Punkty od dyspozytora (P1..Pn)
-                                // TODO: Podmień na swoje pola z currentOrder.
-                                // Musisz zwrócić listę punktów w kolejności przejazdu:
-                                // np. [zaladunek, rozladunek] + ewentualne punkty po drodze.
-                                final stops = <GeoCoordinates>[
-                                  // GeoCoordinates(currentOrder.pickupLat, currentOrder.pickupLon),
-                                  // GeoCoordinates(currentOrder.deliveryLat, currentOrder.deliveryLon),
-                                ];
+                                if (!canStart) {
+                                  if (!canCalculate) return;
 
-                                if (stops.isEmpty) return;
+                                  final stops = _exampleStopsFromDispatcher();
+                                  await controller.calculateRouteOnDemand(
+                                    dispatcherStops: stops,
+                                  );
+                                  return;
+                                }
 
-                                // 2) START zawsze z GPS kierowcy
-                                await controller.buildRouteFromDriverToStops(
-                                  stops: stops,
-                                );
+                                // start/stop follow
+                                if (controller.isFollowing) {
+                                  controller.stopFollowing();
+                                } else {
+                                  controller.startFollowing();
+                                }
                               },
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFF0F4D46),
@@ -215,12 +228,23 @@ class RouteScreen extends ConsumerWidget {
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Icon(Icons.play_arrow_rounded, size: 24),
-                                  SizedBox(width: 10),
+                                children: [
+                                  Icon(
+                                    !canStart
+                                        ? Icons.route_rounded
+                                        : (controller.isFollowing
+                                              ? Icons.pause_rounded
+                                              : Icons.play_arrow_rounded),
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 10),
                                   Text(
-                                    'Wyznacz trasę',
-                                    style: TextStyle(
+                                    !canStart
+                                        ? 'Wyznacz trasę'
+                                        : (controller.isFollowing
+                                              ? 'Zatrzymaj'
+                                              : 'Rozpocznij trasę'),
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontFamily: 'Figtree',
                                       fontWeight: FontWeight.w700,
