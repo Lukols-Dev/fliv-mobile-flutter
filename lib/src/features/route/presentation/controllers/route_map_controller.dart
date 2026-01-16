@@ -7,257 +7,265 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:here_sdk/animation.dart' as here;
 import 'package:here_sdk/core.dart';
 import 'package:here_sdk/core.errors.dart';
-import 'package:here_sdk/core.threading.dart';
 import 'package:here_sdk/mapview.dart';
 import 'package:here_sdk/routing.dart';
 import 'package:mobile/src/core/location/location_controller.dart';
 
 class RouteMapController extends ChangeNotifier {
   RouteMapController(this._ref);
-
   final Ref _ref;
 
   HereMapController? _map;
   RoutingEngine? _routingEngine;
-  bool _sceneLoaded = false;
-
-  bool _disposed = false;
-
-  // HERE default indicator (kropka + strzałka)
-  LocationIndicator? _locationIndicator;
-  GeoCoordinates? _prevCoordsForBearing;
-  GeoCoordinates? _lastUserCoordinates;
-
-  // route + rendering
-  Route? _currentRoute;
-  Route? get currentRoute => _currentRoute;
 
   final List<MapPolygon> _stopCircles = [];
   final List<MapPolyline> _routePolylines = [];
-  TaskHandle? _currentRouteTask;
 
-  // follow mode
+  LocationIndicator? _locationIndicator;
+  GeoCoordinates? _prevCoordsForBearing;
+
+  GeoCoordinates? _lastUserCoordinates;
+
+  Route? _currentRoute;
+  Route? get currentRoute => _currentRoute;
+
+  List<GeoCoordinates> _lastDispatcherStops = const [];
+  GeoCoordinates? _lastStartUsed;
+
   Timer? _followTimer;
-  bool _isFollowing = false;
-  bool get isFollowing => _isFollowing;
-
+  bool get isFollowing => _followTimer != null;
   bool get canStartNavigation => _currentRoute != null;
+
+  static const _followTick = Duration(seconds: 2);
+
+  // ----------------------------
+  // LIFECYCLE MAPY
+  // ----------------------------
 
   void onMapCreated(HereMapController hereMapController) {
     _map = hereMapController;
 
     try {
-      _routingEngine = RoutingEngine();
+      _routingEngine ??= RoutingEngine();
     } on InstantiationException {
       // ignore: avoid_print
       print('RoutingEngine init failed.');
     }
 
-    const double distanceToEarthInMeters = 8000;
-    final mapMeasureZoom = MapMeasure(
-      MapMeasureKind.distanceInMeters,
-      distanceToEarthInMeters,
-    );
-
+    // fallback kamera
+    final mapMeasureZoom = MapMeasure(MapMeasureKind.distanceInMeters, 8000);
     hereMapController.camera.lookAtPointWithMeasure(
-      GeoCoordinates(52.2297, 21.0122), // Warsaw fallback
+      GeoCoordinates(52.2297, 21.0122),
       mapMeasureZoom,
     );
 
     hereMapController.mapScene.loadSceneForMapScheme(MapScheme.normalDay, (
       MapError? error,
     ) {
-      if (_disposed) return;
-
       if (error != null) {
         // ignore: avoid_print
         print('Map scene not loaded. MapError: ${error.toString()}');
         return;
       }
 
-      _sceneLoaded = true;
+      // włącz LocationIndicator na tej mapie
+      _ensureLocationIndicatorEnabled();
 
-      _locationIndicator ??= LocationIndicator()
-        ..locationIndicatorStyle = LocationIndicatorIndicatorStyle.navigation;
-      _locationIndicator!.enable(hereMapController);
-
+      // pokaż usera
       unawaited(refreshAndCenter());
+
+      // jeśli była trasa wyznaczona wcześniej, odtwórz ją wizualnie na nowej mapie
+      _restoreVisualsIfNeeded();
     });
   }
 
-  /// 1) Klik "Wyznacz trasę"
-  /// START = GPS kierowcy
-  /// STOPS = punkty od dyspozytora (P1..Pn)
+  /// Wywołuj w dispose() ekranu: ekran znika => mapa znika.
+  /// Nie zabijamy nawigacji, tylko odpinamy mapę.
+  void detachMap() {
+    _locationIndicator?.disable();
+    _locationIndicator = null;
+
+    _map = null;
+
+    // te obiekty należały do poprzedniej mapy — nie da się ich przenieść
+    _routePolylines.clear();
+    _stopCircles.clear();
+  }
+
+  void _restoreVisualsIfNeeded() {
+    final map = _map;
+    if (map == null) return;
+
+    // odtwórz wskaźnik usera jeśli mamy coords
+    final coords = _lastUserCoordinates;
+    if (coords != null) {
+      _updateHereLocationIndicator(coords);
+    }
+
+    // odtwórz trasę
+    final route = _currentRoute;
+    if (route != null) {
+      _showRouteOnMap(route);
+
+      // odtwórz stop points
+      final start = _lastStartUsed;
+      if (start != null) {
+        _drawStops(start, _lastDispatcherStops);
+      }
+
+      _animateToRoute(route);
+    }
+  }
+
+  // ----------------------------
+  // ROUTING
+  // ----------------------------
+
   Future<void> calculateRouteOnDemand({
     required List<GeoCoordinates> dispatcherStops,
   }) async {
-    if (_disposed) return;
-    if (!_sceneLoaded) return;
-
     final map = _map;
     final routingEngine = _routingEngine;
-    if (map == null || routingEngine == null) return;
-
+    if (routingEngine == null) return;
     if (dispatcherStops.isEmpty) return;
 
-    // cancel previous calculation
-    if (_currentRouteTask != null && !_currentRouteTask!.isFinished) {
-      _currentRouteTask!.cancel();
-      _currentRouteTask = null;
-    }
-
-    // Start GPS
-    final start = await _safeGetUserCoordinates();
-    if (start == null) return;
-
+    // START: zawsze GPS kierowcy
+    final start = await _getUserCoordinates();
     _lastUserCoordinates = start;
+    _lastStartUsed = start;
+
+    _lastDispatcherStops = List<GeoCoordinates>.from(dispatcherStops);
+
+    // wyczyść tylko rysunki/trasę na mapie (ale zostaw follow timer)
+    _clearRouteAndStops();
+
+    _ensureLocationIndicatorEnabled();
     _updateHereLocationIndicator(start);
 
-    // clear old route
-    _clearRouteAndStops(keepLocationIndicator: true);
+    // narysuj stop points (start + stops)
+    _drawStops(start, dispatcherStops);
 
-    // draw points: start + stops
-    _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
-    for (int i = 0; i < dispatcherStops.length; i++) {
-      final isLast = i == dispatcherStops.length - 1;
-      _addStopCircle(
-        dispatcherStops[i],
-        isLast
-            ? const Color(0xFFEF4444)
-            : const Color.fromARGB(255, 246, 93, 59),
-      );
-    }
-
-    // Create waypoints - HERE SDK will automatically snap them to nearest roads
     final waypoints = <Waypoint>[
       Waypoint.withDefaults(start),
       ...dispatcherStops.map(Waypoint.withDefaults),
     ];
 
-    // Log waypoints for debugging
-    // ignore: avoid_print
-    print('Calculating route with ${waypoints.length} waypoints:');
-    // ignore: avoid_print
-    print('  Start: ${start.latitude}, ${start.longitude}');
-    for (int i = 0; i < dispatcherStops.length; i++) {
-      final stop = dispatcherStops[i];
-      final distanceKm = _distanceInKm(start, stop);
-      // ignore: avoid_print
-      print(
-        '  Stop ${i + 1}: ${stop.latitude}, ${stop.longitude} (distance: ${distanceKm.toStringAsFixed(1)} km)',
-      );
-    }
+    final carOptions = CarOptions()
+      ..routeOptions.enableTolls = true
+      ..routeOptions.enableRouteHandle = true
+      ..routeOptions.trafficOptimizationMode =
+          TrafficOptimizationMode.timeDependent;
 
-    final carOptions = CarOptions();
-    carOptions.routeOptions.enableTolls = true;
-    carOptions.routeOptions.trafficOptimizationMode =
-        TrafficOptimizationMode.timeDependent;
-    carOptions.routeOptions.enableRouteHandle = true;
+    final completer = Completer<void>();
 
-    _setCurrentRoute(null);
-
-    _currentRouteTask = routingEngine.calculateCarRoute(waypoints, carOptions, (
-      RoutingError? routingError,
-      List<Route>? routeList,
+    routingEngine.calculateCarRoute(waypoints, carOptions, (
+      RoutingError? error,
+      List<Route>? routes,
     ) {
-      if (_disposed) return;
-
-      if (routingError != null || routeList == null || routeList.isEmpty) {
+      if (error != null || routes == null || routes.isEmpty) {
         // ignore: avoid_print
-        print('Route calculation failed:');
-        // ignore: avoid_print
-        print('  Error: ${routingError?.name ?? 'unknown'}');
-        // ignore: avoid_print
-        print('  Routes found: ${routeList?.length ?? 0}');
-        if (routingError != null) {
-          // ignore: avoid_print
-          print('  Error details: ${routingError.toString()}');
-        }
+        print('Route error: ${error?.name}');
         _setCurrentRoute(null);
+        completer.complete();
         return;
       }
 
-      final route = routeList.first;
+      final route = routes.first;
       _setCurrentRoute(route);
 
-      _showRouteOnMap(route);
-      _animateToRoute(route);
+      // pokaż na mapie (jeśli mapa akurat istnieje)
+      if (_map != null) {
+        _showRouteOnMap(route);
+        _animateToRoute(route);
+      }
+
+      completer.complete();
     });
+
+    await completer.future;
   }
 
-  /// 2) Klik "Rozpocznij trasę" -> follow mode
+  void _drawStops(GeoCoordinates start, List<GeoCoordinates> stops) {
+    final map = _map;
+    if (map == null) return;
+
+    // start kierowcy (niebieski)
+    _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
+
+    // punkty dyspozytora (pomarańczowe), ostatni czerwony
+    for (int i = 0; i < stops.length; i++) {
+      final isLast = i == stops.length - 1;
+      _addStopCircle(
+        stops[i],
+        isLast
+            ? const Color(0xFFEF4444)
+            : const Color.fromARGB(255, 246, 93, 59),
+      );
+    }
+  }
+
+  // ----------------------------
+  // FOLLOW / START-STOP
+  // ----------------------------
+
   void startFollowing() {
-    if (_disposed) return;
-    if (_isFollowing) return;
+    if (_followTimer != null) return;
 
-    _isFollowing = true;
-    _safeNotify();
+    _followTimer = Timer.periodic(_followTick, (_) async {
+      try {
+        final coords = await _getUserCoordinates();
+        _lastUserCoordinates = coords;
 
-    _followTimer?.cancel();
-    _followTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
-      if (_disposed) return;
+        // jeśli mapa jest — aktualizuj wskaźnik + kamerę
+        if (_map != null) {
+          _ensureLocationIndicatorEnabled();
+          _updateHereLocationIndicator(coords);
 
-      final map = _map;
-      if (map == null) return;
-
-      final coords = await _safeGetUserCoordinates();
-      if (coords == null) return;
-
-      _lastUserCoordinates = coords;
-      _updateHereLocationIndicator(coords);
-
-      // gentle follow
-      final measure = MapMeasure(MapMeasureKind.distanceInMeters, 900);
-      map.camera.lookAtPointWithMeasure(coords, measure);
+          final measure = MapMeasure(MapMeasureKind.distanceInMeters, 900);
+          _map!.camera.lookAtPointWithMeasure(coords, measure);
+        }
+      } catch (_) {
+        // ignorujemy chwilowe błędy GPS
+      }
     });
+
+    notifyListeners();
   }
 
   void stopFollowing() {
     _followTimer?.cancel();
     _followTimer = null;
-
-    if (_isFollowing) {
-      _isFollowing = false;
-      _safeNotify();
-    }
+    notifyListeners();
   }
 
-  Future<void> refreshAndCenter() async {
-    if (_disposed) return;
+  // ----------------------------
+  // MAP HELPERS
+  // ----------------------------
 
+  Future<void> refreshAndCenter() async {
     final map = _map;
     if (map == null) return;
 
-    final coords = await _safeGetUserCoordinates();
-    if (coords == null) return;
-
+    final coords = await _getUserCoordinates();
     _lastUserCoordinates = coords;
+
+    _ensureLocationIndicatorEnabled();
     _updateHereLocationIndicator(coords);
 
     final measure = MapMeasure(MapMeasureKind.distanceInMeters, 1200);
     map.camera.lookAtPointWithMeasure(coords, measure);
   }
 
-  Future<GeoCoordinates?> _safeGetUserCoordinates() async {
-    try {
-      final loc = await _ref
-          .read(locationControllerProvider.notifier)
-          .getCurrent();
-      return GeoCoordinates(loc.lat, loc.lon);
-    } on TimeoutException catch (e) {
-      // ignore: avoid_print
-      print('GPS timeout: $e');
-      return _lastUserCoordinates;
-    } catch (e) {
-      // ignore: avoid_print
-      print('GPS error: $e');
-      return _lastUserCoordinates;
-    }
+  Future<GeoCoordinates> _getUserCoordinates() async {
+    final loc = await _ref
+        .read(locationControllerProvider.notifier)
+        .getCurrent();
+    return GeoCoordinates(loc.lat, loc.lon);
   }
 
   void _setCurrentRoute(Route? route) {
     _currentRoute = route;
-    _safeNotify();
+    notifyListeners();
   }
 
   void _showRouteOnMap(Route route) {
@@ -267,7 +275,7 @@ class RouteMapController extends ChangeNotifier {
     const double widthInPixels = 16;
 
     try {
-      final routeMapPolyline = MapPolyline.withRepresentation(
+      final polyline = MapPolyline.withRepresentation(
         route.geometry,
         MapPolylineSolidRepresentation(
           MapMeasureDependentRenderSize.withSingleSize(
@@ -279,8 +287,8 @@ class RouteMapController extends ChangeNotifier {
         ),
       );
 
-      map.mapScene.addMapPolyline(routeMapPolyline);
-      _routePolylines.add(routeMapPolyline);
+      map.mapScene.addMapPolyline(polyline);
+      _routePolylines.add(polyline);
     } on MapPolylineRepresentationInstantiationException catch (e) {
       // ignore: avoid_print
       print('MapPolylineRepresentation error: ${e.error.name}');
@@ -331,9 +339,13 @@ class RouteMapController extends ChangeNotifier {
     _stopCircles.add(circle);
   }
 
-  void _clearRouteAndStops({required bool keepLocationIndicator}) {
+  void _clearRouteAndStops() {
     final map = _map;
-    if (map == null) return;
+    if (map == null) {
+      _routePolylines.clear();
+      _stopCircles.clear();
+      return;
+    }
 
     for (final p in _routePolylines) {
       map.mapScene.removeMapPolyline(p);
@@ -345,23 +357,24 @@ class RouteMapController extends ChangeNotifier {
     }
     _stopCircles.clear();
 
-    if (!keepLocationIndicator) {
-      _locationIndicator?.disable();
-      _locationIndicator = null;
-      _prevCoordsForBearing = null;
-      _lastUserCoordinates = null;
-    }
-
-    _setCurrentRoute(null);
+    _setCurrentRoute(
+      _currentRoute,
+    ); // nie ruszamy route obiektu, tylko odświeżamy UI
   }
 
-  void _updateHereLocationIndicator(GeoCoordinates coords) {
+  void _ensureLocationIndicatorEnabled() {
     final map = _map;
     if (map == null) return;
 
     _locationIndicator ??= LocationIndicator()
       ..locationIndicatorStyle = LocationIndicatorIndicatorStyle.navigation;
+
     _locationIndicator!.enable(map);
+  }
+
+  void _updateHereLocationIndicator(GeoCoordinates coords) {
+    final map = _map;
+    if (map == null) return;
 
     double bearing = 0.0;
     final prev = _prevCoordsForBearing;
@@ -374,7 +387,7 @@ class RouteMapController extends ChangeNotifier {
       ..time = DateTime.now()
       ..bearingInDegrees = bearing;
 
-    _locationIndicator!.updateLocation(location);
+    _locationIndicator?.updateLocation(location);
   }
 
   double _bearingDegrees({
@@ -397,45 +410,10 @@ class RouteMapController extends ChangeNotifier {
     return brng;
   }
 
-  /// Calculate distance between two coordinates in kilometers using Haversine formula
-  double _distanceInKm(GeoCoordinates from, GeoCoordinates to) {
-    const double earthRadiusKm = 6371.0;
-
-    final lat1Rad = from.latitude * (math.pi / 180.0);
-    final lon1Rad = from.longitude * (math.pi / 180.0);
-    final lat2Rad = to.latitude * (math.pi / 180.0);
-    final lon2Rad = to.longitude * (math.pi / 180.0);
-
-    final dLat = lat2Rad - lat1Rad;
-    final dLon = lon2Rad - lon1Rad;
-
-    final a =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1Rad) *
-            math.cos(lat2Rad) *
-            math.sin(dLon / 2) *
-            math.sin(dLon / 2);
-    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-
-    return earthRadiusKm * c;
-  }
-
-  void _safeNotify() {
-    if (_disposed) return;
-    notifyListeners();
-  }
-
   @override
   void dispose() {
-    _disposed = true;
-
     _followTimer?.cancel();
     _followTimer = null;
-
-    if (_currentRouteTask != null && !_currentRouteTask!.isFinished) {
-      _currentRouteTask!.cancel();
-    }
-    _currentRouteTask = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;

@@ -8,14 +8,22 @@ import 'package:here_sdk/mapview.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
 
-final routeMapControllerProvider =
-    ChangeNotifierProvider.autoDispose<RouteMapController>((ref) {
-      return RouteMapController(ref);
-    });
+final routeMapControllerProvider = ChangeNotifierProvider<RouteMapController>((
+  ref,
+) {
+  final c = RouteMapController(ref);
+  ref.onDispose(c.dispose);
+  return c;
+});
 
-class RouteScreen extends ConsumerWidget {
+class RouteScreen extends ConsumerStatefulWidget {
   const RouteScreen({super.key});
 
+  @override
+  ConsumerState<RouteScreen> createState() => _RouteScreenState();
+}
+
+class _RouteScreenState extends ConsumerState<RouteScreen> {
   static const _sheetMin = 0.12;
   static const _sheetInitial = 0.18;
   static const _sheetMax = 0.55;
@@ -27,13 +35,19 @@ class RouteScreen extends ConsumerWidget {
     // TODO: tutaj będzie umieszczana wartość z api, jak juz będę mieć lokalizacje punktów.
     // Docelowo: [zaladunek, rozladunek, ...punktyPoDrodze]
     return <GeoCoordinates>[
-      GeoCoordinates(37.4064, -122.406417), // Poznań
-      GeoCoordinates(37.1079, -122.406417), // Wrocław
+      GeoCoordinates(37.4064, -122.406417), // Poznań (POPRAWNE)
+      GeoCoordinates(37.1079, -122.406417), // Wrocław (POPRAWNE)
     ];
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    ref.read(routeMapControllerProvider).detachMap();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final controller = ref.watch(routeMapControllerProvider);
 
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
@@ -47,15 +61,18 @@ class RouteScreen extends ConsumerWidget {
     final route = controller.currentRoute;
 
     // stan przycisków:
-    final canCalculate =
-        hasOrder; // możesz też uzależnić od "czy order ma punkty"
+    final canCalculate = hasOrder;
     final canStart = controller.canStartNavigation;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          HereMap(onMapCreated: controller.onMapCreated),
+          HereMap(
+            onMapCreated: (map) {
+              controller.onMapCreated(map);
+            },
+          ),
 
           // BACK
           SafeArea(
@@ -115,7 +132,6 @@ class RouteScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 14),
-
                         const Text(
                           'Nawigacja',
                           style: TextStyle(
@@ -151,7 +167,7 @@ class RouteScreen extends ConsumerWidget {
                           ),
                         ] else ...[
                           Text(
-                            'Zlecenie #${currentOrder.ztNumber}',
+                            'Zlecenie #${currentOrder!.ztNumber}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -195,12 +211,11 @@ class RouteScreen extends ConsumerWidget {
                           ],
 
                           // GŁÓWNY PRZYCISK:
-                          // - jeśli trasy nie ma -> "Wyznacz trasę"
-                          // - jeśli trasa jest -> "Rozpocznij trasę" (toggle: start/stop)
                           SizedBox(
                             height: 54,
                             child: FilledButton(
                               onPressed: () async {
+                                // 1) jeśli nie ma trasy -> wyznacz
                                 if (!canStart) {
                                   if (!canCalculate) return;
 
@@ -211,7 +226,7 @@ class RouteScreen extends ConsumerWidget {
                                   return;
                                 }
 
-                                // start/stop follow
+                                // 2) jeśli trasa jest -> start/stop follow
                                 if (controller.isFollowing) {
                                   controller.stopFollowing();
                                 } else {
@@ -301,7 +316,6 @@ class RouteScreen extends ConsumerWidget {
 
 class _InfoChip extends StatelessWidget {
   const _InfoChip({required this.label, required this.value});
-
   final String label;
   final String value;
 
