@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:here_sdk/core.dart';
-import 'package:here_sdk/mapview.dart';
 
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
+import 'package:mobile/src/features/route/presentation/widgets/route_controls_panel.dart';
+import 'package:mobile/src/features/route/presentation/widgets/route_map_layer.dart';
+import 'package:mobile/src/features/route/presentation/widgets/order_status_bottom_sheet.dart'; // ✅ NEW
 
 final routeMapControllerProvider = ChangeNotifierProvider<RouteMapController>((
   ref,
@@ -26,24 +28,33 @@ class RouteScreen extends ConsumerStatefulWidget {
 class _RouteScreenState extends ConsumerState<RouteScreen> {
   static const _sheetMin = 0.12;
   static const _sheetInitial = 0.18;
-  static const _sheetMax = 0.55;
+  static const _sheetMax = 0.62;
 
   String _formatKm(int meters) => (meters / 1000).toStringAsFixed(1);
   String _formatMin(Duration d) => '${(d.inSeconds / 60).round()} min';
 
-  List<GeoCoordinates> _exampleStopsFromDispatcher() {
-    // TODO: tutaj będzie umieszczana wartość z api, jak juz będę mieć lokalizacje punktów.
-    // Docelowo: [zaladunek, rozladunek, ...punktyPoDrodze]
-    return <GeoCoordinates>[
-      GeoCoordinates(37.4064, -122.406417), // Poznań (POPRAWNE)
-      GeoCoordinates(37.1079, -122.406417), // Wrocław (POPRAWNE)
-    ];
-  }
+  List<GeoCoordinates> _exampleStopsFromDispatcher() => <GeoCoordinates>[
+    GeoCoordinates(52.4064, 16.9252), // Poznań
+    GeoCoordinates(51.1079, 17.0385), // Wrocław
+  ];
 
   @override
   void dispose() {
     ref.read(routeMapControllerProvider).detachMap();
     super.dispose();
+  }
+
+  Future<void> _openChangeStatusSheet({required String orderId}) async {
+    final selected = await showOrderStatusBottomSheet(context);
+
+    if (!mounted) return;
+    if (selected == null) return;
+
+    // TODO: tutaj podepniesz API do zmiany statusu ordera.
+    // np. await ref.read(driverOrdersRepoProvider).updateStatus(orderId, selected.apiKey);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Wybrany status: ${selected.apiKey}')),
+    );
   }
 
   @override
@@ -60,41 +71,25 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     final route = controller.currentRoute;
 
-    // stan przycisków:
     final canCalculate = hasOrder;
     final canStart = controller.canStartNavigation;
+
+    // Sterowanie trasy pokazujemy dopiero po wyznaczeniu trasy (tak jak chciałaś)
+    final showRouteControls = route != null;
+
+    // Zmień status: dotyczy ordera => pokazujemy zawsze jeśli jest order
+    final showChangeStatus = hasOrder;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          HereMap(
-            onMapCreated: (map) {
-              controller.onMapCreated(map);
-            },
+          RouteMapLayer(
+            controller: controller,
+            bottomPaddingForFab: bottomPaddingForFab,
+            onBack: () => context.go('/home'),
           ),
 
-          // BACK
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: IconButton(
-                    tooltip: 'Back',
-                    onPressed: () => context.go('/home'),
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // DRAGGABLE SHEET
           DraggableScrollableSheet(
             minChildSize: _sheetMin,
             initialChildSize: _sheetInitial,
@@ -115,198 +110,216 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                 child: SingleChildScrollView(
                   controller: scrollController,
                   physics: const ClampingScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + bottomSafe),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Align(
-                          alignment: Alignment.center,
-                          child: Container(
-                            width: 44,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE5E7EB),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        const Text(
-                          'Nawigacja',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w300,
-                            fontFamily: 'Figtree',
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        if (!hasOrder) ...[
-                          const Text(
-                            'Brak przypisanego aktualnie zlecenia.',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Figtree',
-                              color: Color(0xFF111827),
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Figtree',
-                              color: Color(0xFF6B7280),
-                              height: 1.35,
-                            ),
-                          ),
-                        ] else ...[
-                          Text(
-                            'Zlecenie #${currentOrder!.ztNumber}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              fontFamily: 'Figtree',
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          if (route != null) ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _InfoChip(
-                                    label: 'Dystans',
-                                    value:
-                                        '${_formatKm(route.lengthInMeters)} km',
-                                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ✅ WSZYSTKO W PADDINGU
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(18, 10, 18, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 44,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE5E7EB),
+                                  borderRadius: BorderRadius.circular(999),
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: _InfoChip(
-                                    label: 'Czas',
-                                    value: _formatMin(route.duration),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                            const SizedBox(height: 12),
-                          ] else ...[
+                            const SizedBox(height: 14),
+
                             const Text(
-                              'Trasa: jeszcze nie wyznaczona.',
+                              'Nawigacja',
                               style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w300,
                                 fontFamily: 'Figtree',
                                 color: Color(0xFF6B7280),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 6),
+
+                            if (!hasOrder) ...[
+                              const Text(
+                                'Brak przypisanego aktualnie zlecenia.',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'Figtree',
+                                  color: Color(0xFF111827),
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Figtree',
+                                  color: Color(0xFF6B7280),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ] else ...[
+                              Text(
+                                'Zlecenie #${currentOrder.ztNumber}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Figtree',
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              if (route != null) ...[
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _InfoChip(
+                                        label: 'Dystans',
+                                        value:
+                                            '${_formatKm(route.lengthInMeters)} km',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: _InfoChip(
+                                        label: 'Czas',
+                                        value: _formatMin(route.duration),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                              ] else ...[
+                                const Text(
+                                  'Trasa: jeszcze nie wyznaczona.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Figtree',
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+
+                              // GŁÓWNY PRZYCISK (trasa/nawigacja)
+                              SizedBox(
+                                height: 54,
+                                child: FilledButton(
+                                  onPressed: () async {
+                                    if (!canStart) {
+                                      if (!canCalculate) return;
+                                      final stops =
+                                          _exampleStopsFromDispatcher();
+                                      await controller.calculateRouteOnDemand(
+                                        dispatcherStops: stops,
+                                      );
+                                      return;
+                                    }
+
+                                    if (controller.isFollowing) {
+                                      controller.stopFollowing();
+                                    } else {
+                                      controller.startFollowing();
+                                    }
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0F4D46),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    elevation: 2,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        !canStart
+                                            ? Icons.route_rounded
+                                            : (controller.isFollowing
+                                                  ? Icons.pause_rounded
+                                                  : Icons.play_arrow_rounded),
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        !canStart
+                                            ? 'Wyznacz trasę'
+                                            : (controller.isFollowing
+                                                  ? 'Zatrzymaj'
+                                                  : 'Rozpocznij trasę'),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontFamily: 'Figtree',
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
+                        ),
+                      ),
 
-                          // GŁÓWNY PRZYCISK:
-                          SizedBox(
+                      // Route controls
+                      if (showRouteControls) ...[
+                        const SizedBox(height: 18),
+                        RouteControlsPanel(
+                          isFollowing: controller.isFollowing,
+                          onReportEvent: () {},
+                          onPause: controller.stopFollowing,
+                          onResume: controller.startFollowing,
+                          onFinishRoute: () {},
+                        ),
+                      ],
+
+                      // Change status button
+                      if (showChangeStatus) ...[
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(18, 18, 18, 60),
+                          child: SizedBox(
                             height: 54,
+                            width: double.infinity,
                             child: FilledButton(
-                              onPressed: () async {
-                                // 1) jeśli nie ma trasy -> wyznacz
-                                if (!canStart) {
-                                  if (!canCalculate) return;
-
-                                  final stops = _exampleStopsFromDispatcher();
-                                  await controller.calculateRouteOnDemand(
-                                    dispatcherStops: stops,
-                                  );
-                                  return;
-                                }
-
-                                // 2) jeśli trasa jest -> start/stop follow
-                                if (controller.isFollowing) {
-                                  controller.stopFollowing();
-                                } else {
-                                  controller.startFollowing();
-                                }
-                              },
+                              onPressed: () => _openChangeStatusSheet(
+                                orderId: currentOrder.id,
+                              ),
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F4D46),
+                                backgroundColor: const Color(0xFFF2542F),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                elevation: 2,
+                                elevation: 0,
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    !canStart
-                                        ? Icons.route_rounded
-                                        : (controller.isFollowing
-                                              ? Icons.pause_rounded
-                                              : Icons.play_arrow_rounded),
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    !canStart
-                                        ? 'Wyznacz trasę'
-                                        : (controller.isFollowing
-                                              ? 'Zatrzymaj'
-                                              : 'Rozpocznij trasę'),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: 'Figtree',
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
+                              child: const Text(
+                                'Zmień status',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Figtree',
+                                ),
                               ),
                             ),
                           ),
-                        ],
-
-                        const SizedBox(height: 220),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               );
             },
-          ),
-
-          // CENTER BUTTON
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPaddingForFab),
-                child: Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 3,
-                  child: IconButton(
-                    tooltip: 'Wycentruj na mojej lokalizacji',
-                    icon: const Icon(Icons.my_location_rounded),
-                    onPressed: () async {
-                      try {
-                        await controller.refreshAndCenter();
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Lokalizacja: $e')),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ),
-            ),
           ),
         ],
       ),
