@@ -10,47 +10,6 @@ import 'package:mobile/src/core/l10n/locale_controller.dart';
 class AuthStartScreen extends ConsumerWidget {
   const AuthStartScreen({super.key});
 
-  TextStyle _autoFitTextStyle(
-    BuildContext context, {
-    required String text,
-    required TextStyle style,
-    required int maxLines,
-    required double maxWidth,
-    required double minFontSize,
-  }) {
-    final baseFontSize = style.fontSize ?? 14.0;
-    var fontSize = baseFontSize;
-
-    // Use the same text direction/scaling as the actual Text widget.
-    final direction = Directionality.of(context);
-    final scaler = MediaQuery.textScalerOf(context);
-
-    bool fits(double size) {
-      final painter = TextPainter(
-        text: TextSpan(
-          text: text,
-          style: style.copyWith(fontSize: size),
-        ),
-        maxLines: maxLines,
-        textDirection: direction,
-        textScaler: scaler,
-      )..layout(maxWidth: maxWidth);
-      return !painter.didExceedMaxLines;
-    }
-
-    if (fits(fontSize)) return style;
-
-    // Decrease until it fits or we hit the minimum.
-    while (fontSize > minFontSize) {
-      fontSize = (fontSize - 1).clamp(minFontSize, baseFontSize);
-      if (fits(fontSize)) {
-        return style.copyWith(fontSize: fontSize);
-      }
-    }
-
-    return style.copyWith(fontSize: minFontSize);
-  }
-
   double _estimateBottomMinHeight(BuildContext context) {
     // This screen is intentionally non-scrollable in the bottom section,
     // so we keep the hero image adaptive and reserve enough space here.

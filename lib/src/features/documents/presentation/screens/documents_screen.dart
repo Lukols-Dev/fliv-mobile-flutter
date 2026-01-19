@@ -180,7 +180,6 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             Expanded(
               child: Builder(
                 builder: (context) {
-                  // Jeśli wejście z dolnej nawigacji i brak przypisanego ZT – pokaż info
                   if (widget.orderId == null) {
                     if (currentOrderAsync.isLoading) {
                       return const Center(
@@ -192,36 +191,50 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     if (currentOrder == null) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFE5E7EB)),
-                          ),
-                          child: const Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'Brak przypisanego ZT',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF111827),
+                        child: Align(
+                          alignment: Alignment
+                              .topCenter, // albo Alignment.center, jak wolisz
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth:
+                                  560, // opcjonalnie, żeby nie było "na pół metra" na tabletach
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
                                 ),
                               ),
-                              SizedBox(height: 6),
-                              Text(
-                                'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF6B7280),
+                              child: const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      'Brak przypisanego ZT',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF111827),
+                                      ),
+                                    ),
+                                    SizedBox(height: 6),
+                                    Text(
+                                      'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       );

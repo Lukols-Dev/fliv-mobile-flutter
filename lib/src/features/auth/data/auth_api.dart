@@ -22,10 +22,21 @@ class AuthApi {
   Future<SignUpResponseDto> signUpEmail({
     required String email,
     required String password,
+    required String firstName,
+    required String lastName,
+    required bool isAgreedToTerms,
+    required bool isAgreedToPrivacyPolicy,
   }) async {
     final res = await _dio.post(
       '/api/auth/sign-up/email',
-      data: {'email': email, 'password': password},
+      data: {
+        'email': email,
+        'password': password,
+        'firstName': firstName,
+        'lastName': lastName,
+        'isAgreedToTerms': isAgreedToTerms,
+        'isAgreedToPrivacyPolicy': isAgreedToPrivacyPolicy,
+      },
     );
     return SignUpResponseDto.fromJson(res.data as Map<String, dynamic>);
   }

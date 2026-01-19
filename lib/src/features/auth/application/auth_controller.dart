@@ -55,8 +55,6 @@ class AuthController extends AsyncNotifier<AuthSession?> {
         } else {
           await ordersLocal.upsertCurrent(current);
 
-          // // MVP: details tylko jeśli naprawdę potrzebujesz na Home / od razu.
-          // // Jak nie – możesz to pominąć i pobierać dopiero na screenie szczegółów.
           try {
             final details = await ordersRepo.getById(id: current.id);
             await ordersLocal.upsertDetails(details);
@@ -71,6 +69,10 @@ class AuthController extends AsyncNotifier<AuthSession?> {
   Future<void> signUpDriver({
     required String email,
     required String password,
+    required String firstName,
+    required String lastName,
+    required bool isAgreedToTerms,
+    required bool isAgreedToPrivacyPolicy,
     required RegisterDriverPayload driver,
   }) async {
     state = const AsyncLoading();
@@ -81,15 +83,19 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       final session = await authRepo.signUpEmail(
         email: email,
         password: password,
+        firstName: firstName,
+        lastName: lastName,
+        isAgreedToTerms: isAgreedToTerms,
+        isAgreedToPrivacyPolicy: isAgreedToPrivacyPolicy,
       );
 
       final token = session.accessToken;
 
-      final driverRepo = ref.read(driverRepositoryProvider);
-      await driverRepo.registerDriver(payload: driver);
-
       final storage = ref.read(secureStorageProvider);
       await storage.write(key: kAccessTokenKey, value: token);
+
+      final driverRepo = ref.read(driverRepositoryProvider);
+      await driverRepo.registerDriver(payload: driver);
 
       return session;
     });

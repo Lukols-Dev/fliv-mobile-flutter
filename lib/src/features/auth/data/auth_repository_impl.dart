@@ -30,8 +30,19 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthSession> signUpEmail({
     required String email,
     required String password,
+    required String firstName,
+    required String lastName,
+    required bool isAgreedToTerms,
+    required bool isAgreedToPrivacyPolicy,
   }) async {
-    final dto = await _api.signUpEmail(email: email, password: password);
+    final dto = await _api.signUpEmail(
+      email: email,
+      password: password,
+      firstName: firstName,
+      lastName: lastName,
+      isAgreedToTerms: isAgreedToTerms,
+      isAgreedToPrivacyPolicy: isAgreedToPrivacyPolicy,
+    );
     return AuthSession(accessToken: dto.accessToken);
   }
 

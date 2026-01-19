@@ -316,18 +316,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                             .trim();
                                         final password =
                                             _passwordController.text;
+                                        final firstName =
+                                            _firstNameController.text;
+                                        final lastName =
+                                            _lastNameController.text;
+                                        final isAgreedToTerms = true;
+                                        final isAgreedToPrivacyPolicy = true;
 
                                         final payload = RegisterDriverPayload(
-                                          firstName: _firstNameController.text,
-                                          lastName: _lastNameController.text,
                                           companyInternalId:
                                               _companyIdController.text,
-                                          phone:
-                                              null, // dopniesz pole jak dodasz w UI
-                                          isAgreedToTerms:
-                                              true, // docelowo checkbox
-                                          isAgreedToPrivacyPolicy:
-                                              true, // docelowo checkbox
+                                          phone: null,
                                         );
 
                                         await ref
@@ -337,6 +336,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                             .signUpDriver(
                                               email: email,
                                               password: password,
+                                              firstName: firstName,
+                                              lastName: lastName,
+                                              isAgreedToTerms: isAgreedToTerms,
+                                              isAgreedToPrivacyPolicy:
+                                                  isAgreedToPrivacyPolicy,
                                               driver: payload,
                                             );
                                       },

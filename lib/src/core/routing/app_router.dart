@@ -56,7 +56,6 @@ extension AppRouteX on AppRoute {
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-final _routeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'route');
 final _documentsNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'documents',
 );
@@ -134,15 +133,6 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
-          navigatorKey: _routeNavigatorKey,
-          routes: [
-            GoRoute(
-              path: AppRoute.route.path,
-              builder: (context, state) => const RouteScreen(),
-            ),
-          ],
-        ),
-        StatefulShellBranch(
           navigatorKey: _documentsNavigatorKey,
           routes: [
             GoRoute(
@@ -155,24 +145,6 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // StatefulShellBranch(
-        //   navigatorKey: _ordersNavigatorKey,
-        //   routes: [
-        //     GoRoute(
-        //       path: AppRoute.orders.path,
-        //       builder: (context, state) => const OrdersScreen(),
-        //     ),
-        //   ],
-        // ),
-        // StatefulShellBranch(
-        //   navigatorKey: _accountNavigatorKey,
-        //   routes: [
-        //     GoRoute(
-        //       path: AppRoute.account.path,
-        //       builder: (context, state) => const AccountScreen(),
-        //     ),
-        //   ],
-        // ),
       ],
     ),
   ],
