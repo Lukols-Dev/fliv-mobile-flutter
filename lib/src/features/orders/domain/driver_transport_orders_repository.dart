@@ -5,4 +5,9 @@ abstract class DriverTransportOrdersRepository {
   Future<DriverTransportOrder?> getLatest({String? status});
   Future<void> assignByZtNumber({required String ztNumber});
   Future<DriverTransportOrderDetails> getById({required String id});
+  Future<DriverTransportOrder> updateStatus({
+    required String id,
+    required String status,
+    String? description,
+  });
 }

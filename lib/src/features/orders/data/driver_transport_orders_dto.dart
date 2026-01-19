@@ -185,3 +185,94 @@ class DriverTransportOrderDetailsDto {
     notes: notes,
   );
 }
+
+class UpdateDriverTransportOrderStatusRequestDto {
+  const UpdateDriverTransportOrderStatusRequestDto({
+    required this.status,
+    this.description,
+  });
+
+  final String status;
+  final String? description;
+
+  Map<String, dynamic> toJson() => {
+    'status': status,
+    if (description != null && description!.trim().isNotEmpty)
+      'description': description!.trim(),
+  };
+}
+
+class UpdateDriverTransportOrderStatusResponseDto {
+  const UpdateDriverTransportOrderStatusResponseDto({
+    required this.id,
+    required this.ztNumber,
+    required this.status,
+    required this.events,
+  });
+
+  final String id;
+  final String ztNumber;
+  final String status;
+  final List<TransportOrderEventDto> events;
+
+  factory UpdateDriverTransportOrderStatusResponseDto.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final eventsJson = json['events'] as List<dynamic>? ?? [];
+    return UpdateDriverTransportOrderStatusResponseDto(
+      id: json['id'] as String,
+      ztNumber: json['ztNumber'] as String,
+      status: json['status'] as String,
+      events: eventsJson
+          .map(
+            (e) => TransportOrderEventDto.fromJson(e as Map<String, dynamic>),
+          )
+          .toList(),
+    );
+  }
+
+  DriverTransportOrder toDomain() => DriverTransportOrder(
+    id: id,
+    ztNumber: ztNumber,
+    status: status,
+    fromCountry: '', // Not provided in response
+    toCountry: '', // Not provided in response
+    loadingDate: null, // Not provided in response
+  );
+}
+
+class TransportOrderEventDto {
+  const TransportOrderEventDto({
+    required this.id,
+    required this.type,
+    required this.previousStatus,
+    required this.newStatus,
+    this.description,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String type;
+  final String previousStatus;
+  final String newStatus;
+  final String? description;
+  final DateTime createdAt;
+
+  factory TransportOrderEventDto.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic v) {
+      if (v is String) {
+        return DateTime.tryParse(v) ?? DateTime.now();
+      }
+      return DateTime.now();
+    }
+
+    return TransportOrderEventDto(
+      id: json['id'] as String,
+      type: json['type'] as String,
+      previousStatus: json['previousStatus'] as String,
+      newStatus: json['newStatus'] as String,
+      description: json['description'] as String?,
+      createdAt: parseDate(json['createdAt']),
+    );
+  }
+}

@@ -5,10 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:here_sdk/core.dart';
 
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
+import 'package:mobile/src/features/orders/application/update_order_status_controller.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_controls_panel.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_map_layer.dart';
-import 'package:mobile/src/features/route/presentation/widgets/order_status_bottom_sheet.dart'; // ✅ NEW
+import 'package:mobile/src/features/route/presentation/widgets/order_status_bottom_sheet.dart';
 
 final routeMapControllerProvider = ChangeNotifierProvider<RouteMapController>((
   ref,
@@ -50,11 +51,29 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     if (!mounted) return;
     if (selected == null) return;
 
-    // TODO: tutaj podepniesz API do zmiany statusu ordera.
-    // np. await ref.read(driverOrdersRepoProvider).updateStatus(orderId, selected.apiKey);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Wybrany status: ${selected.apiKey}')),
-    );
+    final controller = ref.read(updateOrderStatusControllerProvider.notifier);
+
+    try {
+      await controller.updateStatus(orderId: orderId, status: selected.apiKey);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Status zmieniony na: ${selected.titlePl}'),
+          backgroundColor: const Color(0xFF0F4D46),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nie udało się zmienić statusu: ${e.toString()}'),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
+    }
   }
 
   @override

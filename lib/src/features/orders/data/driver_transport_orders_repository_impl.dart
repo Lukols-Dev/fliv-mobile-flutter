@@ -42,4 +42,18 @@ class DriverTransportOrdersRepositoryImpl
     final dto = await _api.getOne(id: id);
     return dto.toDomain();
   }
+
+  @override
+  Future<DriverTransportOrder> updateStatus({
+    required String id,
+    required String status,
+    String? description,
+  }) async {
+    final responseDto = await _api.updateStatus(
+      id: id,
+      status: status,
+      description: description,
+    );
+    return responseDto.toDomain();
+  }
 }
