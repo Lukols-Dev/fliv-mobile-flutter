@@ -242,14 +242,16 @@ class OrderDetailsScreen extends ConsumerWidget {
                           child: Column(
                             children: [
                               _RoutePoint(
-                                color: const Color(0xFF10B981),
+                                color: const Color(0xFF004F45),
                                 title: t.order_loading_point,
                                 location: _dashIfEmpty(details.fromCountry),
                                 address: '-',
                                 date: _formatDate(details.loadingDate),
-                                status: '-',
-                                statusColor: const Color(0xFF10B981),
+                                statusColor: const Color(0xFF004F45),
                                 showLine: true,
+                                orderStatus: details.status,
+                                localizations: t,
+                                isUnloadingPoint: false,
                               ),
                               const SizedBox(height: 10),
                               _RoutePoint(
@@ -258,9 +260,12 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 location: _dashIfEmpty(details.toCountry),
                                 address: '-',
                                 date: '-',
-                                status: '-',
-                                statusColor: const Color(0xFFEF4444),
+                                statusColor: const Color(0xFFF2542F),
                                 showLine: false,
+                                orderStatus: details.status,
+                                localizations: t,
+                                isUnloadingPoint: true,
+                                etaTime: null,
                               ),
                             ],
                           ),
@@ -538,9 +543,12 @@ class _RoutePoint extends StatelessWidget {
     required this.location,
     required this.address,
     required this.date,
-    required this.status,
     required this.statusColor,
     required this.showLine,
+    this.orderStatus,
+    this.localizations,
+    this.isUnloadingPoint = false,
+    this.etaTime,
   });
 
   final Color color;
@@ -548,9 +556,12 @@ class _RoutePoint extends StatelessWidget {
   final String location;
   final String address;
   final String date;
-  final String status;
   final Color statusColor;
   final bool showLine;
+  final String? orderStatus;
+  final AppLocalizations? localizations;
+  final bool isUnloadingPoint;
+  final String? etaTime;
 
   @override
   Widget build(BuildContext context) {
@@ -565,7 +576,17 @@ class _RoutePoint extends StatelessWidget {
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             if (showLine)
-              Container(width: 2, height: 60, color: const Color(0xFFE5E7EB)),
+              Container(
+                width: 2,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [statusColor, Colors.white],
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(width: 12),
@@ -579,9 +600,9 @@ class _RoutePoint extends StatelessWidget {
                     child: Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF709470),
                         fontFamily: 'Figtree',
                       ),
                     ),
@@ -589,9 +610,9 @@ class _RoutePoint extends StatelessWidget {
                   Text(
                     date,
                     style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF9CA3AF),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF99A1AF),
                       fontFamily: 'Figtree',
                     ),
                   ),
@@ -602,8 +623,8 @@ class _RoutePoint extends StatelessWidget {
                 location,
                 style: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF0A0A0A),
                   fontFamily: 'Figtree',
                 ),
               ),
@@ -611,34 +632,50 @@ class _RoutePoint extends StatelessWidget {
               Text(
                 address,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF6B7280),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF6A7282),
                   fontFamily: 'Figtree',
                 ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(
-                    statusColor == const Color(0xFF10B981)
-                        ? Icons.check_circle_outline
-                        : Icons.radio_button_checked,
-                    size: 16,
-                    color: statusColor,
-                  ),
-                  const SizedBox(width: 4),
+              if (orderStatus != 'IN_PROGRESS' && localizations != null) ...[
+                const SizedBox(height: 6),
+                if (isUnloadingPoint)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle_rounded,
+                            size: 10,
+                            color: statusColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${localizations!.order_eta}: ${etaTime ?? '-'}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: statusColor,
+                              fontFamily: 'Figtree',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                else
                   Text(
-                    status,
+                    localizations!.order_loaded,
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
                       color: statusColor,
                       fontFamily: 'Figtree',
                     ),
                   ),
-                ],
-              ),
+              ],
             ],
           ),
         ),

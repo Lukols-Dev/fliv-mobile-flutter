@@ -476,6 +476,12 @@ abstract class AppLocalizations {
   /// **'Zobacz dokumenty'**
   String get order_view_documents;
 
+  /// No description provided for @order_eta.
+  ///
+  /// In pl, this message translates to:
+  /// **'ETA'**
+  String get order_eta;
+
   /// No description provided for @documents_title.
   ///
   /// In pl, this message translates to:

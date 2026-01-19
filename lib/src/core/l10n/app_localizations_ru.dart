@@ -205,6 +205,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get order_view_documents => 'View documents';
 
   @override
+  String get order_eta => 'ETA';
+
+  @override
   String get documents_title => 'Documents';
 
   @override

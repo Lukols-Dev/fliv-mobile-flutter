@@ -63,6 +63,7 @@
   "order_notes": "Notes",
   "order_start_navigation": "Start navigation",
   "order_view_documents": "View documents",
+  "order_eta": "ETA",
   "documents_title": "Documents",
   "documents_filter_all": "All",
   "documents_filter_synchronized": "Synchronized",

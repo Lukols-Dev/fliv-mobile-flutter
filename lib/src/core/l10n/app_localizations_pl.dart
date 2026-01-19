@@ -204,6 +204,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get order_view_documents => 'Zobacz dokumenty';
 
   @override
+  String get order_eta => 'ETA';
+
+  @override
   String get documents_title => 'Dokumenty';
 
   @override
