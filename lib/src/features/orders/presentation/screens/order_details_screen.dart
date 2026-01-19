@@ -216,22 +216,20 @@ class OrderDetailsScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _dashIfEmpty(details.clientName),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF111827),
-                                  fontFamily: 'Figtree',
-                                ),
+                              _InfoField(
+                                label: "Nazwa firmy",
+                                value: _dashIfEmpty(details.clientName),
                               ),
                               const SizedBox(height: 12),
-                              _InfoRow(
+                              _InfoField(
                                 label: t.order_contact_person,
-                                value: '-',
+                                value: "Adam Kowalski",
                               ),
                               const SizedBox(height: 8),
-                              _InfoRow(label: t.order_phone, value: '-'),
+                              _InfoField(
+                                label: t.order_phone,
+                                value: "1234567890",
+                              ),
                             ],
                           ),
                         ),
@@ -489,6 +487,43 @@ class _InfoRow extends StatelessWidget {
               fontFamily: 'Figtree',
             ),
             textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoField extends StatelessWidget {
+  const _InfoField({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF6B7280),
+            fontFamily: 'Figtree',
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF111827),
+            fontFamily: 'Figtree',
+            height: 1.25,
           ),
         ),
       ],
