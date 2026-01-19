@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -131,7 +132,7 @@ class AuthStartScreen extends ConsumerWidget {
                     child: DecoratedBox(
                       decoration: const ShapeDecoration(
                         image: DecorationImage(
-                          image: AssetImage('assets/auth-hero-image.jpg'),
+                          image: AssetImage('assets/auth-hero-image.jpeg'),
                           fit: BoxFit.cover,
                         ),
                         shape: RoundedRectangleBorder(
@@ -170,61 +171,40 @@ class AuthStartScreen extends ConsumerWidget {
                                 child: Center(
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
-                                      final w = constraints.maxWidth;
-                                      const baseTitleStyle = TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'Figtree',
-                                        height: 1.38,
-                                        color: Colors.black,
-                                      );
-                                      const baseSubtitleStyle = TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 14,
-                                        fontFamily: 'Figtree',
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.36,
-                                        letterSpacing: 0.28,
-                                      );
-
-                                      final titleStyle = _autoFitTextStyle(
-                                        context,
-                                        text: t.auth_start_title,
-                                        style: baseTitleStyle,
-                                        maxLines: 2,
-                                        maxWidth: w,
-                                        minFontSize: 18,
-                                      );
-                                      final subtitleStyle = _autoFitTextStyle(
-                                        context,
-                                        text: t.auth_start_subtitle,
-                                        style: baseSubtitleStyle,
-                                        maxLines: 3,
-                                        maxWidth: w,
-                                        minFontSize: 12,
-                                      );
-
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
                                         crossAxisAlignment:
                                             CrossAxisAlignment.stretch,
                                         children: [
                                           // TITLE (auto-fit to avoid truncation)
-                                          Text(
+                                          AutoSizeText(
                                             t.auth_start_title,
                                             maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: titleStyle,
+                                            minFontSize: 18,
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w700,
+                                              fontFamily: 'Figtree',
+                                              height: 1.38,
+                                              color: Colors.black,
+                                            ),
                                           ),
 
                                           const SizedBox(height: 12),
 
                                           // SUBTITLE (auto-fit to avoid truncation)
-                                          Text(
+                                          AutoSizeText(
                                             t.auth_start_subtitle,
                                             maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: subtitleStyle,
+                                            minFontSize: 12,
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 14,
+                                              fontFamily: 'Figtree',
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.36,
+                                              letterSpacing: 0.28,
+                                            ),
                                           ),
 
                                           const SizedBox(height: 18),
