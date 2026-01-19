@@ -33,23 +33,37 @@ class OrderDetailsScreen extends ConsumerWidget {
 
   Color _statusColor(String? status) {
     switch (status) {
+      // WEB: bg-green-500 / text-green-600
       case 'COMPLETED':
-        return const Color(0xFF10B981);
+        return const Color(0xFF22C55E); // green-500
+
+      // WEB: text-destructive / bg-destructive/20 (u Ciebie już było)
       case 'PROBLEM':
-        return const Color(0xFFEF4444);
+        return const Color(0xFFEF4444); // red-500
+
+      // WEB: neutral/beige flow
+      case 'PENDING':
+      case 'ACCEPTED':
       case 'PAUSED':
-        return const Color(0xFFFF6B35);
+        return const Color(0xFFEBE5D4); // beige
+
+      // WEB: active/in-progress flow -> green #709470
       case 'IN_PROGRESS':
       case 'LOADING':
       case 'UNLOADING':
-        return const Color(0xFFFF6B35);
+        return const Color(0xFF709470); // primary green
+
       default:
-        return const Color(0xFF9CA3AF);
+        return const Color(0xFF9CA3AF); // gray-400
     }
   }
 
   String _statusLabel(AppLocalizations t, String? status) {
     switch (status) {
+      case 'PENDING':
+        return 'Oczekuje';
+      case 'ACCEPTED':
+        return 'Zaakceptowane';
       case 'IN_PROGRESS':
         return t.order_status_in_transit;
       case 'LOADING':
@@ -154,7 +168,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                     t.order_details_title,
                                     style: const TextStyle(
                                       fontSize: 28,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
                                       color: Color(0xFF111827),
                                       fontFamily: 'Figtree',
                                     ),
@@ -186,7 +200,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w400,
                                   fontFamily: 'Figtree',
                                 ),
                               ),

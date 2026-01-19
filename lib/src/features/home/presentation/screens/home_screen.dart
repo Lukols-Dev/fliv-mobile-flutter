@@ -48,6 +48,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return 'Zakończone';
       case 'PROBLEM':
         return 'Problem';
+      case 'PENDING':
+        return 'Oczekuje';
+      case 'ACCEPTED':
+        return 'Zaakceptowane';
       default:
         return raw;
     }
