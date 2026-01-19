@@ -75,8 +75,15 @@ class DriverTransportOrderDetailsDto {
     this.vehiclePlate,
     this.trailerPlate,
     this.clientName,
+    this.payerName,
+    this.payerEmail,
+    this.driverFirstName,
+    this.driverLastName,
+    this.driverPhone,
     this.fromCountry,
+    this.fromAddress,
     this.toCountry,
+    this.toAddress,
     this.cargoWeightKg,
     this.loadingDate,
     this.cargoDescription,
@@ -90,8 +97,15 @@ class DriverTransportOrderDetailsDto {
   final String? vehiclePlate;
   final String? trailerPlate;
   final String? clientName;
+  final String? payerName;
+  final String? payerEmail;
+  final String? driverFirstName;
+  final String? driverLastName;
+  final String? driverPhone;
   final String? fromCountry;
+  final String? fromAddress;
   final String? toCountry;
+  final String? toAddress;
   final int? cargoWeightKg;
   final DateTime? loadingDate;
   final String? cargoDescription;
@@ -131,8 +145,15 @@ class DriverTransportOrderDetailsDto {
       vehiclePlate: json['vehiclePlate'] as String?,
       trailerPlate: json['trailerPlate'] as String?,
       clientName: json['clientName'] as String?,
+      payerName: json['payerName'] as String?,
+      payerEmail: json['payerEmail'] as String?,
+      driverFirstName: json['driverFirstName'] as String?,
+      driverLastName: json['driverLastName'] as String?,
+      driverPhone: json['driverPhone'] as String?,
       fromCountry: json['fromCountry'] as String?,
+      fromAddress: json['fromAddress'] as String?,
       toCountry: json['toCountry'] as String?,
+      toAddress: json['toAddress'] as String?,
       cargoWeightKg: parseInt(json['cargoWeightKg']),
       loadingDate: parseDate(json['loadingDate']),
       cargoDescription: json['cargoDescription'] as String?,
@@ -148,8 +169,15 @@ class DriverTransportOrderDetailsDto {
     vehiclePlate: vehiclePlate,
     trailerPlate: trailerPlate,
     clientName: clientName,
+    payerName: payerName,
+    payerEmail: payerEmail,
+    driverFirstName: driverFirstName,
+    driverLastName: driverLastName,
+    driverPhone: driverPhone,
     fromCountry: fromCountry,
+    fromAddress: fromAddress,
     toCountry: toCountry,
+    toAddress: toAddress,
     cargoWeightKg: cargoWeightKg,
     loadingDate: loadingDate,
     cargoDescription: cargoDescription,

@@ -223,12 +223,12 @@ class OrderDetailsScreen extends ConsumerWidget {
                               const SizedBox(height: 12),
                               _InfoField(
                                 label: t.order_contact_person,
-                                value: "Adam Kowalski",
+                                value: _dashIfEmpty(details.payerName),
                               ),
                               const SizedBox(height: 8),
                               _InfoField(
-                                label: t.order_phone,
-                                value: "1234567890",
+                                label: "Email",
+                                value: _dashIfEmpty(details.payerEmail),
                               ),
                             ],
                           ),
@@ -245,7 +245,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 color: const Color(0xFF004F45),
                                 title: t.order_loading_point,
                                 location: _dashIfEmpty(details.fromCountry),
-                                address: '-',
+                                address: _dashIfEmpty(details.fromAddress),
                                 date: _formatDate(details.loadingDate),
                                 statusColor: const Color(0xFF004F45),
                                 showLine: true,
@@ -258,7 +258,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 color: const Color(0xFFEF4444),
                                 title: t.order_unloading_point,
                                 location: _dashIfEmpty(details.toCountry),
-                                address: '-',
+                                address: _dashIfEmpty(details.toAddress),
                                 date: '-',
                                 statusColor: const Color(0xFFF2542F),
                                 showLine: false,
@@ -289,13 +289,11 @@ class OrderDetailsScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 12),
                               _InfoRow(
-                                label: 'Wymaga temperatury',
+                                label: 'Wrazliwość na temperaturę',
                                 value: _formatBoolPl(
                                   details.temperatureSensitive,
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              _InfoRow(label: t.order_pallets, value: '-'),
                             ],
                           ),
                         ),
@@ -308,9 +306,9 @@ class OrderDetailsScreen extends ConsumerWidget {
                           child: Text(
                             _dashIfEmpty(details.notes),
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFF111827),
+                              color: Color(0xFF4A5565),
                               height: 1.5,
                               fontFamily: 'Figtree',
                             ),
@@ -474,8 +472,8 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 10,
+              fontWeight: FontWeight.w400,
               color: Color(0xFF6B7280),
               fontFamily: 'Figtree',
             ),
@@ -486,8 +484,8 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
               color: Color(0xFF111827),
               fontFamily: 'Figtree',
             ),
@@ -638,7 +636,7 @@ class _RoutePoint extends StatelessWidget {
                   fontFamily: 'Figtree',
                 ),
               ),
-              if (orderStatus != 'IN_PROGRESS' && localizations != null) ...[
+              if (orderStatus == 'IN_PROGRESS') ...[
                 const SizedBox(height: 6),
                 if (isUnloadingPoint)
                   Column(
@@ -666,14 +664,20 @@ class _RoutePoint extends StatelessWidget {
                     ],
                   )
                 else
-                  Text(
-                    localizations!.order_loaded,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w400,
-                      color: statusColor,
-                      fontFamily: 'Figtree',
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.check_outlined, size: 10, color: statusColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        localizations!.order_loaded,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: statusColor,
+                          fontFamily: 'Figtree',
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ],

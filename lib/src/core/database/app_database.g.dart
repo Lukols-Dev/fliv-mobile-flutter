@@ -1617,12 +1617,34 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _fromAddressMeta = const VerificationMeta(
+    'fromAddress',
+  );
+  @override
+  late final GeneratedColumn<String> fromAddress = GeneratedColumn<String>(
+    'from_address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _toCountryMeta = const VerificationMeta(
     'toCountry',
   );
   @override
   late final GeneratedColumn<String> toCountry = GeneratedColumn<String>(
     'to_country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toAddressMeta = const VerificationMeta(
+    'toAddress',
+  );
+  @override
+  late final GeneratedColumn<String> toAddress = GeneratedColumn<String>(
+    'to_address',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -1704,7 +1726,9 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     trailerPlate,
     clientName,
     fromCountry,
+    fromAddress,
     toCountry,
+    toAddress,
     cargoWeightKg,
     loadingDate,
     cargoDescription,
@@ -1774,10 +1798,25 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
         ),
       );
     }
+    if (data.containsKey('from_address')) {
+      context.handle(
+        _fromAddressMeta,
+        fromAddress.isAcceptableOrUnknown(
+          data['from_address']!,
+          _fromAddressMeta,
+        ),
+      );
+    }
     if (data.containsKey('to_country')) {
       context.handle(
         _toCountryMeta,
         toCountry.isAcceptableOrUnknown(data['to_country']!, _toCountryMeta),
+      );
+    }
+    if (data.containsKey('to_address')) {
+      context.handle(
+        _toAddressMeta,
+        toAddress.isAcceptableOrUnknown(data['to_address']!, _toAddressMeta),
       );
     }
     if (data.containsKey('cargo_weight_kg')) {
@@ -1868,9 +1907,17 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
         DriftSqlType.string,
         data['${effectivePrefix}from_country'],
       ),
+      fromAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_address'],
+      ),
       toCountry: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}to_country'],
+      ),
+      toAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_address'],
       ),
       cargoWeightKg: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -1914,7 +1961,9 @@ class DriverOrderDetailsTableData extends DataClass
   final String? trailerPlate;
   final String? clientName;
   final String? fromCountry;
+  final String? fromAddress;
   final String? toCountry;
+  final String? toAddress;
   final int? cargoWeightKg;
   final DateTime? loadingDate;
   final String? cargoDescription;
@@ -1929,7 +1978,9 @@ class DriverOrderDetailsTableData extends DataClass
     this.trailerPlate,
     this.clientName,
     this.fromCountry,
+    this.fromAddress,
     this.toCountry,
+    this.toAddress,
     this.cargoWeightKg,
     this.loadingDate,
     this.cargoDescription,
@@ -1959,8 +2010,14 @@ class DriverOrderDetailsTableData extends DataClass
     if (!nullToAbsent || fromCountry != null) {
       map['from_country'] = Variable<String>(fromCountry);
     }
+    if (!nullToAbsent || fromAddress != null) {
+      map['from_address'] = Variable<String>(fromAddress);
+    }
     if (!nullToAbsent || toCountry != null) {
       map['to_country'] = Variable<String>(toCountry);
+    }
+    if (!nullToAbsent || toAddress != null) {
+      map['to_address'] = Variable<String>(toAddress);
     }
     if (!nullToAbsent || cargoWeightKg != null) {
       map['cargo_weight_kg'] = Variable<int>(cargoWeightKg);
@@ -2002,9 +2059,15 @@ class DriverOrderDetailsTableData extends DataClass
       fromCountry: fromCountry == null && nullToAbsent
           ? const Value.absent()
           : Value(fromCountry),
+      fromAddress: fromAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromAddress),
       toCountry: toCountry == null && nullToAbsent
           ? const Value.absent()
           : Value(toCountry),
+      toAddress: toAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAddress),
       cargoWeightKg: cargoWeightKg == null && nullToAbsent
           ? const Value.absent()
           : Value(cargoWeightKg),
@@ -2037,7 +2100,9 @@ class DriverOrderDetailsTableData extends DataClass
       trailerPlate: serializer.fromJson<String?>(json['trailerPlate']),
       clientName: serializer.fromJson<String?>(json['clientName']),
       fromCountry: serializer.fromJson<String?>(json['fromCountry']),
+      fromAddress: serializer.fromJson<String?>(json['fromAddress']),
       toCountry: serializer.fromJson<String?>(json['toCountry']),
+      toAddress: serializer.fromJson<String?>(json['toAddress']),
       cargoWeightKg: serializer.fromJson<int?>(json['cargoWeightKg']),
       loadingDate: serializer.fromJson<DateTime?>(json['loadingDate']),
       cargoDescription: serializer.fromJson<String?>(json['cargoDescription']),
@@ -2059,7 +2124,9 @@ class DriverOrderDetailsTableData extends DataClass
       'trailerPlate': serializer.toJson<String?>(trailerPlate),
       'clientName': serializer.toJson<String?>(clientName),
       'fromCountry': serializer.toJson<String?>(fromCountry),
+      'fromAddress': serializer.toJson<String?>(fromAddress),
       'toCountry': serializer.toJson<String?>(toCountry),
+      'toAddress': serializer.toJson<String?>(toAddress),
       'cargoWeightKg': serializer.toJson<int?>(cargoWeightKg),
       'loadingDate': serializer.toJson<DateTime?>(loadingDate),
       'cargoDescription': serializer.toJson<String?>(cargoDescription),
@@ -2077,7 +2144,9 @@ class DriverOrderDetailsTableData extends DataClass
     Value<String?> trailerPlate = const Value.absent(),
     Value<String?> clientName = const Value.absent(),
     Value<String?> fromCountry = const Value.absent(),
+    Value<String?> fromAddress = const Value.absent(),
     Value<String?> toCountry = const Value.absent(),
+    Value<String?> toAddress = const Value.absent(),
     Value<int?> cargoWeightKg = const Value.absent(),
     Value<DateTime?> loadingDate = const Value.absent(),
     Value<String?> cargoDescription = const Value.absent(),
@@ -2092,7 +2161,9 @@ class DriverOrderDetailsTableData extends DataClass
     trailerPlate: trailerPlate.present ? trailerPlate.value : this.trailerPlate,
     clientName: clientName.present ? clientName.value : this.clientName,
     fromCountry: fromCountry.present ? fromCountry.value : this.fromCountry,
+    fromAddress: fromAddress.present ? fromAddress.value : this.fromAddress,
     toCountry: toCountry.present ? toCountry.value : this.toCountry,
+    toAddress: toAddress.present ? toAddress.value : this.toAddress,
     cargoWeightKg: cargoWeightKg.present
         ? cargoWeightKg.value
         : this.cargoWeightKg,
@@ -2125,7 +2196,11 @@ class DriverOrderDetailsTableData extends DataClass
       fromCountry: data.fromCountry.present
           ? data.fromCountry.value
           : this.fromCountry,
+      fromAddress: data.fromAddress.present
+          ? data.fromAddress.value
+          : this.fromAddress,
       toCountry: data.toCountry.present ? data.toCountry.value : this.toCountry,
+      toAddress: data.toAddress.present ? data.toAddress.value : this.toAddress,
       cargoWeightKg: data.cargoWeightKg.present
           ? data.cargoWeightKg.value
           : this.cargoWeightKg,
@@ -2153,7 +2228,9 @@ class DriverOrderDetailsTableData extends DataClass
           ..write('trailerPlate: $trailerPlate, ')
           ..write('clientName: $clientName, ')
           ..write('fromCountry: $fromCountry, ')
+          ..write('fromAddress: $fromAddress, ')
           ..write('toCountry: $toCountry, ')
+          ..write('toAddress: $toAddress, ')
           ..write('cargoWeightKg: $cargoWeightKg, ')
           ..write('loadingDate: $loadingDate, ')
           ..write('cargoDescription: $cargoDescription, ')
@@ -2173,7 +2250,9 @@ class DriverOrderDetailsTableData extends DataClass
     trailerPlate,
     clientName,
     fromCountry,
+    fromAddress,
     toCountry,
+    toAddress,
     cargoWeightKg,
     loadingDate,
     cargoDescription,
@@ -2192,7 +2271,9 @@ class DriverOrderDetailsTableData extends DataClass
           other.trailerPlate == this.trailerPlate &&
           other.clientName == this.clientName &&
           other.fromCountry == this.fromCountry &&
+          other.fromAddress == this.fromAddress &&
           other.toCountry == this.toCountry &&
+          other.toAddress == this.toAddress &&
           other.cargoWeightKg == this.cargoWeightKg &&
           other.loadingDate == this.loadingDate &&
           other.cargoDescription == this.cargoDescription &&
@@ -2210,7 +2291,9 @@ class DriverOrderDetailsTableCompanion
   final Value<String?> trailerPlate;
   final Value<String?> clientName;
   final Value<String?> fromCountry;
+  final Value<String?> fromAddress;
   final Value<String?> toCountry;
+  final Value<String?> toAddress;
   final Value<int?> cargoWeightKg;
   final Value<DateTime?> loadingDate;
   final Value<String?> cargoDescription;
@@ -2226,7 +2309,9 @@ class DriverOrderDetailsTableCompanion
     this.trailerPlate = const Value.absent(),
     this.clientName = const Value.absent(),
     this.fromCountry = const Value.absent(),
+    this.fromAddress = const Value.absent(),
     this.toCountry = const Value.absent(),
+    this.toAddress = const Value.absent(),
     this.cargoWeightKg = const Value.absent(),
     this.loadingDate = const Value.absent(),
     this.cargoDescription = const Value.absent(),
@@ -2243,7 +2328,9 @@ class DriverOrderDetailsTableCompanion
     this.trailerPlate = const Value.absent(),
     this.clientName = const Value.absent(),
     this.fromCountry = const Value.absent(),
+    this.fromAddress = const Value.absent(),
     this.toCountry = const Value.absent(),
+    this.toAddress = const Value.absent(),
     this.cargoWeightKg = const Value.absent(),
     this.loadingDate = const Value.absent(),
     this.cargoDescription = const Value.absent(),
@@ -2260,7 +2347,9 @@ class DriverOrderDetailsTableCompanion
     Expression<String>? trailerPlate,
     Expression<String>? clientName,
     Expression<String>? fromCountry,
+    Expression<String>? fromAddress,
     Expression<String>? toCountry,
+    Expression<String>? toAddress,
     Expression<int>? cargoWeightKg,
     Expression<DateTime>? loadingDate,
     Expression<String>? cargoDescription,
@@ -2277,7 +2366,9 @@ class DriverOrderDetailsTableCompanion
       if (trailerPlate != null) 'trailer_plate': trailerPlate,
       if (clientName != null) 'client_name': clientName,
       if (fromCountry != null) 'from_country': fromCountry,
+      if (fromAddress != null) 'from_address': fromAddress,
       if (toCountry != null) 'to_country': toCountry,
+      if (toAddress != null) 'to_address': toAddress,
       if (cargoWeightKg != null) 'cargo_weight_kg': cargoWeightKg,
       if (loadingDate != null) 'loading_date': loadingDate,
       if (cargoDescription != null) 'cargo_description': cargoDescription,
@@ -2297,7 +2388,9 @@ class DriverOrderDetailsTableCompanion
     Value<String?>? trailerPlate,
     Value<String?>? clientName,
     Value<String?>? fromCountry,
+    Value<String?>? fromAddress,
     Value<String?>? toCountry,
+    Value<String?>? toAddress,
     Value<int?>? cargoWeightKg,
     Value<DateTime?>? loadingDate,
     Value<String?>? cargoDescription,
@@ -2314,7 +2407,9 @@ class DriverOrderDetailsTableCompanion
       trailerPlate: trailerPlate ?? this.trailerPlate,
       clientName: clientName ?? this.clientName,
       fromCountry: fromCountry ?? this.fromCountry,
+      fromAddress: fromAddress ?? this.fromAddress,
       toCountry: toCountry ?? this.toCountry,
+      toAddress: toAddress ?? this.toAddress,
       cargoWeightKg: cargoWeightKg ?? this.cargoWeightKg,
       loadingDate: loadingDate ?? this.loadingDate,
       cargoDescription: cargoDescription ?? this.cargoDescription,
@@ -2349,8 +2444,14 @@ class DriverOrderDetailsTableCompanion
     if (fromCountry.present) {
       map['from_country'] = Variable<String>(fromCountry.value);
     }
+    if (fromAddress.present) {
+      map['from_address'] = Variable<String>(fromAddress.value);
+    }
     if (toCountry.present) {
       map['to_country'] = Variable<String>(toCountry.value);
+    }
+    if (toAddress.present) {
+      map['to_address'] = Variable<String>(toAddress.value);
     }
     if (cargoWeightKg.present) {
       map['cargo_weight_kg'] = Variable<int>(cargoWeightKg.value);
@@ -2386,7 +2487,9 @@ class DriverOrderDetailsTableCompanion
           ..write('trailerPlate: $trailerPlate, ')
           ..write('clientName: $clientName, ')
           ..write('fromCountry: $fromCountry, ')
+          ..write('fromAddress: $fromAddress, ')
           ..write('toCountry: $toCountry, ')
+          ..write('toAddress: $toAddress, ')
           ..write('cargoWeightKg: $cargoWeightKg, ')
           ..write('loadingDate: $loadingDate, ')
           ..write('cargoDescription: $cargoDescription, ')
@@ -3881,7 +3984,9 @@ typedef $$DriverOrderDetailsTableTableCreateCompanionBuilder =
       Value<String?> trailerPlate,
       Value<String?> clientName,
       Value<String?> fromCountry,
+      Value<String?> fromAddress,
       Value<String?> toCountry,
+      Value<String?> toAddress,
       Value<int?> cargoWeightKg,
       Value<DateTime?> loadingDate,
       Value<String?> cargoDescription,
@@ -3899,7 +4004,9 @@ typedef $$DriverOrderDetailsTableTableUpdateCompanionBuilder =
       Value<String?> trailerPlate,
       Value<String?> clientName,
       Value<String?> fromCountry,
+      Value<String?> fromAddress,
       Value<String?> toCountry,
+      Value<String?> toAddress,
       Value<int?> cargoWeightKg,
       Value<DateTime?> loadingDate,
       Value<String?> cargoDescription,
@@ -3953,8 +4060,18 @@ class $$DriverOrderDetailsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get fromAddress => $composableBuilder(
+    column: $table.fromAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get toCountry => $composableBuilder(
     column: $table.toCountry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toAddress => $composableBuilder(
+    column: $table.toAddress,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4033,8 +4150,18 @@ class $$DriverOrderDetailsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get fromAddress => $composableBuilder(
+    column: $table.fromAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get toCountry => $composableBuilder(
     column: $table.toCountry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toAddress => $composableBuilder(
+    column: $table.toAddress,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4107,8 +4234,16 @@ class $$DriverOrderDetailsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get fromAddress => $composableBuilder(
+    column: $table.fromAddress,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get toCountry =>
       $composableBuilder(column: $table.toCountry, builder: (column) => column);
+
+  GeneratedColumn<String> get toAddress =>
+      $composableBuilder(column: $table.toAddress, builder: (column) => column);
 
   GeneratedColumn<int> get cargoWeightKg => $composableBuilder(
     column: $table.cargoWeightKg,
@@ -4190,7 +4325,9 @@ class $$DriverOrderDetailsTableTableTableManager
                 Value<String?> trailerPlate = const Value.absent(),
                 Value<String?> clientName = const Value.absent(),
                 Value<String?> fromCountry = const Value.absent(),
+                Value<String?> fromAddress = const Value.absent(),
                 Value<String?> toCountry = const Value.absent(),
+                Value<String?> toAddress = const Value.absent(),
                 Value<int?> cargoWeightKg = const Value.absent(),
                 Value<DateTime?> loadingDate = const Value.absent(),
                 Value<String?> cargoDescription = const Value.absent(),
@@ -4206,7 +4343,9 @@ class $$DriverOrderDetailsTableTableTableManager
                 trailerPlate: trailerPlate,
                 clientName: clientName,
                 fromCountry: fromCountry,
+                fromAddress: fromAddress,
                 toCountry: toCountry,
+                toAddress: toAddress,
                 cargoWeightKg: cargoWeightKg,
                 loadingDate: loadingDate,
                 cargoDescription: cargoDescription,
@@ -4224,7 +4363,9 @@ class $$DriverOrderDetailsTableTableTableManager
                 Value<String?> trailerPlate = const Value.absent(),
                 Value<String?> clientName = const Value.absent(),
                 Value<String?> fromCountry = const Value.absent(),
+                Value<String?> fromAddress = const Value.absent(),
                 Value<String?> toCountry = const Value.absent(),
+                Value<String?> toAddress = const Value.absent(),
                 Value<int?> cargoWeightKg = const Value.absent(),
                 Value<DateTime?> loadingDate = const Value.absent(),
                 Value<String?> cargoDescription = const Value.absent(),
@@ -4240,7 +4381,9 @@ class $$DriverOrderDetailsTableTableTableManager
                 trailerPlate: trailerPlate,
                 clientName: clientName,
                 fromCountry: fromCountry,
+                fromAddress: fromAddress,
                 toCountry: toCountry,
+                toAddress: toAddress,
                 cargoWeightKg: cargoWeightKg,
                 loadingDate: loadingDate,
                 cargoDescription: cargoDescription,

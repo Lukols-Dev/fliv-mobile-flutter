@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +70,17 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.createTable(driverOrderDocumentTable);
+      }
+      // upgrade z v5 -> v6 (dodajemy fromAddress i toAddress do driverOrderDetailsTable)
+      if (from < 6) {
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.fromAddress,
+        );
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.toAddress,
+        );
       }
     },
   );

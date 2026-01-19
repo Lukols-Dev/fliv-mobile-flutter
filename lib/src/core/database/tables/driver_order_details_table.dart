@@ -9,7 +9,9 @@ class DriverOrderDetailsTable extends Table {
   TextColumn get trailerPlate => text().nullable()();
   TextColumn get clientName => text().nullable()();
   TextColumn get fromCountry => text().nullable()();
+  TextColumn get fromAddress => text().nullable()();
   TextColumn get toCountry => text().nullable()();
+  TextColumn get toAddress => text().nullable()();
   IntColumn get cargoWeightKg => integer().nullable()();
   DateTimeColumn get loadingDate => dateTime().nullable()();
   TextColumn get cargoDescription => text().nullable()();
