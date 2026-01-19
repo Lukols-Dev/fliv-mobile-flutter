@@ -441,9 +441,9 @@ class _InfoCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF10B981),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF709470),
               fontFamily: 'Figtree',
             ),
           ),
