@@ -59,9 +59,11 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
   Future<void> _reportProblemFlow({required BuildContext sheetContext}) async {
     if (_sending) return;
 
-    final description = await showDialog<String>(
+    final description = await showModalBottomSheet<String>(
       context: widget.parentContext,
-      builder: (_) => const _ReportProblemDialog(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _ReportProblemSheet(),
     );
 
     if (description == null || description.trim().isEmpty) return;
@@ -273,14 +275,14 @@ class _ChoiceTile extends StatelessWidget {
   }
 }
 
-class _ReportProblemDialog extends StatefulWidget {
-  const _ReportProblemDialog();
+class _ReportProblemSheet extends StatefulWidget {
+  const _ReportProblemSheet();
 
   @override
-  State<_ReportProblemDialog> createState() => _ReportProblemDialogState();
+  State<_ReportProblemSheet> createState() => _ReportProblemSheetState();
 }
 
-class _ReportProblemDialogState extends State<_ReportProblemDialog> {
+class _ReportProblemSheetState extends State<_ReportProblemSheet> {
   final _controller = TextEditingController();
 
   @override
@@ -292,27 +294,149 @@ class _ReportProblemDialogState extends State<_ReportProblemDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _controller.text.trim().isNotEmpty;
+    final padding = MediaQuery.of(context).padding;
 
-    return AlertDialog(
-      title: const Text('Zgłoś Problem'),
-      content: TextField(
-        controller: _controller,
-        maxLines: 4,
-        decoration: const InputDecoration(hintText: 'Opisz problem'),
-        onChanged: (_) => setState(() {}),
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Anuluj'),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header z przyciskiem zamknij i tytułem
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: Color(0xFF111827),
+                      size: 24,
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Zgłoś problem',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Figtree',
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Opis problemu',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Figtree',
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.4,
+                      ),
+                      child: TextField(
+                        controller: _controller,
+                        maxLines: null,
+                        minLines: 4,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: 'Opisz',
+                          hintStyle: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF9CA3AF),
+                            fontFamily: 'Figtree',
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF3F1E9),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.all(18),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontFamily: 'Figtree',
+                          color: Color(0xFF111827),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Footer z przyciskiem
+            Container(
+              padding: EdgeInsets.fromLTRB(18, 0, 18, padding.bottom + 18),
+              decoration: const BoxDecoration(color: Colors.white),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: canSubmit
+                      ? () => Navigator.of(context).pop(_controller.text.trim())
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFF2542F),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFFE5E7EB),
+                    disabledForegroundColor: const Color(0xFF9CA3AF),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Dodaj zgłoszenie',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Figtree',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        FilledButton(
-          onPressed: canSubmit
-              ? () => Navigator.of(context).pop(_controller.text.trim())
-              : null,
-          child: const Text('Wyślij'),
-        ),
-      ],
+      ),
     );
   }
 }
