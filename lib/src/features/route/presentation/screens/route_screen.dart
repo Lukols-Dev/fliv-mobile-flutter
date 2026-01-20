@@ -102,7 +102,6 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     final showChangeStatus = hasOrder;
 
-    // ValueNotifier do śledzenia wysokości bottom sheet
     final sheetHeightNotifier = ValueNotifier<double>(screenH * _sheetInitial);
 
     return Scaffold(
