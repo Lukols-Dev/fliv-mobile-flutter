@@ -77,11 +77,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState.isLoading;
 
     ref.listen(authControllerProvider, (prev, next) {
+      final wasLoading = prev?.isLoading ?? false;
       next.whenOrNull(
         error: (e, _) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(e.toString())));
+          if (!wasLoading) return;
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.clearSnackBars();
+          messenger.showSnackBar(SnackBar(content: Text(t.auth_login_failed)));
         },
       );
     });
