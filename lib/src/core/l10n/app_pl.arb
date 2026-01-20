@@ -23,6 +23,7 @@
   "auth_send_link": "Wyślij link",
   "auth_invalid_email": "Nieprawidłowy adres email",
   "auth_login_failed": "Nieprawidłowy email lub hasło",
+  "auth_register_failed": "Nie udało się utworzyć konta",
   "common_or": "lub",
   "common_fill_all_fields": "Wypełnij wszystkie pola",
   "language_pl": "Polski",

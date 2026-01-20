@@ -23,6 +23,7 @@
   "auth_send_link": "Send link",
   "auth_invalid_email": "Invalid email address",
   "auth_login_failed": "Invalid email or password",
+  "auth_register_failed": "Failed to create account",
   "common_or": "or",
   "common_fill_all_fields": "Fill in all fields",
   "language_pl": "Polish",

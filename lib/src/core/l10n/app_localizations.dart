@@ -236,6 +236,12 @@ abstract class AppLocalizations {
   /// **'Nieprawidłowy email lub hasło'**
   String get auth_login_failed;
 
+  /// No description provided for @auth_register_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się utworzyć konta'**
+  String get auth_register_failed;
+
   /// No description provided for @common_or.
   ///
   /// In pl, this message translates to:

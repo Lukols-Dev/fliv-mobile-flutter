@@ -82,6 +82,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get auth_login_failed => 'Invalid email or password';
 
   @override
+  String get auth_register_failed => 'Failed to create account';
+
+  @override
   String get common_or => 'or';
 
   @override

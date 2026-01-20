@@ -82,6 +82,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get auth_login_failed => 'Nieprawidłowy email lub hasło';
 
   @override
+  String get auth_register_failed => 'Nie udało się utworzyć konta';
+
+  @override
   String get common_or => 'lub';
 
   @override
