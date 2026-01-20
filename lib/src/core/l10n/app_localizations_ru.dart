@@ -252,4 +252,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get documents_add_button => 'Add document';
+
+  @override
+  String get route_report_event_title => 'Report';
+
+  @override
+  String get route_report_event_detour => 'Detour';
+
+  @override
+  String get route_report_event_accident => 'Accident';
+
+  @override
+  String get route_report_event_delay => 'Delay';
+
+  @override
+  String get common_close => 'Close';
+
+  @override
+  String get route_report_success => 'Event reported';
+
+  @override
+  String get route_report_error => 'Failed to report event';
 }

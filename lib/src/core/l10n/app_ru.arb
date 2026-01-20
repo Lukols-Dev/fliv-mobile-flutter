@@ -78,5 +78,12 @@
   "documents_add_photo_max_size": "Maximum size: 10 MB",
   "documents_add_name_label": "Document name",
   "documents_add_name_hint": "e.g. CMR - Consignment note",
-  "documents_add_button": "Add document"
+  "documents_add_button": "Add document",
+  "route_report_event_title": "Report",
+  "route_report_event_detour": "Detour",
+  "route_report_event_accident": "Accident",
+  "route_report_event_delay": "Delay",
+  "common_close": "Close",
+  "route_report_success": "Event reported",
+"route_report_error": "Failed to report event"
 }

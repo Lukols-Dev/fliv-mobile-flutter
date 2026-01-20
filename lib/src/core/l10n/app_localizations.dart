@@ -571,6 +571,48 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Dodaj dokument'**
   String get documents_add_button;
+
+  /// No description provided for @route_report_event_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoś'**
+  String get route_report_event_title;
+
+  /// No description provided for @route_report_event_detour.
+  ///
+  /// In pl, this message translates to:
+  /// **'Objazd'**
+  String get route_report_event_detour;
+
+  /// No description provided for @route_report_event_accident.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wypadek'**
+  String get route_report_event_accident;
+
+  /// No description provided for @route_report_event_delay.
+  ///
+  /// In pl, this message translates to:
+  /// **'Opóźnienie'**
+  String get route_report_event_delay;
+
+  /// No description provided for @common_close.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zamknij'**
+  String get common_close;
+
+  /// No description provided for @route_report_success.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoszono zdarzenie'**
+  String get route_report_success;
+
+  /// No description provided for @route_report_error.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zgłosić zdarzenia'**
+  String get route_report_error;
 }
 
 class _AppLocalizationsDelegate

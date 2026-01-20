@@ -78,5 +78,12 @@
   "documents_add_photo_max_size": "Maksymalny rozmiar: 10 MB",
   "documents_add_name_label": "Nazwa dokumentu",
   "documents_add_name_hint": "np. CMR - List przewozowy",
-  "documents_add_button": "Dodaj dokument"
+  "documents_add_button": "Dodaj dokument",
+  "route_report_event_title": "Zgłoś",
+  "route_report_event_detour": "Objazd",
+  "route_report_event_accident": "Wypadek",
+  "route_report_event_delay": "Opóźnienie",
+  "common_close": "Zamknij",
+  "route_report_success": "Zgłoszono zdarzenie",
+  "route_report_error": "Nie udało się zgłosić zdarzenia"
 }

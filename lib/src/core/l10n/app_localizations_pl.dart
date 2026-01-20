@@ -250,4 +250,25 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get documents_add_button => 'Dodaj dokument';
+
+  @override
+  String get route_report_event_title => 'Zgłoś';
+
+  @override
+  String get route_report_event_detour => 'Objazd';
+
+  @override
+  String get route_report_event_accident => 'Wypadek';
+
+  @override
+  String get route_report_event_delay => 'Opóźnienie';
+
+  @override
+  String get common_close => 'Zamknij';
+
+  @override
+  String get route_report_success => 'Zgłoszono zdarzenie';
+
+  @override
+  String get route_report_error => 'Nie udało się zgłosić zdarzenia';
 }

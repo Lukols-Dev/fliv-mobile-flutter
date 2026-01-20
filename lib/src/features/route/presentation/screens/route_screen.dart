@@ -8,6 +8,7 @@ import 'package:mobile/src/features/orders/application/current_driver_order_prov
 import 'package:mobile/src/features/orders/application/update_order_status_controller.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_controls_panel.dart';
+import 'package:mobile/src/features/route/presentation/widgets/route_incident_bottom_sheet.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_map_layer.dart';
 import 'package:mobile/src/features/route/presentation/widgets/order_status_bottom_sheet.dart';
 
@@ -76,6 +77,10 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     }
   }
 
+  Future<void> _openReportEventSheet({required String orderId}) async {
+    await showReportEventBottomSheet(context, orderId: orderId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(routeMapControllerProvider);
@@ -93,10 +98,8 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     final canCalculate = hasOrder;
     final canStart = controller.canStartNavigation;
 
-    // Sterowanie trasy pokazujemy dopiero po wyznaczeniu trasy (tak jak chciałaś)
     final showRouteControls = route != null;
 
-    // Zmień status: dotyczy ordera => pokazujemy zawsze jeśli jest order
     final showChangeStatus = hasOrder;
 
     return Scaffold(
@@ -132,7 +135,6 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // ✅ WSZYSTKO W PADDINGU
                       Padding(
                         padding: EdgeInsets.fromLTRB(18, 10, 18, 0),
                         child: Column(
@@ -292,11 +294,12 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                       ),
 
                       // Route controls
-                      if (showRouteControls) ...[
+                      if (!showRouteControls) ...[
                         const SizedBox(height: 18),
                         RouteControlsPanel(
                           isFollowing: controller.isFollowing,
-                          onReportEvent: () {},
+                          onReportEvent: () =>
+                              _openReportEventSheet(orderId: currentOrder!.id),
                           onPause: controller.stopFollowing,
                           onResume: controller.startFollowing,
                           onFinishRoute: () {},
