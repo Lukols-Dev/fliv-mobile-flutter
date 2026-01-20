@@ -28,9 +28,9 @@ class RouteScreen extends ConsumerStatefulWidget {
 }
 
 class _RouteScreenState extends ConsumerState<RouteScreen> {
-  static const _sheetMin = 0.12;
-  static const _sheetInitial = 0.18;
-  static const _sheetMax = 0.62;
+  static const _sheetMin = 0.20;
+  static const _sheetInitial = 0.30;
+  static const _sheetMax = 0.70;
 
   String _formatKm(int meters) => (meters / 1000).toStringAsFixed(1);
   String _formatMin(Duration d) => '${(d.inSeconds / 60).round()} min';
