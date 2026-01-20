@@ -130,6 +130,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profile_phone_label => 'Phone';
 
   @override
+  String get profile_save_failed => 'Failed to save data';
+
+  @override
   String get common_save => 'Save';
 
   @override
@@ -158,6 +161,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get driver_data_driver_certificate_deadline =>
       'Driver\'s certificate deadline';
+
+  @override
+  String get driver_data_invalid_date => 'Invalid date';
+
+  @override
+  String get driver_data_save_failed => 'Failed to save data';
 
   @override
   String get order_details_title => 'Order details';

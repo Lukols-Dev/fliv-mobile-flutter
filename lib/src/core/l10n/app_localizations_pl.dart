@@ -130,6 +130,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get profile_phone_label => 'Telefon';
 
   @override
+  String get profile_save_failed => 'Nie udało się zapisać danych';
+
+  @override
   String get common_save => 'Zapisz';
 
   @override
@@ -157,6 +160,12 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get driver_data_driver_certificate_deadline =>
       'Termin świadectwa kierowcy';
+
+  @override
+  String get driver_data_invalid_date => 'Nieprawidłowa data';
+
+  @override
+  String get driver_data_save_failed => 'Nie udało się zapisać danych';
 
   @override
   String get order_details_title => 'Szczegóły zlecenia';

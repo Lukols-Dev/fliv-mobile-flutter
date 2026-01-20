@@ -332,6 +332,12 @@ abstract class AppLocalizations {
   /// **'Telefon'**
   String get profile_phone_label;
 
+  /// No description provided for @profile_save_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zapisać danych'**
+  String get profile_save_failed;
+
   /// No description provided for @common_save.
   ///
   /// In pl, this message translates to:
@@ -385,6 +391,18 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Termin świadectwa kierowcy'**
   String get driver_data_driver_certificate_deadline;
+
+  /// No description provided for @driver_data_invalid_date.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nieprawidłowa data'**
+  String get driver_data_invalid_date;
+
+  /// No description provided for @driver_data_save_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zapisać danych'**
+  String get driver_data_save_failed;
 
   /// No description provided for @order_details_title.
   ///

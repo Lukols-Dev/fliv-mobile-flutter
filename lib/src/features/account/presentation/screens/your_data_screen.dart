@@ -15,12 +15,21 @@ class YourDataScreen extends ConsumerStatefulWidget {
 }
 
 class _YourDataScreenState extends ConsumerState<YourDataScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+
+  final _firstNameFocus = FocusNode();
+  final _lastNameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+
   bool _didSetInitialValues = false;
   bool _isSaving = false;
+  bool _submittedOnce = false;
 
   @override
   void dispose() {
@@ -28,7 +37,31 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
     _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+
+    _firstNameFocus.dispose();
+    _lastNameFocus.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
     super.dispose();
+  }
+
+  bool _isValidEmail(String value) {
+    final v = value.trim();
+    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return re.hasMatch(v);
+  }
+
+  String? _validateRequired(String? value, AppLocalizations t) {
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return t.common_fill_all_fields;
+    return null;
+  }
+
+  String? _validateEmail(String? value, AppLocalizations t) {
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return t.common_fill_all_fields;
+    if (!_isValidEmail(v)) return t.auth_invalid_email;
+    return null;
   }
 
   void _applyProfileOnce(DriverProfile p) {
@@ -50,7 +83,7 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
     ref.listen(driverProfileProvider, (_, next) {
       next.whenOrNull(
         data: (p) {
-          if (p != null) _applyProfileOnce(p);
+          _applyProfileOnce(p);
         },
       );
     });
@@ -62,7 +95,7 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF0F4D46)),
-          onPressed: () => context.pop(),
+          onPressed: _isSaving ? null : () => context.pop(),
         ),
       ),
       body: SafeArea(
@@ -88,305 +121,389 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
             ),
           ),
           data: (profile) {
-            if (profile == null) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Brak danych profilu (offline i brak cache).',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
-            }
             // Ensure controllers are populated even if listener doesn't fire
             _applyProfileOnce(profile);
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: _submittedOnce
+                      ? AutovalidateMode.onUserInteraction
+                      : AutovalidateMode.disabled,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 8),
 
-                    // TITLE
-                    Center(
-                      child: Text(
-                        t.profile_your_data,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF111827),
+                      // TITLE
+                      Center(
+                        child: Text(
+                          t.profile_your_data,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827),
+                          ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 32),
 
-                    // FIRST NAME INPUT FIELD
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.auth_first_name_label,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _firstNameController,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5DC),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF0F4D46),
-                                width: 1,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
+                      // FIRST NAME
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.auth_first_name_label,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF111827),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // LAST NAME INPUT FIELD
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.auth_last_name_label,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _lastNameController,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5DC),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF0F4D46),
-                                width: 1,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // EMAIL INPUT FIELD
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.auth_email_label,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5DC),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF0F4D46),
-                                width: 1,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // PHONE INPUT FIELD
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.profile_phone_label,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5DC),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF0F4D46),
-                                width: 1,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // SAVE BUTTON
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: FilledButton(
-                        onPressed: _isSaving
-                            ? null
-                            : () async {
-                                setState(() => _isSaving = true);
-                                try {
-                                  final repo = ref.read(
-                                    driverRepositoryProvider,
-                                  );
-                                  await repo.updateProfile(
-                                    UpdateUserProfilePayload(
-                                      firstName: _firstNameController.text,
-                                      lastName: _lastNameController.text,
-                                      phone: _phoneController.text,
-                                    ),
-                                  );
-
-                                  ref.invalidate(driverProfileProvider);
-                                  if (context.mounted) context.pop();
-                                } catch (e) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Błąd zapisu profilu: $e'),
-                                    ),
-                                  );
-                                } finally {
-                                  if (mounted)
-                                    setState(() => _isSaving = false);
-                                }
-                              },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F4D46),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                t.common_save,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _firstNameController,
+                            focusNode: _firstNameFocus,
+                            enabled: !_isSaving,
+                            textInputAction: TextInputAction.next,
+                            validator: (v) => _validateRequired(v, t),
+                            onFieldSubmitted: (_) {
+                              FocusScope.of(
+                                context,
+                              ).requestFocus(_lastNameFocus);
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5DC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
                                 ),
                               ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF0F4D46),
+                                  width: 1,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              errorStyle: const TextStyle(
+                                fontSize: 12,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
-                  ],
+                      const SizedBox(height: 20),
+
+                      // LAST NAME
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.auth_last_name_label,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _lastNameController,
+                            focusNode: _lastNameFocus,
+                            enabled: !_isSaving,
+                            textInputAction: TextInputAction.next,
+                            validator: (v) => _validateRequired(v, t),
+                            onFieldSubmitted: (_) {
+                              FocusScope.of(context).requestFocus(_emailFocus);
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5DC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF0F4D46),
+                                  width: 1,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              errorStyle: const TextStyle(
+                                fontSize: 12,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // EMAIL
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.auth_email_label,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _emailController,
+                            focusNode: _emailFocus,
+                            enabled: !_isSaving,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            validator: (v) => _validateEmail(v, t),
+                            onFieldSubmitted: (_) {
+                              FocusScope.of(context).requestFocus(_phoneFocus);
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5DC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF0F4D46),
+                                  width: 1,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              errorStyle: const TextStyle(
+                                fontSize: 12,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // PHONE
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.profile_phone_label,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _phoneController,
+                            focusNode: _phoneFocus,
+                            enabled: !_isSaving,
+                            keyboardType: TextInputType.phone,
+                            textInputAction: TextInputAction.done,
+                            validator: (v) => _validateRequired(v, t),
+                            onFieldSubmitted: (_) async {
+                              if (_isSaving) return;
+                              setState(() => _submittedOnce = true);
+                              final ok =
+                                  _formKey.currentState?.validate() ?? false;
+                              if (!ok) return;
+
+                              setState(() => _isSaving = true);
+                              try {
+                                final repo = ref.read(driverRepositoryProvider);
+                                await repo.updateProfile(
+                                  UpdateUserProfilePayload(
+                                    firstName: _firstNameController.text.trim(),
+                                    lastName: _lastNameController.text.trim(),
+                                    phone: _phoneController.text.trim(),
+                                  ),
+                                );
+
+                                ref.invalidate(driverProfileProvider);
+                                if (context.mounted) context.pop();
+                              } catch (_) {
+                                if (!context.mounted) return;
+                                final messenger = ScaffoldMessenger.of(context);
+                                messenger.clearSnackBars();
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(t.profile_save_failed),
+                                  ),
+                                );
+                              } finally {
+                                if (mounted) setState(() => _isSaving = false);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5DC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF0F4D46),
+                                  width: 1,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              errorStyle: const TextStyle(
+                                fontSize: 12,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // SAVE BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: FilledButton(
+                          onPressed: _isSaving
+                              ? null
+                              : () async {
+                                  setState(() => _submittedOnce = true);
+                                  final ok =
+                                      _formKey.currentState?.validate() ??
+                                      false;
+                                  if (!ok) return;
+
+                                  setState(() => _isSaving = true);
+                                  try {
+                                    final repo = ref.read(
+                                      driverRepositoryProvider,
+                                    );
+                                    await repo.updateProfile(
+                                      UpdateUserProfilePayload(
+                                        firstName: _firstNameController.text
+                                            .trim(),
+                                        lastName: _lastNameController.text
+                                            .trim(),
+                                        phone: _phoneController.text.trim(),
+                                      ),
+                                    );
+
+                                    ref.invalidate(driverProfileProvider);
+                                    if (context.mounted) context.pop();
+                                  } catch (_) {
+                                    if (!context.mounted) return;
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    messenger.clearSnackBars();
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(t.profile_save_failed),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isSaving = false);
+                                    }
+                                  }
+                                },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F4D46),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  t.common_save,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
             );
