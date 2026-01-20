@@ -75,4 +75,18 @@ class DriverTransportOrdersApi {
       res.data as Map<String, dynamic>,
     );
   }
+
+  Future<UpdateDriverTransportOrderStatusResponseDto> reportProblem({
+    required String id,
+    required String description,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/driver/transport-orders/$id/problem',
+      data: {'description': description.trim()},
+    );
+
+    return UpdateDriverTransportOrderStatusResponseDto.fromJson(
+      res.data as Map<String, dynamic>,
+    );
+  }
 }

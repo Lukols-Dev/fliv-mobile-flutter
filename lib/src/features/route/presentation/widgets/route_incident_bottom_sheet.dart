@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/features/orders/application/report_order_problem_controller.dart';
 
 import '../../application/report_route_event_controller.dart';
 import '../../domain/report_route_event_payload.dart';
@@ -54,6 +55,43 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
     RouteEventType.accident => Icons.car_crash_rounded,
     RouteEventType.delay => Icons.schedule_rounded,
   };
+
+  Future<void> _reportProblemFlow({required BuildContext sheetContext}) async {
+    if (_sending) return;
+
+    final description = await showDialog<String>(
+      context: widget.parentContext,
+      builder: (_) => const _ReportProblemDialog(),
+    );
+
+    if (description == null || description.trim().isEmpty) return;
+
+    setState(() => _sending = true);
+    try {
+      await ref
+          .read(reportOrderProblemControllerProvider.notifier)
+          .reportProblem(orderId: widget.orderId, description: description);
+
+      if (!mounted) return;
+      Navigator.of(sheetContext).pop(); // close sheet after request
+
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+        const SnackBar(
+          content: Text('Zgłoszono problem'),
+          backgroundColor: Color(0xFF0F4D46),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+        SnackBar(
+          content: Text('Nie udało się zgłosić problemu: ${e.toString()}'),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
 
   Future<void> _sendAndClose({
     required BuildContext sheetContext,
@@ -140,6 +178,15 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
                   ),
 
                 _ChoiceTile(
+                  title: 'Zgłoś Problem',
+                  icon: Icons.report_problem_rounded,
+                  iconBg: const Color(0xFFFEE2E2),
+                  iconColor: const Color(0xFF991B1B),
+                  enabled: !_sending,
+                  onTap: () => _reportProblemFlow(sheetContext: context),
+                ),
+
+                _ChoiceTile(
                   title: t.common_close,
                   icon: Icons.close_rounded,
                   iconBg: const Color(0xFFE5E7EB),
@@ -222,6 +269,50 @@ class _ChoiceTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ReportProblemDialog extends StatefulWidget {
+  const _ReportProblemDialog();
+
+  @override
+  State<_ReportProblemDialog> createState() => _ReportProblemDialogState();
+}
+
+class _ReportProblemDialogState extends State<_ReportProblemDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSubmit = _controller.text.trim().isNotEmpty;
+
+    return AlertDialog(
+      title: const Text('Zgłoś Problem'),
+      content: TextField(
+        controller: _controller,
+        maxLines: 4,
+        decoration: const InputDecoration(hintText: 'Opisz problem'),
+        onChanged: (_) => setState(() {}),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(
+          onPressed: canSubmit
+              ? () => Navigator.of(context).pop(_controller.text.trim())
+              : null,
+          child: const Text('Wyślij'),
+        ),
+      ],
     );
   }
 }

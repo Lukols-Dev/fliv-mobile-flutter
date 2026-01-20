@@ -56,4 +56,16 @@ class DriverTransportOrdersRepositoryImpl
     );
     return responseDto.toDomain();
   }
+
+  @override
+  Future<DriverTransportOrder> reportProblem({
+    required String id,
+    required String description,
+  }) async {
+    final responseDto = await _api.reportProblem(
+      id: id,
+      description: description,
+    );
+    return responseDto.toDomain();
+  }
 }

@@ -10,4 +10,9 @@ abstract class DriverTransportOrdersRepository {
     required String status,
     String? description,
   });
+
+  Future<DriverTransportOrder> reportProblem({
+    required String id,
+    required String description,
+  });
 }
