@@ -102,6 +102,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     final showChangeStatus = hasOrder;
 
+    // ValueNotifier do śledzenia wysokości bottom sheet
+    final sheetHeightNotifier = ValueNotifier<double>(screenH * _sheetInitial);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -109,239 +112,251 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
           RouteMapLayer(
             controller: controller,
             bottomPaddingForFab: bottomPaddingForFab,
+            sheetHeightNotifier: sheetHeightNotifier,
             onBack: () => context.go('/home'),
           ),
 
-          DraggableScrollableSheet(
-            minChildSize: _sheetMin,
-            initialChildSize: _sheetInitial,
-            maxChildSize: _sheetMax,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x22000000),
-                      blurRadius: 18,
-                      offset: Offset(0, -6),
+          NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              final sheetHeight = screenH * notification.extent;
+              sheetHeightNotifier.value = sheetHeight;
+              return false;
+            },
+            child: DraggableScrollableSheet(
+              minChildSize: _sheetMin,
+              initialChildSize: _sheetInitial,
+              maxChildSize: _sheetMax,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(22),
                     ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  physics: const ClampingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(18, 10, 18, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Align(
-                              alignment: Alignment.center,
-                              child: Container(
-                                width: 44,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE5E7EB),
-                                  borderRadius: BorderRadius.circular(999),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x22000000),
+                        blurRadius: 18,
+                        offset: Offset(0, -6),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(18, 10, 18, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Align(
+                                alignment: Alignment.center,
+                                child: Container(
+                                  width: 44,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE5E7EB),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 14),
+                              const SizedBox(height: 14),
 
-                            const Text(
-                              'Nawigacja',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w300,
-                                fontFamily: 'Figtree',
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-
-                            if (!hasOrder) ...[
                               const Text(
-                                'Brak przypisanego aktualnie zlecenia.',
+                                'Nawigacja',
                                 style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'Figtree',
-                                  color: Color(0xFF111827),
-                                  height: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w300,
                                   fontFamily: 'Figtree',
                                   color: Color(0xFF6B7280),
-                                  height: 1.35,
                                 ),
                               ),
-                            ] else ...[
-                              Text(
-                                'Zlecenie #${currentOrder.ztNumber}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  fontFamily: 'Figtree',
-                                  color: Color(0xFF111827),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
 
-                              if (route != null) ...[
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _InfoChip(
-                                        label: 'Dystans',
-                                        value:
-                                            '${_formatKm(route.lengthInMeters)} km',
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: _InfoChip(
-                                        label: 'Czas',
-                                        value: _formatMin(route.duration),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                              ] else ...[
+                              if (!hasOrder) ...[
                                 const Text(
-                                  'Trasa: jeszcze nie wyznaczona.',
+                                  'Brak przypisanego aktualnie zlecenia.',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Figtree',
+                                    color: Color(0xFF111827),
+                                    height: 1.2,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                     fontFamily: 'Figtree',
                                     color: Color(0xFF6B7280),
+                                    height: 1.35,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                              ],
-
-                              // GŁÓWNY PRZYCISK (trasa/nawigacja)
-                              SizedBox(
-                                height: 54,
-                                child: FilledButton(
-                                  onPressed: () async {
-                                    if (!canStart) {
-                                      if (!canCalculate) return;
-                                      final stops =
-                                          _exampleStopsFromDispatcher();
-                                      await controller.calculateRouteOnDemand(
-                                        dispatcherStops: stops,
-                                      );
-                                      return;
-                                    }
-
-                                    if (controller.isFollowing) {
-                                      controller.stopFollowing();
-                                    } else {
-                                      controller.startFollowing();
-                                    }
-                                  },
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0F4D46),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    elevation: 2,
+                              ] else ...[
+                                Text(
+                                  'Zlecenie #${currentOrder.ztNumber}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    fontFamily: 'Figtree',
+                                    color: Color(0xFF111827),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                ),
+                                const SizedBox(height: 8),
+
+                                if (route != null) ...[
+                                  Row(
                                     children: [
-                                      Icon(
-                                        !canStart
-                                            ? Icons.route_rounded
-                                            : (controller.isFollowing
-                                                  ? Icons.pause_rounded
-                                                  : Icons.play_arrow_rounded),
-                                        size: 24,
+                                      Expanded(
+                                        child: _InfoChip(
+                                          label: 'Dystans',
+                                          value:
+                                              '${_formatKm(route.lengthInMeters)} km',
+                                        ),
                                       ),
                                       const SizedBox(width: 10),
-                                      Text(
-                                        !canStart
-                                            ? 'Wyznacz trasę'
-                                            : (controller.isFollowing
-                                                  ? 'Zatrzymaj'
-                                                  : 'Rozpocznij trasę'),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontFamily: 'Figtree',
-                                          fontWeight: FontWeight.w700,
+                                      Expanded(
+                                        child: _InfoChip(
+                                          label: 'Czas',
+                                          value: _formatMin(route.duration),
                                         ),
                                       ),
                                     ],
                                   ),
+                                  const SizedBox(height: 12),
+                                ] else ...[
+                                  const Text(
+                                    'Trasa: jeszcze nie wyznaczona.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Figtree',
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+
+                                // GŁÓWNY PRZYCISK (trasa/nawigacja)
+                                SizedBox(
+                                  height: 54,
+                                  child: FilledButton(
+                                    onPressed: () async {
+                                      if (!canStart) {
+                                        if (!canCalculate) return;
+                                        final stops =
+                                            _exampleStopsFromDispatcher();
+                                        await controller.calculateRouteOnDemand(
+                                          dispatcherStops: stops,
+                                        );
+                                        return;
+                                      }
+
+                                      if (controller.isFollowing) {
+                                        controller.stopFollowing();
+                                      } else {
+                                        controller.startFollowing();
+                                      }
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFF0F4D46),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      elevation: 2,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          !canStart
+                                              ? Icons.route_rounded
+                                              : (controller.isFollowing
+                                                    ? Icons.pause_rounded
+                                                    : Icons.play_arrow_rounded),
+                                          size: 24,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          !canStart
+                                              ? 'Wyznacz trasę'
+                                              : (controller.isFollowing
+                                                    ? 'Zatrzymaj'
+                                                    : 'Rozpocznij trasę'),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontFamily: 'Figtree',
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
 
-                      // Route controls
-                      if (!showRouteControls) ...[
-                        const SizedBox(height: 18),
-                        RouteControlsPanel(
-                          isFollowing: controller.isFollowing,
-                          onReportEvent: () =>
-                              _openReportEventSheet(orderId: currentOrder!.id),
-                          onPause: controller.stopFollowing,
-                          onResume: controller.startFollowing,
-                          onFinishRoute: () {},
-                        ),
-                      ],
+                        // Route controls
+                        if (!showRouteControls) ...[
+                          const SizedBox(height: 18),
+                          RouteControlsPanel(
+                            isFollowing: controller.isFollowing,
+                            onReportEvent: () => _openReportEventSheet(
+                              orderId: currentOrder!.id,
+                            ),
+                            onPause: controller.stopFollowing,
+                            onResume: controller.startFollowing,
+                            onFinishRoute: () {},
+                          ),
+                        ],
 
-                      // Change status button
-                      if (showChangeStatus) ...[
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(18, 18, 18, 60),
-                          child: SizedBox(
-                            height: 54,
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: () => _openChangeStatusSheet(
-                                orderId: currentOrder.id,
-                              ),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFFF2542F),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                        // Change status button
+                        if (showChangeStatus) ...[
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(18, 18, 18, 60),
+                            child: SizedBox(
+                              height: 54,
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: () => _openChangeStatusSheet(
+                                  orderId: currentOrder.id,
                                 ),
-                                elevation: 0,
-                              ),
-                              child: const Text(
-                                'Zmień status',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  fontFamily: 'Figtree',
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF2542F),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  'Zmień status',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    fontFamily: 'Figtree',
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ],
       ),
