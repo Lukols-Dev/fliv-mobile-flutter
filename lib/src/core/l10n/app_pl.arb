@@ -22,6 +22,7 @@
   "auth_forgot_password_description": "Nie martw się! To się zdarza. Wpisz adres e-mail powiązany z Twoim kontem.",
   "auth_send_link": "Wyślij link",
   "auth_invalid_email": "Nieprawidłowy adres email",
+  "auth_login_failed": "Nieprawidłowy email lub hasło",
   "common_or": "lub",
   "common_fill_all_fields": "Wypełnij wszystkie pola",
   "language_pl": "Polski",

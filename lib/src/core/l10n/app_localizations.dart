@@ -230,6 +230,12 @@ abstract class AppLocalizations {
   /// **'Nieprawidłowy adres email'**
   String get auth_invalid_email;
 
+  /// No description provided for @auth_login_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nieprawidłowy email lub hasło'**
+  String get auth_login_failed;
+
   /// No description provided for @common_or.
   ///
   /// In pl, this message translates to:
