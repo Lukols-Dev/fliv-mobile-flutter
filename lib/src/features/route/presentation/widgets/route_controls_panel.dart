@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/src/core/l10n/app_localizations.dart';
 
 class RouteControlsPanel extends StatelessWidget {
   const RouteControlsPanel({
@@ -19,15 +20,16 @@ class RouteControlsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(color: const Color(0xFFF3F1E9)),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Sterowanie',
-            style: TextStyle(
+          Text(
+            t.route_controls_title,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               fontFamily: 'Figtree',
@@ -51,28 +53,28 @@ class RouteControlsPanel extends StatelessWidget {
               childAspectRatio: 1.55,
               children: [
                 _ControlTile(
-                  label: 'Zgłoś zdarzenie',
+                  label: t.route_controls_report_event,
                   icon: Icons.report_gmailerrorred_rounded,
                   iconColor: Color(0xFFEF4444),
                   iconBg: Color(0xFFFEE2E2),
                   onTap: onReportEvent,
                 ),
                 _ControlTile(
-                  label: 'Pauza',
+                  label: t.route_controls_pause,
                   icon: Icons.pause_rounded,
                   iconColor: Color(0xFF709470),
                   iconBg: Color(0xFFE7EFE7),
                   onTap: isFollowing ? onPause : null,
                 ),
                 _ControlTile(
-                  label: 'Wznów',
+                  label: t.route_controls_resume,
                   icon: Icons.play_arrow_rounded,
                   iconColor: Color(0xFF0F4D46),
                   iconBg: Color(0xFFE7EFE7),
                   onTap: !isFollowing ? onResume : null,
                 ),
                 _ControlTile(
-                  label: 'Zakończ trasę',
+                  label: t.route_controls_finish_route,
                   icon: Icons.check_circle_rounded,
                   iconColor: Color(0xFF709470),
                   iconBg: Color(0xFFE7EFE7),

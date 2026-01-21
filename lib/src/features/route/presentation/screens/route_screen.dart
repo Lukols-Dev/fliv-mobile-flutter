@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:here_sdk/core.dart';
 
+import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/application/update_order_status_controller.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
@@ -33,7 +34,8 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   static const _sheetMax = 0.70;
 
   String _formatKm(int meters) => (meters / 1000).toStringAsFixed(1);
-  String _formatMin(Duration d) => '${(d.inSeconds / 60).round()} min';
+  String _formatMin(AppLocalizations t, Duration d) =>
+      '${(d.inSeconds / 60).round()} ${t.common_minutes_short}';
 
   List<GeoCoordinates> _exampleStopsFromDispatcher() => <GeoCoordinates>[
     GeoCoordinates(52.4064, 16.9252), // Poznań
@@ -47,6 +49,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   }
 
   Future<void> _openChangeStatusSheet({required String orderId}) async {
+    final t = AppLocalizations.of(context)!;
     final selected = await showOrderStatusBottomSheet(context);
 
     if (!mounted) return;
@@ -61,7 +64,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Status zmieniony na: ${selected.titlePl}'),
+          content: Text(
+            '${t.route_status_changed_prefix} ${selected.title(t)}',
+          ),
           backgroundColor: const Color(0xFF0F4D46),
         ),
       );
@@ -70,7 +75,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Nie udało się zmienić statusu: ${e.toString()}'),
+          content: Text('${t.route_status_change_failed}: ${e.toString()}'),
           backgroundColor: const Color(0xFFEF4444),
         ),
       );
@@ -83,6 +88,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final controller = ref.watch(routeMapControllerProvider);
 
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
@@ -164,9 +170,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                               ),
                               const SizedBox(height: 14),
 
-                              const Text(
-                                'Nawigacja',
-                                style: TextStyle(
+                              Text(
+                                t.route_navigation_title,
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w300,
                                   fontFamily: 'Figtree',
@@ -176,9 +182,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                               const SizedBox(height: 6),
 
                               if (!hasOrder) ...[
-                                const Text(
-                                  'Brak przypisanego aktualnie zlecenia.',
-                                  style: TextStyle(
+                                Text(
+                                  t.route_no_order_title,
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
                                     fontFamily: 'Figtree',
@@ -187,9 +193,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-                                const Text(
-                                  'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.',
-                                  style: TextStyle(
+                                Text(
+                                  t.route_no_order_description,
+                                  style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                     fontFamily: 'Figtree',
@@ -214,7 +220,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                     children: [
                                       Expanded(
                                         child: _InfoChip(
-                                          label: 'Dystans',
+                                          label: t.route_distance_label,
                                           value:
                                               '${_formatKm(route.lengthInMeters)} km',
                                         ),
@@ -222,17 +228,17 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: _InfoChip(
-                                          label: 'Czas',
-                                          value: _formatMin(route.duration),
+                                          label: t.route_time_label,
+                                          value: _formatMin(t, route.duration),
                                         ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
                                 ] else ...[
-                                  const Text(
-                                    'Trasa: jeszcze nie wyznaczona.',
-                                    style: TextStyle(
+                                  Text(
+                                    t.route_route_not_calculated,
+                                    style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                       fontFamily: 'Figtree',
@@ -286,10 +292,10 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                         const SizedBox(width: 10),
                                         Text(
                                           !canStart
-                                              ? 'Wyznacz trasę'
+                                              ? t.route_calculate_route
                                               : (controller.isFollowing
-                                                    ? 'Zatrzymaj'
-                                                    : 'Rozpocznij trasę'),
+                                                    ? t.route_stop
+                                                    : t.route_start_route),
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontFamily: 'Figtree',
@@ -338,9 +344,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                   ),
                                   elevation: 0,
                                 ),
-                                child: const Text(
-                                  'Zmień status',
-                                  style: TextStyle(
+                                child: Text(
+                                  t.route_change_status,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w800,
                                     fontFamily: 'Figtree',

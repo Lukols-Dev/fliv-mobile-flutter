@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/src/core/l10n/app_localizations.dart';
 
 import 'package:mobile/src/core/location/location_controller.dart';
 import 'package:mobile/src/core/location/geocoding_providers.dart';
@@ -34,35 +35,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
   }
 
-  String _statusLabel(String raw) {
+  String _statusLabel(AppLocalizations t, String raw) {
     switch (raw) {
       case 'IN_PROGRESS':
-        return 'W trasie';
+        return t.order_status_in_progress;
       case 'LOADING':
-        return 'Załadunek';
+        return t.order_status_loading;
       case 'UNLOADING':
-        return 'Rozładunek';
+        return t.order_status_unloading;
       case 'PAUSED':
-        return 'Pauza';
+        return t.order_status_paused;
       case 'COMPLETED':
-        return 'Zakończone';
+        return t.order_status_completed;
       case 'PROBLEM':
-        return 'Problem';
+        return t.order_status_problem;
       case 'PENDING':
-        return 'Oczekuje';
+        return t.order_status_pending;
       case 'ACCEPTED':
-        return 'Zaakceptowane';
+        return t.order_status_accepted;
       default:
         return raw;
     }
   }
 
   Future<void> _assignOrder(BuildContext context) async {
+    final t = AppLocalizations.of(context)!;
     final zt = _ztController.text.trim();
     if (zt.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Podaj numer ZT.')));
+      ).showSnackBar(SnackBar(content: Text(t.home_enter_zt_number)));
       return;
     }
 
@@ -77,12 +79,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Zlecenie przypisane.')));
+        ).showSnackBar(SnackBar(content: Text(t.home_order_assigned)));
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Nie udało się przypisać zlecenia: $e')),
+          SnackBar(content: Text('${t.home_assign_order_failed}: $e')),
         );
       }
     } finally {
@@ -113,6 +115,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     final profileAsync = ref.watch(driverProfileProvider);
     final profile = profileAsync.maybeWhen(data: (p) => p, orElse: () => null);
 
@@ -183,10 +187,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      const Expanded(
+                                      Expanded(
                                         child: Text(
-                                          'Witaj z powrotem!',
-                                          style: TextStyle(
+                                          t.home_welcome_back,
+                                          style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w300,
                                             fontFamily: 'Figtree',
@@ -210,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'ID: $driverId',
+                                    '${t.common_id_label}: $driverId',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
@@ -275,47 +279,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Obecna lokalizacja',
-                                      style: TextStyle(
+                                    Text(
+                                      t.home_current_location_title,
+                                      style: const TextStyle(
                                         color: Colors.black,
                                         fontSize: 11,
                                         fontFamily: 'Figtree',
                                         fontWeight: FontWeight.w300,
                                       ),
                                     ),
-                                    SizedBox(height: 2),
+                                    const SizedBox(height: 2),
                                     Text(
                                       () {
                                         if (locationAsync.isLoading) {
-                                          return 'Pobieranie lokalizacji…';
+                                          return t.home_location_fetching;
                                         }
 
                                         return locationAsync.when(
                                           data: (loc) {
                                             if (loc == null) {
-                                              return 'Kliknij odśwież, aby pobrać';
+                                              return t
+                                                  .home_location_tap_refresh;
                                             }
 
                                             if (cityStreetAsync.isLoading) {
-                                              return 'Ustalanie adresu…';
+                                              return t
+                                                  .home_location_resolving_address;
                                             }
 
                                             return cityStreetAsync.when(
                                               data: (v) =>
                                                   (v == null || v.isEmpty)
-                                                  ? 'Nie udało się ustalić adresu'
+                                                  ? t.home_location_address_not_found
                                                   : v,
-                                              loading: () =>
-                                                  'Ustalanie adresu…',
-                                              error: (e, _) =>
-                                                  'Nie udało się ustalić adresu',
+                                              loading: () => t
+                                                  .home_location_resolving_address,
+                                              error: (e, _) => t
+                                                  .home_location_address_not_found,
                                             );
                                           },
                                           loading: () =>
-                                              'Pobieranie lokalizacji…',
+                                              t.home_location_fetching,
                                           error: (e, _) =>
-                                              'Nie udało się pobrać',
+                                              t.home_location_fetch_failed,
                                         );
                                       }(),
                                       style: TextStyle(
@@ -332,7 +338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(width: 8),
                               IconButton(
-                                tooltip: 'Odśwież lokalizację',
+                                tooltip: t.home_refresh_location_tooltip,
                                 icon: const Icon(Icons.refresh_rounded),
                                 color: const Color(0xFF004F45),
                                 onPressed: () async {
@@ -346,7 +352,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Lokalizacja: $e'),
+                                        content: Text(
+                                          '${t.common_location}: $e',
+                                        ),
                                       ),
                                     );
                                   }
@@ -358,9 +366,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                         const SizedBox(height: 38),
 
-                        const Text(
-                          'Aktualne Zlecenie',
-                          style: TextStyle(
+                        Text(
+                          t.home_current_order_title,
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Figtree',
@@ -390,9 +398,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text(
-                                  'Brak przypisanego zlecenia',
-                                  style: TextStyle(
+                                Text(
+                                  t.home_no_assigned_order_title,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w800,
                                     fontFamily: 'Figtree',
@@ -400,9 +408,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                const Text(
-                                  'Aby przypisać zlecenie, wpisz numer ZT otrzymany od dyspozytora.',
-                                  style: TextStyle(
+                                Text(
+                                  t.home_no_assigned_order_description,
+                                  style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                     fontFamily: 'Figtree',
@@ -414,7 +422,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   controller: _ztController,
                                   textInputAction: TextInputAction.done,
                                   decoration: InputDecoration(
-                                    hintText: 'np. ZT-123456',
+                                    hintText: t.home_zt_hint,
                                     filled: true,
                                     fillColor: const Color(0xFFF5F5DC),
                                     border: OutlineInputBorder(
@@ -445,9 +453,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               strokeWidth: 2,
                                             ),
                                           )
-                                        : const Text(
-                                            'Przypisz zlecenie',
-                                            style: TextStyle(
+                                        : Text(
+                                            t.home_assign_order_button,
+                                            style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w800,
                                               fontFamily: 'Figtree',
@@ -504,10 +512,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       children: [
                                         Row(
                                           children: [
-                                            const Expanded(
+                                            Expanded(
                                               child: Text(
-                                                'Numer zlecenia',
-                                                style: TextStyle(
+                                                t.home_order_number_label,
+                                                style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 12,
                                                   fontFamily: 'Figtree',
@@ -542,6 +550,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                   const SizedBox(width: 6),
                                                   Text(
                                                     _statusLabel(
+                                                      t,
                                                       currentOrder.status,
                                                     ),
                                                     style: const TextStyle(
@@ -584,7 +593,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       children: [
                                         _TimelineRow(
                                           color: const Color(0xFF004F45),
-                                          title: 'Punkt załadunku',
+                                          title: t.order_loading_point,
                                           subtitle1: currentOrder.fromCountry,
                                           subtitle2: '',
                                           date: _formatLoadingDate(
@@ -594,7 +603,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         const SizedBox(height: 10),
                                         _TimelineRow(
                                           color: const Color(0xFFEF4444),
-                                          title: 'Punkt rozładunku',
+                                          title: t.order_unloading_point,
                                           subtitle1: currentOrder.toCountry,
                                           subtitle2: '',
                                           date: '—',
@@ -623,15 +632,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             child: Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
-                                              children: const [
-                                                Icon(
+                                              children: [
+                                                const Icon(
                                                   Icons.near_me_outlined,
                                                   size: 24,
                                                 ),
-                                                SizedBox(width: 10),
+                                                const SizedBox(width: 10),
                                                 Text(
-                                                  'Otwórz nawigację',
-                                                  style: TextStyle(
+                                                  t.home_open_navigation,
+                                                  style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 16,
                                                     fontFamily: 'Figtree',

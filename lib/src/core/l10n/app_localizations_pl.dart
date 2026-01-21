@@ -29,7 +29,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get auth_email_label => 'Adres email';
 
   @override
-  String get auth_email_hint => 'jan.nowak@example.com';
+  String get auth_email_hint => 'email@example.com';
 
   @override
   String get auth_password_label => 'Hasło';
@@ -286,4 +286,256 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get route_report_error => 'Nie udało się zgłosić zdarzenia';
+
+  @override
+  String get home_welcome_back => 'Witaj z powrotem!';
+
+  @override
+  String get order_status_in_progress => 'W trasie';
+
+  @override
+  String get order_status_loading => 'Załadunek';
+
+  @override
+  String get order_status_unloading => 'Rozładunek';
+
+  @override
+  String get order_status_paused => 'Pauza';
+
+  @override
+  String get order_status_completed => 'Zakończone';
+
+  @override
+  String get order_status_problem => 'Problem';
+
+  @override
+  String get order_status_pending => 'Oczekuje';
+
+  @override
+  String get order_status_accepted => 'Zaakceptowane';
+
+  @override
+  String get common_id_label => 'ID';
+
+  @override
+  String get common_location => 'Lokalizacja';
+
+  @override
+  String get common_yes => 'Tak';
+
+  @override
+  String get common_no => 'Nie';
+
+  @override
+  String get common_kg_short => 'kg';
+
+  @override
+  String get common_email => 'Email';
+
+  @override
+  String get home_current_location_title => 'Obecna lokalizacja';
+
+  @override
+  String get home_location_fetching => 'Pobieranie lokalizacji…';
+
+  @override
+  String get home_location_tap_refresh => 'Kliknij odśwież, aby pobrać';
+
+  @override
+  String get home_location_resolving_address => 'Ustalanie adresu…';
+
+  @override
+  String get home_location_address_not_found => 'Nie udało się ustalić adresu';
+
+  @override
+  String get home_location_fetch_failed => 'Nie udało się pobrać';
+
+  @override
+  String get home_refresh_location_tooltip => 'Odśwież lokalizację';
+
+  @override
+  String get home_current_order_title => 'Aktualne Zlecenie';
+
+  @override
+  String get home_enter_zt_number => 'Podaj numer ZT.';
+
+  @override
+  String get home_order_assigned => 'Zlecenie przypisane.';
+
+  @override
+  String get home_assign_order_failed => 'Nie udało się przypisać zlecenia';
+
+  @override
+  String get home_no_assigned_order_title => 'Brak przypisanego zlecenia';
+
+  @override
+  String get home_no_assigned_order_description =>
+      'Aby przypisać zlecenie, wpisz numer ZT otrzymany od dyspozytora.';
+
+  @override
+  String get home_zt_hint => 'np. ZT-123456';
+
+  @override
+  String get home_assign_order_button => 'Przypisz zlecenie';
+
+  @override
+  String get home_order_number_label => 'Numer zlecenia';
+
+  @override
+  String get home_open_navigation => 'Otwórz nawigację';
+
+  @override
+  String get order_missing_id => 'Brak ID zlecenia';
+
+  @override
+  String get order_fetch_failed => 'Błąd pobierania zlecenia';
+
+  @override
+  String get order_company_name_label => 'Nazwa firmy';
+
+  @override
+  String get order_temperature_sensitive_label => 'Wrażliwość na temperaturę';
+
+  @override
+  String get documents_offline_message =>
+      'Offline: możesz dodawać dokumenty lokalnie i synchronizować później.';
+
+  @override
+  String get documents_no_assigned_zt_title => 'Brak przypisanego ZT';
+
+  @override
+  String get documents_no_assigned_zt_description =>
+      'Aby dodać dokument, najpierw przypisz zlecenie (ZT).';
+
+  @override
+  String get documents_default_title => 'Dokument';
+
+  @override
+  String get documents_empty_list =>
+      'Brak dokumentów. Dodaj pierwszy dokument.';
+
+  @override
+  String get documents_delete_document_title => 'Usuń dokument';
+
+  @override
+  String get common_cancel => 'Anuluj';
+
+  @override
+  String get common_delete => 'Usuń';
+
+  @override
+  String get documents_delete_local_confirm =>
+      'Usunąć dokument lokalnie z telefonu?';
+
+  @override
+  String get documents_delete_remote_confirm => 'Usunąć dokument z serwera?';
+
+  @override
+  String get documents_offline_error =>
+      'Jesteś offline. Możesz dodawać dokumenty lokalnie i zsynchronizować później.';
+
+  @override
+  String get documents_fetch_failed =>
+      'Nie udało się pobrać dokumentów z serwera.';
+
+  @override
+  String get documents_sync_action => 'Synchronizuj';
+
+  @override
+  String get documents_status_failed => 'Błąd synchronizacji';
+
+  @override
+  String get documents_options_tooltip => 'Opcje';
+
+  @override
+  String get documents_preview_load_failed =>
+      'Nie udało się załadować podglądu.';
+
+  @override
+  String get route_navigation_title => 'Nawigacja';
+
+  @override
+  String get route_no_order_title => 'Brak przypisanego aktualnie zlecenia.';
+
+  @override
+  String get route_no_order_description =>
+      'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.';
+
+  @override
+  String get route_distance_label => 'Dystans';
+
+  @override
+  String get route_time_label => 'Czas';
+
+  @override
+  String get route_route_not_calculated => 'Trasa: jeszcze nie wyznaczona.';
+
+  @override
+  String get route_calculate_route => 'Wyznacz trasę';
+
+  @override
+  String get route_stop => 'Zatrzymaj';
+
+  @override
+  String get route_start_route => 'Rozpocznij trasę';
+
+  @override
+  String get route_change_status => 'Zmień status';
+
+  @override
+  String get route_status_changed_prefix => 'Status zmieniony na:';
+
+  @override
+  String get route_status_change_failed => 'Nie udało się zmienić statusu';
+
+  @override
+  String get common_back => 'Wstecz';
+
+  @override
+  String get route_center_on_my_location => 'Wycentruj na mojej lokalizacji';
+
+  @override
+  String get route_report_problem => 'Zgłoś Problem';
+
+  @override
+  String get route_report_problem_sheet_title => 'Zgłoś problem';
+
+  @override
+  String get route_report_problem_description_label => 'Opis problemu';
+
+  @override
+  String get route_report_problem_description_hint => 'Opisz';
+
+  @override
+  String get route_report_problem_submit => 'Dodaj zgłoszenie';
+
+  @override
+  String get route_report_problem_success => 'Zgłoszono problem';
+
+  @override
+  String get route_report_problem_failed => 'Nie udało się zgłosić problemu';
+
+  @override
+  String get route_controls_title => 'Sterowanie';
+
+  @override
+  String get route_controls_report_event => 'Zgłoś zdarzenie';
+
+  @override
+  String get route_controls_pause => 'Pauza';
+
+  @override
+  String get route_controls_resume => 'Wznów';
+
+  @override
+  String get route_controls_finish_route => 'Zakończ trasę';
+
+  @override
+  String get route_status_change_title => 'Zmiana statusu';
+
+  @override
+  String get route_status_in_progress_label => 'W realizacji';
+
+  @override
+  String get common_minutes_short => 'min';
 }

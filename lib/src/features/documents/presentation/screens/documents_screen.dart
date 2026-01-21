@@ -158,9 +158,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   ],
                   const SizedBox(height: 12),
                   if (isOffline)
-                    const Text(
-                      'Offline: możesz dodawać dokumenty lokalnie i synchronizować później.',
-                      style: TextStyle(
+                    Text(
+                      t.documents_offline_message,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF6B7280),
@@ -207,25 +207,25 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                   color: const Color(0xFFE5E7EB),
                                 ),
                               ),
-                              child: const Padding(
-                                padding: EdgeInsets.all(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     Text(
-                                      'Brak przypisanego ZT',
-                                      style: TextStyle(
+                                      t.documents_no_assigned_zt_title,
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
                                         color: Color(0xFF111827),
                                       ),
                                     ),
-                                    SizedBox(height: 6),
+                                    const SizedBox(height: 6),
                                     Text(
-                                      'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
-                                      style: TextStyle(
+                                      t.documents_no_assigned_zt_description,
+                                      style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         color: Color(0xFF6B7280),
@@ -354,7 +354,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         ? d.description!.trim()
                         : (d.originalFilename?.trim().isNotEmpty ?? false)
                         ? d.originalFilename!.trim()
-                        : 'Dokument';
+                        : t.documents_default_title;
 
                     return _DocItem(
                       title: title,
@@ -446,13 +446,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                               ? ListView(
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  children: const [
-                                    SizedBox(height: 140),
-                                    Center(
-                                      child: Text(
-                                        'Brak dokumentów. Dodaj pierwszy dokument.',
-                                      ),
-                                    ),
+                                  children: [
+                                    const SizedBox(height: 140),
+                                    Center(child: Text(t.documents_empty_list)),
                                   ],
                                 )
                               : ListView.separated(
@@ -472,18 +468,20 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                       final ok = await showDialog<bool>(
                                         context: context,
                                         builder: (ctx) => AlertDialog(
-                                          title: const Text('Usuń dokument'),
+                                          title: Text(
+                                            t.documents_delete_document_title,
+                                          ),
                                           content: Text(message),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.of(ctx).pop(false),
-                                              child: const Text('Anuluj'),
+                                              child: Text(t.common_cancel),
                                             ),
                                             FilledButton(
                                               onPressed: () =>
                                                   Navigator.of(ctx).pop(true),
-                                              child: const Text('Usuń'),
+                                              child: Text(t.common_delete),
                                             ),
                                           ],
                                         ),
@@ -529,7 +527,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                         ? null
                                         : () async {
                                             if (!await confirmDelete(
-                                              'Usunąć dokument lokalnie z telefonu?',
+                                              t.documents_delete_local_confirm,
                                             ))
                                               return;
                                             try {
@@ -559,7 +557,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                         ? null
                                         : () async {
                                             if (!await confirmDelete(
-                                              'Usunąć dokument z serwera?',
+                                              t.documents_delete_remote_confirm,
                                             ))
                                               return;
                                             try {
@@ -606,8 +604,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                           padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
                           child: Text(
                             _isOfflineLikeRemoteError(remoteAsync.error)
-                                ? 'Jesteś offline. Możesz dodawać dokumenty lokalnie i zsynchronizować później.'
-                                : 'Nie udało się pobrać dokumentów z serwera.\n${remoteAsync.error}',
+                                ? t.documents_offline_error
+                                : '${t.documents_fetch_failed}\n${remoteAsync.error}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -733,7 +731,7 @@ class _DocumentCard extends StatelessWidget {
                       Icons.cloud_upload_outlined,
                       color: Color(0xFF0F4D46),
                     ),
-                    title: const Text('Synchronizuj'),
+                    title: Text(t.documents_sync_action),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onSync?.call();
@@ -742,10 +740,10 @@ class _DocumentCard extends StatelessWidget {
                 if (onDeleteRemote != null)
                   ListTile(
                     leading: const Icon(
-                      Icons.cloud_off_outlined,
+                      Icons.delete_outline,
                       color: Colors.red,
                     ),
-                    title: const Text('Usuń'),
+                    title: Text(t.common_delete),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onDeleteRemote?.call();
@@ -757,7 +755,7 @@ class _DocumentCard extends StatelessWidget {
                       Icons.delete_outline,
                       color: Colors.red,
                     ),
-                    title: const Text('Usuń'),
+                    title: Text(t.common_delete),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onDeleteLocal?.call();
@@ -810,7 +808,6 @@ class _DocumentCard extends StatelessWidget {
     switch (item.status) {
       case DocumentStatusUi.synchronized:
         statusColor = const Color(0xFF10B981);
-        // Badge on thumbnail: cloud + check. Row icon: check next to text.
         statusBadgeIcon = Icons.cloud_done_outlined;
         statusRowIcon = Icons.check_circle_outline;
         statusText = t.documents_status_synchronized;
@@ -831,7 +828,7 @@ class _DocumentCard extends StatelessWidget {
         statusColor = const Color(0xFFEF4444);
         statusBadgeIcon = Icons.error_outline;
         statusRowIcon = Icons.error_outline;
-        statusText = 'Błąd synchronizacji';
+        statusText = t.documents_status_failed;
         break;
     }
 
@@ -1017,7 +1014,7 @@ class _DocumentCard extends StatelessWidget {
             )
           else if (hasAnyActions)
             IconButton(
-              tooltip: 'Opcje',
+              tooltip: t.documents_options_tooltip,
               onPressed: () => _showActionsSheet(context),
               icon: const Icon(Icons.more_vert),
             ),
@@ -1040,6 +1037,7 @@ class _DocumentImagePreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     Widget child;
 
     final local = filePath?.trim();
@@ -1053,7 +1051,7 @@ class _DocumentImagePreviewScreen extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) {
           return Center(
             child: Text(
-              'Nie udało się załadować podglądu.\n$error',
+              '${t.documents_preview_load_failed}\n$error',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white),
             ),

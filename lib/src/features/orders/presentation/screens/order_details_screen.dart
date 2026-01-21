@@ -21,14 +21,9 @@ class OrderDetailsScreen extends ConsumerWidget {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
   }
 
-  String _formatWeightKg(int? kg) {
-    if (kg == null) return '-';
-    return '$kg kg';
-  }
-
-  String _formatBoolPl(bool? v) {
+  String _formatBool(AppLocalizations t, bool? v) {
     if (v == null) return '-';
-    return v ? 'Tak' : 'Nie';
+    return v ? t.common_yes : t.common_no;
   }
 
   Color _statusColor(String? status) {
@@ -61,21 +56,21 @@ class OrderDetailsScreen extends ConsumerWidget {
   String _statusLabel(AppLocalizations t, String? status) {
     switch (status) {
       case 'PENDING':
-        return 'Oczekuje';
+        return t.order_status_pending;
       case 'ACCEPTED':
-        return 'Zaakceptowane';
+        return t.order_status_accepted;
       case 'IN_PROGRESS':
-        return t.order_status_in_transit;
+        return t.order_status_in_progress;
       case 'LOADING':
-        return 'Załadunek';
+        return t.order_status_loading;
       case 'UNLOADING':
-        return 'Rozładunek';
+        return t.order_status_unloading;
       case 'PAUSED':
-        return 'Pauza';
+        return t.order_status_paused;
       case 'COMPLETED':
-        return 'Zakończone';
+        return t.order_status_completed;
       case 'PROBLEM':
-        return 'Problem';
+        return t.order_status_problem;
       default:
         return '-';
     }
@@ -104,10 +99,10 @@ class OrderDetailsScreen extends ConsumerWidget {
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(
+        body: Center(
           child: Text(
-            'Brak ID zlecenia',
-            style: TextStyle(fontFamily: 'Figtree'),
+            t.order_missing_id,
+            style: const TextStyle(fontFamily: 'Figtree'),
           ),
         ),
       );
@@ -137,7 +132,7 @@ class OrderDetailsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text(
-            'Błąd pobierania zlecenia: $e',
+            '${t.order_fetch_failed}: $e',
             style: const TextStyle(fontFamily: 'Figtree'),
           ),
         ),
@@ -217,7 +212,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _InfoField(
-                                label: "Nazwa firmy",
+                                label: t.order_company_name_label,
                                 value: _dashIfEmpty(details.clientName),
                               ),
                               const SizedBox(height: 12),
@@ -227,7 +222,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 8),
                               _InfoField(
-                                label: "Email",
+                                label: t.common_email,
                                 value: _dashIfEmpty(details.payerEmail),
                               ),
                             ],
@@ -285,12 +280,15 @@ class OrderDetailsScreen extends ConsumerWidget {
                               const SizedBox(height: 12),
                               _InfoRow(
                                 label: t.order_weight,
-                                value: _formatWeightKg(details.cargoWeightKg),
+                                value: details.cargoWeightKg != null
+                                    ? '${details.cargoWeightKg} ${t.common_kg_short}'
+                                    : '-',
                               ),
                               const SizedBox(height: 12),
                               _InfoRow(
-                                label: 'Wrazliwość na temperaturę',
-                                value: _formatBoolPl(
+                                label: t.order_temperature_sensitive_label,
+                                value: _formatBool(
+                                  t,
                                   details.temperatureSensitive,
                                 ),
                               ),

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/src/core/l10n/app_localizations.dart';
 
 enum OrderStatusChoice { inProgress, loading, unloading }
 
 extension OrderStatusChoiceX on OrderStatusChoice {
-  String get titlePl => switch (this) {
-    OrderStatusChoice.inProgress => 'W realizacji',
-    OrderStatusChoice.loading => 'Załadunek',
-    OrderStatusChoice.unloading => 'Rozładunek',
+  String title(AppLocalizations t) => switch (this) {
+    OrderStatusChoice.inProgress => t.route_status_in_progress_label,
+    OrderStatusChoice.loading => t.order_status_loading,
+    OrderStatusChoice.unloading => t.order_status_unloading,
   };
 
-  // To co wysyłasz do backendu (Twoje statusy z systemu)
   String get apiKey => switch (this) {
     OrderStatusChoice.inProgress => 'IN_PROGRESS',
     OrderStatusChoice.loading => 'LOADING',
@@ -27,6 +27,7 @@ extension OrderStatusChoiceX on OrderStatusChoice {
 }
 
 Future<OrderStatusChoice?> showOrderStatusBottomSheet(BuildContext context) {
+  final t = AppLocalizations.of(context)!;
   return showModalBottomSheet<OrderStatusChoice>(
     context: context,
     isScrollControlled: false,
@@ -43,9 +44,9 @@ Future<OrderStatusChoice?> showOrderStatusBottomSheet(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Zmiana statusu',
-                style: TextStyle(
+              Text(
+                t.route_status_change_title,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w400,
                   fontFamily: 'Figtree',
@@ -63,7 +64,7 @@ Future<OrderStatusChoice?> showOrderStatusBottomSheet(BuildContext context) {
                 childAspectRatio: 1.55,
                 children: [
                   _StatusTile(
-                    title: OrderStatusChoice.inProgress.titlePl,
+                    title: OrderStatusChoice.inProgress.title(t),
                     icon: OrderStatusChoice.inProgress.icon,
                     iconBg: OrderStatusChoice.inProgress.iconBg,
                     iconColor: OrderStatusChoice.inProgress.iconColor,
@@ -71,14 +72,14 @@ Future<OrderStatusChoice?> showOrderStatusBottomSheet(BuildContext context) {
                         Navigator.pop(ctx, OrderStatusChoice.inProgress),
                   ),
                   _StatusTile(
-                    title: OrderStatusChoice.loading.titlePl,
+                    title: OrderStatusChoice.loading.title(t),
                     icon: OrderStatusChoice.loading.icon,
                     iconBg: OrderStatusChoice.loading.iconBg,
                     iconColor: OrderStatusChoice.loading.iconColor,
                     onTap: () => Navigator.pop(ctx, OrderStatusChoice.loading),
                   ),
                   _StatusTile(
-                    title: OrderStatusChoice.unloading.titlePl,
+                    title: OrderStatusChoice.unloading.title(t),
                     icon: OrderStatusChoice.unloading.icon,
                     iconBg: OrderStatusChoice.unloading.iconBg,
                     iconColor: OrderStatusChoice.unloading.iconColor,
@@ -86,7 +87,7 @@ Future<OrderStatusChoice?> showOrderStatusBottomSheet(BuildContext context) {
                         Navigator.pop(ctx, OrderStatusChoice.unloading),
                   ),
                   _StatusTile(
-                    title: 'Zamknij',
+                    title: t.common_close,
                     icon: Icons.close_rounded,
                     iconBg: const Color(0xFFE5E7EB),
                     iconColor: const Color(0xFF111827),

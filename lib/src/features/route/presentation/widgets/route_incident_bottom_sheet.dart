@@ -77,16 +77,18 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
       if (!mounted) return;
       Navigator.of(sheetContext).pop(); // close sheet after request
 
+      final t = AppLocalizations.of(widget.parentContext)!;
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        const SnackBar(
-          content: Text('Zgłoszono problem'),
-          backgroundColor: Color(0xFF0F4D46),
+        SnackBar(
+          content: Text(t.route_report_problem_success),
+          backgroundColor: const Color(0xFF0F4D46),
         ),
       );
     } catch (e) {
+      final t = AppLocalizations.of(widget.parentContext)!;
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: Text('Nie udało się zgłosić problemu: ${e.toString()}'),
+          content: Text('${t.route_report_problem_failed}: ${e.toString()}'),
           backgroundColor: const Color(0xFFEF4444),
         ),
       );
@@ -180,7 +182,7 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
                   ),
 
                 _ChoiceTile(
-                  title: 'Zgłoś Problem',
+                  title: t.route_report_problem,
                   icon: Icons.report_problem_rounded,
                   iconBg: const Color(0xFFFEE2E2),
                   iconColor: const Color(0xFF991B1B),
@@ -293,6 +295,7 @@ class _ReportProblemSheetState extends State<_ReportProblemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final canSubmit = _controller.text.trim().isNotEmpty;
     final padding = MediaQuery.of(context).padding;
 
@@ -348,9 +351,9 @@ class _ReportProblemSheetState extends State<_ReportProblemSheet> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Opis problemu',
-                      style: TextStyle(
+                    Text(
+                      t.route_report_problem_description_label,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Figtree',
@@ -368,7 +371,7 @@ class _ReportProblemSheetState extends State<_ReportProblemSheet> {
                         minLines: 4,
                         textAlignVertical: TextAlignVertical.top,
                         decoration: InputDecoration(
-                          hintText: 'Opisz',
+                          hintText: t.route_report_problem_description_hint,
                           hintStyle: const TextStyle(
                             fontSize: 16,
                             color: Color(0xFF9CA3AF),
@@ -423,9 +426,9 @@ class _ReportProblemSheetState extends State<_ReportProblemSheet> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text(
-                    'Dodaj zgłoszenie',
-                    style: TextStyle(
+                  child: Text(
+                    t.route_report_problem_submit,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Figtree',

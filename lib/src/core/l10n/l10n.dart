@@ -8,7 +8,7 @@ class SupportedLocales {
 
   static String label(Locale locale) => switch (locale.languageCode) {
     'pl' => 'Polski',
-    'ru' => 'Russian',
+    'ru' => 'Русский',
     _ => locale.languageCode,
   };
 }
