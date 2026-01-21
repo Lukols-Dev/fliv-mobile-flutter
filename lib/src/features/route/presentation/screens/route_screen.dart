@@ -205,7 +205,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                 ),
                               ] else ...[
                                 Text(
-                                  'Zlecenie #${currentOrder.ztNumber}',
+                                  '${t.route_order_number_prefix}${currentOrder.ztNumber}',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,

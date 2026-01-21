@@ -1129,6 +1129,12 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'min'**
   String get common_minutes_short;
+
+  /// No description provided for @route_order_number_prefix.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zlecenie #'**
+  String get route_order_number_prefix;
 }
 
 class _AppLocalizationsDelegate

@@ -538,4 +538,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get common_minutes_short => 'min';
+
+  @override
+  String get route_order_number_prefix => 'Zlecenie #';
 }

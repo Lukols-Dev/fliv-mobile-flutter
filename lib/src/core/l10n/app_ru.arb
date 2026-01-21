@@ -171,5 +171,6 @@
   "route_controls_finish_route": "Завершить маршрут",
   "route_status_change_title": "Изменение статуса",
   "route_status_in_progress_label": "В процессе",
-  "common_minutes_short": "мин"
+  "common_minutes_short": "мин",
+  "route_order_number_prefix": "Заказ #"
 }

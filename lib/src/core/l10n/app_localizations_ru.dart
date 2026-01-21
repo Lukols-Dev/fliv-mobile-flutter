@@ -545,4 +545,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get common_minutes_short => 'мин';
+
+  @override
+  String get route_order_number_prefix => 'Заказ #';
 }
