@@ -3,13 +3,13 @@ flutter_native_splash:
   ios: true
   web: false
 
-  image: "assets/logo.png"
+  image: "assets/splash-logo.png"
   color: "#ffffff"
 
   android_gravity: center
   ios_content_mode: center
 
   android_12:
-    image: "assets/logo.png"
+    image: "assets/splash-logo.png"
     color: "#ffffff"
     icon_background_color: "#ffffff"
