@@ -4,12 +4,15 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:here_sdk/animation.dart' as here;
 import 'package:here_sdk/core.dart';
 import 'package:here_sdk/core.errors.dart';
 import 'package:here_sdk/mapview.dart';
+import 'package:here_sdk/navigation.dart';
 import 'package:here_sdk/routing.dart';
 import 'package:mobile/src/core/location/location_controller.dart';
+import 'package:mobile/src/core/location/location_service.dart';
 
 class RouteMapController extends ChangeNotifier {
   RouteMapController(this._ref);
@@ -17,6 +20,7 @@ class RouteMapController extends ChangeNotifier {
 
   HereMapController? _map;
   RoutingEngine? _routingEngine;
+  VisualNavigator? _visualNavigator;
 
   final List<MapPolygon> _stopCircles = [];
   final List<MapPolyline> _routePolylines = [];
@@ -29,14 +33,28 @@ class RouteMapController extends ChangeNotifier {
   Route? _currentRoute;
   Route? get currentRoute => _currentRoute;
 
+  String? _navigationInstruction;
+  String? get navigationInstruction => _navigationInstruction;
+
+  String? _navigationError;
+  String? get navigationError => _navigationError;
+
+  int? _remainingDistanceInMeters;
+  int? get remainingDistanceInMeters => _remainingDistanceInMeters;
+
+  Duration? _remainingDuration;
+  Duration? get remainingDuration => _remainingDuration;
+
   List<GeoCoordinates> _lastDispatcherStops = const [];
   GeoCoordinates? _lastStartUsed;
 
-  Timer? _followTimer;
-  bool get isFollowing => _followTimer != null;
-  bool get canStartNavigation => _currentRoute != null;
+  StreamSubscription<geo.Position>? _positionSub;
+  RouteProgressListener? _routeProgressListener;
+  EventTextListener? _eventTextListener;
+  DestinationReachedListener? _destinationReachedListener;
 
-  static const _followTick = Duration(seconds: 2);
+  bool get isFollowing => _positionSub != null;
+  bool get canStartNavigation => _currentRoute != null;
 
   // ----------------------------
   // LIFECYCLE MAPY
@@ -72,7 +90,14 @@ class RouteMapController extends ChangeNotifier {
       _ensureLocationIndicatorEnabled();
 
       // pokaż usera
-      unawaited(refreshAndCenter());
+      if (!isFollowing) {
+        unawaited(refreshAndCenter());
+      }
+
+      if (isFollowing) {
+        _visualNavigator?.startRendering(hereMapController);
+        return;
+      }
 
       // jeśli była trasa wyznaczona wcześniej, odtwórz ją wizualnie na nowej mapie
       _restoreVisualsIfNeeded();
@@ -82,6 +107,8 @@ class RouteMapController extends ChangeNotifier {
   /// Wywołuj w dispose() ekranu: ekran znika => mapa znika.
   /// Nie zabijamy nawigacji, tylko odpinamy mapę.
   void detachMap() {
+    _visualNavigator?.stopRendering();
+
     _locationIndicator?.disable();
     _locationIndicator = null;
 
@@ -124,8 +151,12 @@ class RouteMapController extends ChangeNotifier {
   Future<void> calculateRouteOnDemand({
     required List<GeoCoordinates> dispatcherStops,
   }) async {
-    final map = _map;
+    if (isFollowing) {
+      stopFollowing();
+    }
+
     final routingEngine = _routingEngine;
+    if (_map == null) return;
     if (routingEngine == null) return;
     if (dispatcherStops.isEmpty) return;
 
@@ -135,8 +166,12 @@ class RouteMapController extends ChangeNotifier {
     _lastStartUsed = start;
 
     _lastDispatcherStops = List<GeoCoordinates>.from(dispatcherStops);
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
 
-    // wyczyść tylko rysunki/trasę na mapie (ale zostaw follow timer)
+    // wyczyść tylko rysunki/trasę na mapie
     _clearRouteAndStops();
 
     _ensureLocationIndicatorEnabled();
@@ -150,7 +185,7 @@ class RouteMapController extends ChangeNotifier {
       ...dispatcherStops.map(Waypoint.withDefaults),
     ];
 
-    final carOptions = CarOptions()
+    final truckOptions = TruckOptions()
       ..routeOptions.enableTolls = true
       ..routeOptions.enableRouteHandle = true
       ..routeOptions.trafficOptimizationMode =
@@ -158,13 +193,14 @@ class RouteMapController extends ChangeNotifier {
 
     final completer = Completer<void>();
 
-    routingEngine.calculateCarRoute(waypoints, carOptions, (
+    routingEngine.calculateTruckRoute(waypoints, truckOptions, (
       RoutingError? error,
       List<Route>? routes,
     ) {
       if (error != null || routes == null || routes.isEmpty) {
         // ignore: avoid_print
         print('Route error: ${error?.name}');
+        _navigationError = error?.name ?? 'Route calculation failed';
         _setCurrentRoute(null);
         completer.complete();
         return;
@@ -205,37 +241,131 @@ class RouteMapController extends ChangeNotifier {
   }
 
   // ----------------------------
-  // FOLLOW / START-STOP
+  // NAVIGATION / START-STOP
   // ----------------------------
 
-  void startFollowing() {
-    if (_followTimer != null) return;
+  Future<void> startFollowing() async {
+    if (_positionSub != null) return;
 
-    _followTimer = Timer.periodic(_followTick, (_) async {
-      try {
-        final coords = await _getUserCoordinates();
-        _lastUserCoordinates = coords;
+    final route = _currentRoute;
+    if (route == null) {
+      throw StateError('Route is not calculated.');
+    }
 
-        // jeśli mapa jest — aktualizuj wskaźnik + kamerę
-        if (_map != null) {
-          _ensureLocationIndicatorEnabled();
-          _updateHereLocationIndicator(coords);
+    final visualNavigator = _ensureVisualNavigator();
+    visualNavigator.route = route;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = route.lengthInMeters;
+    _remainingDuration = route.duration;
 
-          final measure = MapMeasure(MapMeasureKind.distanceInMeters, 900);
-          _map!.camera.lookAtPointWithMeasure(coords, measure);
-        }
-      } catch (_) {
-        // ignorujemy chwilowe błędy GPS
-      }
-    });
+    _locationIndicator?.disable();
+    _locationIndicator = null;
+
+    final map = _map;
+    if (map != null) {
+      visualNavigator.startRendering(map);
+    }
+
+    final locationService = _ref.read(locationServiceProvider);
+    final currentPosition = await locationService.getCurrentPosition();
+    _handlePositionUpdate(currentPosition);
+
+    _positionSub = locationService.getPositionStream().listen(
+      _handlePositionUpdate,
+      onError: (Object e) {
+        _navigationError = e.toString();
+        notifyListeners();
+      },
+    );
 
     notifyListeners();
   }
 
   void stopFollowing() {
-    _followTimer?.cancel();
-    _followTimer = null;
+    _positionSub?.cancel();
+    _positionSub = null;
+    _visualNavigator?.route = null;
+    _visualNavigator?.stopRendering();
     notifyListeners();
+  }
+
+  VisualNavigator _ensureVisualNavigator() {
+    if (_visualNavigator != null) return _visualNavigator!;
+
+    try {
+      final visualNavigator = VisualNavigator();
+
+      _routeProgressListener = RouteProgressListener((progress) {
+        if (progress.sectionProgress.isNotEmpty) {
+          final remaining = progress.sectionProgress.last;
+          _remainingDistanceInMeters = remaining.remainingDistanceInMeters;
+          _remainingDuration = remaining.remainingDuration;
+        }
+
+        final maneuverProgress = progress.maneuverProgress.isNotEmpty
+            ? progress.maneuverProgress.first
+            : null;
+        if (maneuverProgress != null) {
+          final maneuver = visualNavigator.getManeuver(
+            maneuverProgress.maneuverIndex,
+          );
+          final text = maneuver?.text;
+          if (text != null && text.trim().isNotEmpty) {
+            _navigationInstruction = text.trim();
+          }
+        }
+
+        notifyListeners();
+      });
+
+      _eventTextListener = EventTextListener((eventText) {
+        if (eventText.text.trim().isNotEmpty) {
+          _navigationInstruction = eventText.text.trim();
+          notifyListeners();
+        }
+      });
+
+      _destinationReachedListener = DestinationReachedListener(() {
+        stopFollowing();
+        _remainingDistanceInMeters = 0;
+        _remainingDuration = Duration.zero;
+        notifyListeners();
+      });
+
+      visualNavigator.routeProgressListener = _routeProgressListener;
+      visualNavigator.eventTextListener = _eventTextListener;
+      visualNavigator.destinationReachedListener = _destinationReachedListener;
+
+      _visualNavigator = visualNavigator;
+      return visualNavigator;
+    } on InstantiationException {
+      throw StateError('VisualNavigator init failed.');
+    }
+  }
+
+  void _handlePositionUpdate(
+    geo.Position position, {
+    bool centerCamera = false,
+  }) {
+    final coords = GeoCoordinates(position.latitude, position.longitude);
+    _lastUserCoordinates = coords;
+
+    final location = Location.withCoordinates(coords)
+      ..time = position.timestamp
+      ..horizontalAccuracyInMeters = position.accuracy.isFinite
+          ? position.accuracy
+          : null
+      ..bearingInDegrees = position.heading.isFinite ? position.heading : null
+      ..speedInMetersPerSecond = position.speed.isFinite ? position.speed : null;
+
+    _visualNavigator?.onLocationUpdated(location);
+
+    final map = _map;
+    if (centerCamera && map != null && !isFollowing) {
+      final measure = MapMeasure(MapMeasureKind.distanceInMeters, 900);
+      map.camera.lookAtPointWithMeasure(coords, measure);
+    }
   }
 
   // ----------------------------
@@ -243,6 +373,8 @@ class RouteMapController extends ChangeNotifier {
   // ----------------------------
 
   Future<void> refreshAndCenter() async {
+    if (isFollowing) return;
+
     final map = _map;
     if (map == null) return;
 
@@ -412,8 +544,11 @@ class RouteMapController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _followTimer?.cancel();
-    _followTimer = null;
+    _positionSub?.cancel();
+    _positionSub = null;
+    _visualNavigator?.stopRendering();
+    _visualNavigator?.route = null;
+    _visualNavigator = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;

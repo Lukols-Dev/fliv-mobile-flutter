@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -105,6 +107,7 @@ class DriverOrdersLocalDataSource {
       cargoDescription: row.cargoDescription,
       temperatureSensitive: row.temperatureSensitive,
       notes: row.notes,
+      routePoints: _decodeRoutePoints(row.routePointsJson),
     );
   }
 
@@ -129,6 +132,84 @@ class DriverOrdersLocalDataSource {
       cargoDescription: v(d.cargoDescription),
       temperatureSensitive: v(d.temperatureSensitive),
       notes: v(d.notes),
+      routePointsJson: d.routePoints.isEmpty
+          ? const Value(null)
+          : Value(_encodeRoutePoints(d.routePoints)),
+    );
+  }
+
+  List<DriverTransportOrderRoutePoint> _decodeRoutePoints(String? jsonText) {
+    if (jsonText == null || jsonText.trim().isEmpty) return const [];
+
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(jsonText);
+    } catch (_) {
+      return const [];
+    }
+
+    if (decoded is! List) return const [];
+
+    int parseInt(dynamic v) {
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    double parseDouble(dynamic v) {
+      if (v is double) return v;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    bool parseBool(dynamic v) {
+      if (v is bool) return v;
+      if (v is String) {
+        final normalized = v.toLowerCase().trim();
+        if (normalized == 'true') return true;
+        if (normalized == 'false') return false;
+      }
+      return true;
+    }
+
+    return decoded
+        .whereType<Map>()
+        .map(
+          (item) => DriverTransportOrderRoutePoint(
+            id: item['id'] as String? ?? '',
+            sequence: parseInt(item['sequence']),
+            type: item['type'] as String? ?? 'VIA',
+            source: item['source'] as String? ?? 'DISPATCHER',
+            isManual: parseBool(item['isManual']),
+            label: item['label'] as String?,
+            address: item['address'] as String?,
+            latitude: parseDouble(item['latitude']),
+            longitude: parseDouble(item['longitude']),
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+  }
+
+  String _encodeRoutePoints(List<DriverTransportOrderRoutePoint> points) {
+    return jsonEncode(
+      points
+          .map(
+            (point) => {
+              'id': point.id,
+              'sequence': point.sequence,
+              'type': point.type,
+              'source': point.source,
+              'isManual': point.isManual,
+              'label': point.label,
+              'address': point.address,
+              'latitude': point.latitude,
+              'longitude': point.longitude,
+            },
+          )
+          .toList(),
     );
   }
 }

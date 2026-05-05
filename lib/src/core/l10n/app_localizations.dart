@@ -992,6 +992,30 @@ abstract class AppLocalizations {
   /// **'Trasa: jeszcze nie wyznaczona.'**
   String get route_route_not_calculated;
 
+  /// No description provided for @route_no_configured_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak skonfigurowanej trasy.'**
+  String get route_no_configured_route;
+
+  /// No description provided for @route_loading_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Ładowanie trasy...'**
+  String get route_loading_route;
+
+  /// No description provided for @route_route_error.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać lub wyznaczyć trasy'**
+  String get route_route_error;
+
+  /// No description provided for @route_next_instruction_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny manewr'**
+  String get route_next_instruction_label;
+
   /// No description provided for @route_calculate_route.
   ///
   /// In pl, this message translates to:

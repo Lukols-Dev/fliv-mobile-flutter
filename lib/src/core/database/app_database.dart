@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -80,6 +80,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           driverOrderDetailsTable,
           driverOrderDetailsTable.toAddress,
+        );
+      }
+      // upgrade z v6 -> v7 (cache punktów trasy dla nawigacji HERE)
+      if (from < 7) {
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.routePointsJson,
         );
       }
     },

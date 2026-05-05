@@ -17,6 +17,7 @@ class DriverOrderDetailsTable extends Table {
   TextColumn get cargoDescription => text().nullable()();
   BoolColumn get temperatureSensitive => boolean().nullable()();
   TextColumn get notes => text().nullable()();
+  TextColumn get routePointsJson => text().nullable()();
 
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 

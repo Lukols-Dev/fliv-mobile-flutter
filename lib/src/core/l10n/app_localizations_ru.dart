@@ -477,6 +477,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get route_route_not_calculated => 'Маршрут: еще не рассчитан.';
 
   @override
+  String get route_no_configured_route => 'Маршрут не настроен.';
+
+  @override
+  String get route_loading_route => 'Загрузка маршрута...';
+
+  @override
+  String get route_route_error => 'Не удалось загрузить или рассчитать маршрут';
+
+  @override
+  String get route_next_instruction_label => 'Следующий маневр';
+
+  @override
   String get route_calculate_route => 'Рассчитать маршрут';
 
   @override

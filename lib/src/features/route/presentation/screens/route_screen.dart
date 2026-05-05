@@ -6,7 +6,9 @@ import 'package:here_sdk/core.dart';
 
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
+import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 import 'package:mobile/src/features/orders/application/update_order_status_controller.dart';
+import 'package:mobile/src/features/orders/domain/driver_transport_order_details.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_controls_panel.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_incident_bottom_sheet.dart';
@@ -37,10 +39,12 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   String _formatMin(AppLocalizations t, Duration d) =>
       '${(d.inSeconds / 60).round()} ${t.common_minutes_short}';
 
-  List<GeoCoordinates> _exampleStopsFromDispatcher() => <GeoCoordinates>[
-    GeoCoordinates(52.4064, 16.9252), // Poznań
-    GeoCoordinates(51.1079, 17.0385), // Wrocław
-  ];
+  bool _isValidRoutePoint(DriverTransportOrderRoutePoint point) {
+    return point.latitude >= -90 &&
+        point.latitude <= 90 &&
+        point.longitude >= -180 &&
+        point.longitude <= 180;
+  }
 
   @override
   void dispose() {
@@ -94,6 +98,17 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
     final currentOrder = currentOrderAsync.asData?.value;
     final hasOrder = currentOrder != null;
+    final orderDetailsAsync = hasOrder
+        ? ref.watch(driverOrderDetailsProvider(currentOrder.id))
+        : null;
+    final orderDetails = orderDetailsAsync?.asData?.value;
+    final routePoints =
+        orderDetails?.routePoints ?? const <DriverTransportOrderRoutePoint>[];
+    final dispatcherStops = routePoints
+        .where(_isValidRoutePoint)
+        .map((point) => GeoCoordinates(point.latitude, point.longitude))
+        .toList(growable: false);
+    final hasConfiguredRoute = dispatcherStops.isNotEmpty;
 
     final screenH = MediaQuery.of(context).size.height;
     final bottomSafe = MediaQuery.of(context).padding.bottom;
@@ -101,10 +116,11 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     final route = controller.currentRoute;
 
-    final canCalculate = hasOrder;
+    final canCalculate =
+        hasOrder && hasConfiguredRoute && orderDetailsAsync?.isLoading != true;
     final canStart = controller.canStartNavigation;
 
-    final showRouteControls = route != null;
+    final showRouteControls = route != null && hasOrder;
 
     final showChangeStatus = hasOrder;
 
@@ -215,26 +231,84 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                 ),
                                 const SizedBox(height: 8),
 
-                                if (route != null) ...[
+                                if (orderDetailsAsync?.isLoading == true) ...[
+                                  Text(
+                                    t.route_loading_route,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Figtree',
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ] else if (orderDetailsAsync?.hasError ==
+                                    true) ...[
+                                  Text(
+                                    t.route_route_error,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Figtree',
+                                      color: Color(0xFFEF4444),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ] else if (!hasConfiguredRoute) ...[
+                                  Text(
+                                    t.route_no_configured_route,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Figtree',
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ] else if (route != null) ...[
                                   Row(
                                     children: [
                                       Expanded(
                                         child: _InfoChip(
                                           label: t.route_distance_label,
                                           value:
-                                              '${_formatKm(route.lengthInMeters)} km',
+                                              '${_formatKm(controller.remainingDistanceInMeters ?? route.lengthInMeters)} km',
                                         ),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: _InfoChip(
                                           label: t.route_time_label,
-                                          value: _formatMin(t, route.duration),
+                                          value: _formatMin(
+                                            t,
+                                            controller.remainingDuration ??
+                                                route.duration,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
+                                  if (controller.navigationInstruction !=
+                                      null) ...[
+                                    _InstructionCard(
+                                      label: t.route_next_instruction_label,
+                                      value: controller.navigationInstruction!,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  if (controller.navigationError != null) ...[
+                                    Text(
+                                      controller.navigationError!,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        fontFamily: 'Figtree',
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                 ] else ...[
                                   Text(
                                     t.route_route_not_calculated,
@@ -252,21 +326,52 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                 SizedBox(
                                   height: 54,
                                   child: FilledButton(
-                                    onPressed: () async {
+                                    onPressed: (!canStart && !canCalculate)
+                                        ? null
+                                        : () async {
                                       if (!canStart) {
                                         if (!canCalculate) return;
-                                        final stops =
-                                            _exampleStopsFromDispatcher();
-                                        await controller.calculateRouteOnDemand(
-                                          dispatcherStops: stops,
-                                        );
+                                        try {
+                                          await controller
+                                              .calculateRouteOnDemand(
+                                                dispatcherStops:
+                                                    dispatcherStops,
+                                              );
+                                          if (controller.canStartNavigation) {
+                                            await controller.startFollowing();
+                                          }
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '${t.route_route_error}: $e',
+                                              ),
+                                            ),
+                                          );
+                                        }
                                         return;
                                       }
 
                                       if (controller.isFollowing) {
                                         controller.stopFollowing();
                                       } else {
-                                        controller.startFollowing();
+                                        try {
+                                          await controller.startFollowing();
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '${t.common_location}: $e',
+                                              ),
+                                            ),
+                                          );
+                                        }
                                       }
                                     },
                                     style: FilledButton.styleFrom(
@@ -282,17 +387,15 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          !canStart
-                                              ? Icons.route_rounded
-                                              : (controller.isFollowing
-                                                    ? Icons.pause_rounded
-                                                    : Icons.play_arrow_rounded),
+                                          controller.isFollowing
+                                              ? Icons.pause_rounded
+                                              : Icons.play_arrow_rounded,
                                           size: 24,
                                         ),
                                         const SizedBox(width: 10),
                                         Text(
                                           !canStart
-                                              ? t.route_calculate_route
+                                              ? t.route_start_route
                                               : (controller.isFollowing
                                                     ? t.route_stop
                                                     : t.route_start_route),
@@ -312,7 +415,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                         ),
 
                         // Route controls
-                        if (!showRouteControls) ...[
+                        if (showRouteControls) ...[
                           const SizedBox(height: 18),
                           RouteControlsPanel(
                             isFollowing: controller.isFollowing,
@@ -320,8 +423,19 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                               orderId: currentOrder!.id,
                             ),
                             onPause: controller.stopFollowing,
-                            onResume: controller.startFollowing,
-                            onFinishRoute: () {},
+                            onResume: () async {
+                              try {
+                                await controller.startFollowing();
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${t.common_location}: $e'),
+                                  ),
+                                );
+                              }
+                            },
+                            onFinishRoute: controller.stopFollowing,
                           ),
                         ],
 
@@ -361,6 +475,52 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                   ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InstructionCard extends StatelessWidget {
+  const _InstructionCard({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE7EFE7),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD6E4D6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Figtree',
+              color: Color(0xFF0F4D46),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Figtree',
+              color: Color(0xFF111827),
+              height: 1.25,
             ),
           ),
         ],

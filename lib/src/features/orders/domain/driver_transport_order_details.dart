@@ -20,6 +20,7 @@ class DriverTransportOrderDetails {
     this.cargoDescription,
     this.temperatureSensitive,
     this.notes,
+    this.routePoints = const [],
   });
 
   final String id;
@@ -42,4 +43,29 @@ class DriverTransportOrderDetails {
   final String? cargoDescription;
   final bool? temperatureSensitive;
   final String? notes;
+  final List<DriverTransportOrderRoutePoint> routePoints;
+}
+
+class DriverTransportOrderRoutePoint {
+  const DriverTransportOrderRoutePoint({
+    required this.id,
+    required this.sequence,
+    required this.type,
+    this.source = 'DISPATCHER',
+    this.isManual = true,
+    this.label,
+    this.address,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  final String id;
+  final int sequence;
+  final String type;
+  final String source;
+  final bool isManual;
+  final String? label;
+  final String? address;
+  final double latitude;
+  final double longitude;
 }

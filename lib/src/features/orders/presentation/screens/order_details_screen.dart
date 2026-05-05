@@ -343,7 +343,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
-                            // TODO: Implement start navigation
+                            context.go('/route');
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF0F4D46),

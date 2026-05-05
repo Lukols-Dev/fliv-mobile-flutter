@@ -17,7 +17,7 @@ PODS:
   - geolocator_apple (1.2.0):
     - Flutter
     - FlutterMacOS
-  - here_sdk (4.25.0.0.250834.release):
+  - here_sdk (4.25.5.1.278909.release):
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
@@ -134,7 +134,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
   geocoding_ios: 33776c9ebb98d037b5e025bb0e7537f6dd19646e
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
-  here_sdk: c063d7534aec52c4926bcc435b681b76fa42d1fb
+  here_sdk: b2263410bf1f6bbed9f5faf66c9e231de5b4d113
   image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
