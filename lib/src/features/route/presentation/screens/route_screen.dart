@@ -589,6 +589,40 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                             ),
                                     ),
                                   ),
+                                  if (savedRoutePlan != null &&
+                                      route != null &&
+                                      !controller.isFollowing) ...[
+                                    const SizedBox(height: 10),
+                                    SizedBox(
+                                      height: 48,
+                                      child: OutlinedButton(
+                                        onPressed: controller.isCalculating
+                                            ? null
+                                            : controller.cancelApproachRoute,
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: const Color(
+                                            0xFF111827,
+                                          ),
+                                          side: const BorderSide(
+                                            color: Color(0xFFE5E7EB),
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          t.common_cancel,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: 'Figtree',
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ],
                             ),

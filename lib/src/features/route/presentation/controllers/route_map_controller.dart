@@ -422,6 +422,33 @@ class RouteMapController extends ChangeNotifier {
     await completer.future;
   }
 
+  void cancelApproachRoute() {
+    if (isFollowing) {
+      stopFollowing();
+    }
+
+    _visualNavigator?.route = null;
+    _visualNavigator?.stopRendering();
+
+    _currentRoute = null;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+    _lastStartUsed = null;
+    _lastDispatcherStops = const [];
+
+    _clearRouteAndStops();
+
+    final dispatcherPlan = _lastDispatcherRoutePlan;
+    if (_mapSceneLoaded && dispatcherPlan != null) {
+      _drawDispatcherRoutePreview(dispatcherPlan);
+      unawaited(_showUserLocationIndicatorWithoutCentering());
+    }
+
+    notifyListeners();
+  }
+
   CarOptions _buildCarOptions(DriverRouteRoutingProfile profile) {
     return CarOptions()
       ..routeOptions = _buildRouteOptions(profile)
