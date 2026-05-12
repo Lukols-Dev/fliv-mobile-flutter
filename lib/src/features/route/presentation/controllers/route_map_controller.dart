@@ -169,11 +169,15 @@ class RouteMapController extends ChangeNotifier {
         final start = _lastStartUsed;
         if (start != null) {
           _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
+          _ensureLocationIndicatorEnabled();
+          _updateHereLocationIndicator(start);
         }
         _fitApproachAndDispatcherRoute(
           approachRoute: route,
           dispatcherBox: dispatcherBox,
         );
+      } else {
+        unawaited(_showUserLocationIndicatorWithoutCentering());
       }
       return;
     }
@@ -229,6 +233,7 @@ class RouteMapController extends ChangeNotifier {
     _clearRouteAndStops();
     if (_mapSceneLoaded) {
       _drawDispatcherRoutePreview(routePlan);
+      unawaited(_showUserLocationIndicatorWithoutCentering());
     }
     notifyListeners();
   }
@@ -244,6 +249,8 @@ class RouteMapController extends ChangeNotifier {
     _remainingDistanceInMeters = null;
     _remainingDuration = null;
     _clearRouteAndStops();
+    _locationIndicator?.disable();
+    _locationIndicator = null;
     notifyListeners();
   }
 
@@ -689,6 +696,25 @@ class RouteMapController extends ChangeNotifier {
         .read(locationControllerProvider.notifier)
         .getCurrent();
     return GeoCoordinates(loc.lat, loc.lon);
+  }
+
+  Future<void> _showUserLocationIndicatorWithoutCentering() async {
+    final previewToken = _dispatcherPreviewFitToken;
+    if (_map == null) return;
+
+    try {
+      final coords = await _getUserCoordinates();
+      if (_map == null) return;
+      if (_lastDispatcherRoutePlan == null) return;
+      if (previewToken != _dispatcherPreviewFitToken) return;
+
+      _lastUserCoordinates = coords;
+      _ensureLocationIndicatorEnabled();
+      _updateHereLocationIndicator(coords);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Location indicator error: $e');
+    }
   }
 
   void _setCurrentRoute(Route? route) {
