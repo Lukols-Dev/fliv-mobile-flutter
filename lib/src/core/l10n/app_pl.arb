@@ -154,6 +154,8 @@
   "route_route_error": "Nie udało się pobrać lub wyznaczyć trasy",
   "route_next_instruction_label": "Następny manewr",
   "route_calculate_route": "Wyznacz trasę",
+  "route_calculate_approach": "Wylicz dojazd",
+  "route_approach_label": "Dojazd do startu",
   "route_stop": "Zatrzymaj",
   "route_start_route": "Rozpocznij trasę",
   "route_change_status": "Zmień status",

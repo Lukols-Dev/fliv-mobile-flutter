@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:here_sdk/mapview.dart';
 
@@ -18,12 +20,20 @@ class RouteMapLayer extends StatelessWidget {
   final double bottomPaddingForFab;
   final ValueNotifier<double>? sheetHeightNotifier;
 
+  static final Set<Factory<OneSequenceGestureRecognizer>>
+      _mapGestureRecognizers = {
+    Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+  };
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     return Stack(
       children: [
-        HereMap(onMapCreated: (map) => controller.onMapCreated(map)),
+        HereMap(
+          gestureRecognizers: _mapGestureRecognizers,
+          onMapCreated: (map) => controller.onMapCreated(map),
+        ),
 
         // BACK
         SafeArea(

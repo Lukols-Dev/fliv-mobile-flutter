@@ -154,6 +154,8 @@
   "route_route_error": "Не удалось загрузить или рассчитать маршрут",
   "route_next_instruction_label": "Следующий маневр",
   "route_calculate_route": "Рассчитать маршрут",
+  "route_calculate_approach": "Рассчитать подъезд",
+  "route_approach_label": "Подъезд к старту",
   "route_stop": "Остановить",
   "route_start_route": "Начать маршрут",
   "route_change_status": "Изменить статус",

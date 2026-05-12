@@ -486,6 +486,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get route_calculate_route => 'Wyznacz trasę';
 
   @override
+  String get route_calculate_approach => 'Wylicz dojazd';
+
+  @override
+  String get route_approach_label => 'Dojazd do startu';
+
+  @override
   String get route_stop => 'Zatrzymaj';
 
   @override

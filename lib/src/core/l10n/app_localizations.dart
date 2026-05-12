@@ -1022,6 +1022,18 @@ abstract class AppLocalizations {
   /// **'Wyznacz trasę'**
   String get route_calculate_route;
 
+  /// No description provided for @route_calculate_approach.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wylicz dojazd'**
+  String get route_calculate_approach;
+
+  /// No description provided for @route_approach_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dojazd do startu'**
+  String get route_approach_label;
+
   /// No description provided for @route_stop.
   ///
   /// In pl, this message translates to:

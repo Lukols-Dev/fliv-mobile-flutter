@@ -492,6 +492,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get route_calculate_route => 'Рассчитать маршрут';
 
   @override
+  String get route_calculate_approach => 'Рассчитать подъезд';
+
+  @override
+  String get route_approach_label => 'Подъезд к старту';
+
+  @override
   String get route_stop => 'Остановить';
 
   @override
