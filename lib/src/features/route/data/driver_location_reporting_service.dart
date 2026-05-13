@@ -59,6 +59,18 @@ class DriverLocationReportingApi implements DriverLocationReportingClient {
   }
 }
 
+class _NavigationProgress {
+  const _NavigationProgress({
+    required this.remainingDistanceMeters,
+    required this.traveledDistanceMeters,
+    required this.remainingDurationSeconds,
+  });
+
+  final int remainingDistanceMeters;
+  final int traveledDistanceMeters;
+  final int remainingDurationSeconds;
+}
+
 class DriverLocationReportingService {
   DriverLocationReportingService({
     required DriverHereLocationReader hereLocationReader,
@@ -72,8 +84,27 @@ class DriverLocationReportingService {
   Timer? _periodicTimer;
   String? _periodicTransportOrderId;
   Future<void>? _periodicSendInFlight;
+  _NavigationProgress? _navProgress;
 
   bool get isReporting => _periodicTransportOrderId != null;
+
+  void updateNavigationProgress({
+    required int? remainingDistanceMeters,
+    required int? traveledDistanceMeters,
+    required int? remainingDurationSeconds,
+  }) {
+    if (remainingDistanceMeters == null ||
+        traveledDistanceMeters == null ||
+        remainingDurationSeconds == null) {
+      _navProgress = null;
+      return;
+    }
+    _navProgress = _NavigationProgress(
+      remainingDistanceMeters: remainingDistanceMeters,
+      traveledDistanceMeters: traveledDistanceMeters,
+      remainingDurationSeconds: remainingDurationSeconds,
+    );
+  }
 
   Future<void> reportCurrentLocation({required String transportOrderId}) {
     final inFlight = _inFlightByOrder[transportOrderId];
@@ -240,6 +271,7 @@ class DriverLocationReportingService {
       throw const DriverHereLocationUnavailableException();
     }
 
+    final nav = _navProgress;
     return {
       'latitude': location.coordinates.latitude,
       'longitude': location.coordinates.longitude,
@@ -249,6 +281,11 @@ class DriverLocationReportingService {
         'speedMetersPerSecond': location.speedInMetersPerSecond,
       if (_isFinite(location.bearingInDegrees))
         'bearingDegrees': location.bearingInDegrees,
+      if (nav != null) ...{
+        'remainingDistanceMeters': nav.remainingDistanceMeters,
+        'traveledDistanceMeters': nav.traveledDistanceMeters,
+        'remainingDurationSeconds': nav.remainingDurationSeconds,
+      },
       'recordedAt': recordedAt.toUtc().toIso8601String(),
       'source': 'HERE_SDK',
     };

@@ -704,7 +704,13 @@ class RouteMapController extends ChangeNotifier {
     _positionSub?.cancel();
     _positionSub = null;
     _isRerouting = false;
-    _ref.read(driverLocationReportingServiceProvider).stopPeriodicReporting();
+    final reportingService = _ref.read(driverLocationReportingServiceProvider);
+    reportingService.updateNavigationProgress(
+      remainingDistanceMeters: null,
+      traveledDistanceMeters: null,
+      remainingDurationSeconds: null,
+    );
+    reportingService.stopPeriodicReporting();
     if (_mapLocationSub == null) {
       _ref.read(driverHereLocationServiceProvider).stop();
     }
@@ -781,6 +787,15 @@ class RouteMapController extends ChangeNotifier {
           final remaining = progress.sectionProgress.last;
           _remainingDistanceInMeters = remaining.remainingDistanceInMeters;
           _remainingDuration = remaining.remainingDuration;
+
+          final totalMeters = _currentRoute?.lengthInMeters;
+          _ref.read(driverLocationReportingServiceProvider).updateNavigationProgress(
+            remainingDistanceMeters: _remainingDistanceInMeters,
+            traveledDistanceMeters: (totalMeters != null && _remainingDistanceInMeters != null)
+                ? totalMeters - _remainingDistanceInMeters!
+                : null,
+            remainingDurationSeconds: _remainingDuration?.inSeconds,
+          );
         }
 
         final maneuverProgress = progress.maneuverProgress.isNotEmpty
