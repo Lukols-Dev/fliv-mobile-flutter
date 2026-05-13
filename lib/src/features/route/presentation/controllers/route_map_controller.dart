@@ -25,6 +25,9 @@ class RouteMapController extends ChangeNotifier {
     52.201271,
     20.631585,
   );
+  static const Duration _navigationCameraAutoResumeDelay = Duration(
+    seconds: 10,
+  );
 
   HereMapController? _map;
   RoutingEngine? _routingEngine;
@@ -69,6 +72,7 @@ class RouteMapController extends ChangeNotifier {
 
   StreamSubscription<Location>? _positionSub;
   StreamSubscription<Location>? _mapLocationSub;
+  Timer? _navigationCameraResumeTimer;
   RouteProgressListener? _routeProgressListener;
   EventTextListener? _eventTextListener;
   DestinationReachedListener? _destinationReachedListener;
@@ -196,6 +200,7 @@ class RouteMapController extends ChangeNotifier {
   /// Wywołuj w dispose() ekranu: ekran znika => mapa znika.
   /// Nie zabijamy nawigacji, tylko odpinamy mapę.
   void detachMap() {
+    _cancelNavigationCameraAutoResume();
     _visualNavigator?.stopRendering();
 
     _mapLocationSub?.cancel();
@@ -223,6 +228,24 @@ class RouteMapController extends ChangeNotifier {
     for (final gestureType in GestureType.values) {
       hereMapController.gestures.enableDefaultAction(gestureType);
     }
+
+    hereMapController.gestures.panListener = PanListener((state, _, __, ___) {
+      if (!isFollowing) return;
+
+      if (state == GestureState.begin) {
+        _pauseNavigationCameraTracking();
+        return;
+      }
+
+      if (state == GestureState.update) {
+        _cancelNavigationCameraAutoResume();
+        return;
+      }
+
+      if (state == GestureState.end || state == GestureState.cancel) {
+        _scheduleNavigationCameraAutoResume();
+      }
+    });
   }
 
   void _restoreVisualsIfNeeded() {
@@ -634,6 +657,8 @@ class RouteMapController extends ChangeNotifier {
     }
 
     final visualNavigator = _ensureVisualNavigator();
+    _cancelNavigationCameraAutoResume();
+    visualNavigator.cameraBehavior = FixedCameraBehavior();
     visualNavigator.route = route;
     _navigationError = null;
     _navigationInstruction = null;
@@ -675,6 +700,7 @@ class RouteMapController extends ChangeNotifier {
   }
 
   void stopFollowing() {
+    _cancelNavigationCameraAutoResume();
     _positionSub?.cancel();
     _positionSub = null;
     _isRerouting = false;
@@ -834,7 +860,10 @@ class RouteMapController extends ChangeNotifier {
   Future<void> refreshAndCenter({
     bool allowDuringDispatcherPreview = true,
   }) async {
-    if (isFollowing) return;
+    if (isFollowing) {
+      _resumeNavigationCameraTracking();
+      return;
+    }
     if (!allowDuringDispatcherPreview && _lastDispatcherRoutePlan != null) {
       return;
     }
@@ -854,6 +883,49 @@ class RouteMapController extends ChangeNotifier {
 
     final measure = MapMeasure(MapMeasureKind.distanceInMeters, 1200);
     map.camera.lookAtPointWithMeasure(coords, measure);
+  }
+
+  void _resumeNavigationCameraTracking() {
+    _cancelNavigationCameraAutoResume();
+
+    final visualNavigator = _visualNavigator;
+    if (visualNavigator == null) return;
+
+    visualNavigator.cameraBehavior = FixedCameraBehavior();
+
+    final currentLocation = _ref
+        .read(driverHereLocationServiceProvider)
+        .lastKnownHereLocation;
+    if (currentLocation != null) {
+      _handleHereLocationUpdate(currentLocation);
+    }
+
+    notifyListeners();
+  }
+
+  void _pauseNavigationCameraTracking() {
+    _cancelNavigationCameraAutoResume();
+    _visualNavigator?.cameraBehavior = null;
+    notifyListeners();
+  }
+
+  void _scheduleNavigationCameraAutoResume() {
+    _cancelNavigationCameraAutoResume();
+    if (!isFollowing) return;
+
+    _navigationCameraResumeTimer = Timer(
+      _navigationCameraAutoResumeDelay,
+      () {
+        _navigationCameraResumeTimer = null;
+        if (!isFollowing) return;
+        _resumeNavigationCameraTracking();
+      },
+    );
+  }
+
+  void _cancelNavigationCameraAutoResume() {
+    _navigationCameraResumeTimer?.cancel();
+    _navigationCameraResumeTimer = null;
   }
 
   Future<void> _showCurrentLocationOnMap({required bool centerCamera}) async {
@@ -1241,6 +1313,7 @@ class RouteMapController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _cancelNavigationCameraAutoResume();
     _positionSub?.cancel();
     _positionSub = null;
     _mapLocationSub?.cancel();
