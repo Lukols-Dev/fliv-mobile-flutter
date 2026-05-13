@@ -867,12 +867,33 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                                 }
                                                 return;
                                               }
+                                              final navMessenger = ScaffoldMessenger.of(context);
+                                              final navT = AppLocalizations.of(context)!;
                                               try {
                                                 await _startNavigationAndReportLocation(
                                                   orderId: currentOrder.id,
                                                 );
                                               } catch (_) {
                                                 // _startNavigationAndReportLocation handles user-visible errors.
+                                                return;
+                                              }
+                                              if (!mounted) return;
+                                              if (!controller.isFollowing) return;
+                                              try {
+                                                await ref
+                                                    .read(updateOrderStatusControllerProvider.notifier)
+                                                    .updateStatus(
+                                                      orderId: currentOrder.id,
+                                                      status: 'IN_PROGRESS',
+                                                    );
+                                              } catch (e) {
+                                                if (!mounted) return;
+                                                navMessenger.showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('${navT.route_status_change_failed}: ${e.toString()}'),
+                                                    backgroundColor: const Color(0xFFEF4444),
+                                                  ),
+                                                );
                                               }
                                             },
                                       style: FilledButton.styleFrom(
