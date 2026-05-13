@@ -62,7 +62,6 @@ dependencies:
   # Note that the path must point to your downloaded HERE SDK plugin folder.
   here_sdk:
     path: plugins/here_sdk
-  geolocator: ^14.0.2
   geocoding: ^4.0.0
   auto_size_text: ^3.0.0
   flexible_polyline_dart: ^1.0.1

@@ -4,7 +4,6 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart' as geo;
 import 'package:here_sdk/animation.dart' as here;
 import 'package:here_sdk/core.dart';
 import 'package:here_sdk/core.errors.dart';
@@ -13,21 +12,19 @@ import 'package:here_sdk/mapview.dart';
 import 'package:here_sdk/navigation.dart';
 import 'package:here_sdk/routing.dart';
 import 'package:here_sdk/transport.dart';
-import 'package:mobile/src/core/location/location_controller.dart';
-import 'package:mobile/src/core/location/location_service.dart';
+import 'package:mobile/src/core/here/driver_here_location_service.dart';
 import 'package:mobile/src/features/orders/domain/driver_transport_order_details.dart';
+import 'package:mobile/src/features/route/data/driver_location_reporting_service.dart';
 import 'package:mobile/src/features/route/domain/dispatcher_route_polyline_decoder.dart';
 
 class RouteMapController extends ChangeNotifier {
   RouteMapController(this._ref);
   final Ref _ref;
 
-  // TODO: Tymczasowa lokalizacja drivera na moment testow podgladu mapy.
-  static final GeoCoordinates _temporaryDriverLocation = GeoCoordinates(
+  static final GeoCoordinates _initialMapCenter = GeoCoordinates(
     52.201271,
     20.631585,
   );
-  static const bool _useTemporaryDriverLocation = true;
 
   HereMapController? _map;
   RoutingEngine? _routingEngine;
@@ -51,6 +48,9 @@ class RouteMapController extends ChangeNotifier {
   List<DriverTransportOrderRoutePoint> _lastDispatcherRoutePoints = const [];
   GeoBox? _lastDispatcherRouteBoundingBox;
   int _dispatcherPreviewFitToken = 0;
+  bool _showCurrentLocationWhenMapReady = false;
+  bool _centerCurrentLocationWhenMapReady = false;
+  Future<void>? _pendingCurrentLocationUpdate;
 
   String? _navigationInstruction;
   String? get navigationInstruction => _navigationInstruction;
@@ -67,10 +67,19 @@ class RouteMapController extends ChangeNotifier {
   List<GeoCoordinates> _lastDispatcherStops = const [];
   GeoCoordinates? _lastStartUsed;
 
-  StreamSubscription<geo.Position>? _positionSub;
+  StreamSubscription<Location>? _positionSub;
+  StreamSubscription<Location>? _mapLocationSub;
   RouteProgressListener? _routeProgressListener;
   EventTextListener? _eventTextListener;
   DestinationReachedListener? _destinationReachedListener;
+  RouteDeviationListener? _routeDeviationListener;
+  MilestoneStatusListener? _milestoneStatusListener;
+
+  bool _isRerouting = false;
+  bool get isRerouting => _isRerouting;
+
+  int _milestonesReached = 0;
+  int get milestonesReached => _milestonesReached;
 
   bool _isCalculating = false;
   bool get isCalculating => _isCalculating;
@@ -97,7 +106,7 @@ class RouteMapController extends ChangeNotifier {
     // fallback kamera
     final mapMeasureZoom = MapMeasure(MapMeasureKind.distanceInMeters, 8000);
     hereMapController.camera.lookAtPointWithMeasure(
-      _temporaryDriverLocation,
+      _initialMapCenter,
       mapMeasureZoom,
     );
 
@@ -113,11 +122,13 @@ class RouteMapController extends ChangeNotifier {
 
       if (isFollowing) {
         _visualNavigator?.startRendering(hereMapController);
+        _flushPendingCurrentLocationIfNeeded();
         return;
       }
 
       if (_lastDispatcherRoutePlan != null) {
         _restoreVisualsIfNeeded();
+        _flushPendingCurrentLocationIfNeeded();
         return;
       }
 
@@ -126,7 +137,60 @@ class RouteMapController extends ChangeNotifier {
 
       // jeśli była trasa wyznaczona wcześniej, odtwórz ją wizualnie na nowej mapie
       _restoreVisualsIfNeeded();
+      _flushPendingCurrentLocationIfNeeded();
     });
+  }
+
+  void showCurrentLocationWhenReady({bool centerCamera = false}) {
+    _showCurrentLocationWhenMapReady = true;
+    _centerCurrentLocationWhenMapReady =
+        _centerCurrentLocationWhenMapReady || centerCamera;
+    _ensureMapLocationUpdates();
+    _flushPendingCurrentLocationIfNeeded();
+  }
+
+  void _flushPendingCurrentLocationIfNeeded() {
+    if (!_showCurrentLocationWhenMapReady) return;
+    if (!_mapSceneLoaded || _map == null) return;
+    if (_pendingCurrentLocationUpdate != null) return;
+
+    final shouldCenter =
+        _centerCurrentLocationWhenMapReady &&
+        _lastDispatcherRoutePlan == null &&
+        _currentRoute == null &&
+        !isFollowing;
+
+    _showCurrentLocationWhenMapReady = false;
+    _centerCurrentLocationWhenMapReady = false;
+
+    _pendingCurrentLocationUpdate = _showCurrentLocationOnMap(
+      centerCamera: shouldCenter,
+    ).whenComplete(() => _pendingCurrentLocationUpdate = null);
+  }
+
+  void _ensureMapLocationUpdates() {
+    if (_mapLocationSub != null) return;
+
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    _mapLocationSub = locationService.locationStream.listen(
+      _handleMapLocationUpdate,
+      onError: (Object e) {
+        // ignore: avoid_print
+        print('Map location stream error: $e');
+      },
+    );
+
+    unawaited(_showCurrentLocationFromLastKnown());
+  }
+
+  void _handleMapLocationUpdate(Location location) {
+    if (_map == null || isFollowing) return;
+
+    final coords = location.coordinates;
+    _lastUserCoordinates = coords;
+    _ensureLocationIndicatorEnabled();
+    _updateHereLocationIndicator(coords, bearing: location.bearingInDegrees);
+    notifyListeners();
   }
 
   /// Wywołuj w dispose() ekranu: ekran znika => mapa znika.
@@ -134,11 +198,20 @@ class RouteMapController extends ChangeNotifier {
   void detachMap() {
     _visualNavigator?.stopRendering();
 
+    _mapLocationSub?.cancel();
+    _mapLocationSub = null;
+    if (_positionSub == null) {
+      _ref.read(driverHereLocationServiceProvider).stop();
+    }
+
     _locationIndicator?.disable();
     _locationIndicator = null;
 
     _map = null;
     _mapSceneLoaded = false;
+    _showCurrentLocationWhenMapReady = false;
+    _centerCurrentLocationWhenMapReady = false;
+    _pendingCurrentLocationUpdate = null;
     _dispatcherPreviewFitToken++;
 
     // te obiekty należały do poprzedniej mapy — nie da się ich przenieść
@@ -168,7 +241,6 @@ class RouteMapController extends ChangeNotifier {
         _showApproachRouteOnMap(route);
         final start = _lastStartUsed;
         if (start != null) {
-          _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
           _ensureLocationIndicatorEnabled();
           _updateHereLocationIndicator(start);
         }
@@ -194,10 +266,7 @@ class RouteMapController extends ChangeNotifier {
       _showRouteOnMap(route);
 
       // odtwórz stop points
-      final start = _lastStartUsed;
-      if (start != null) {
-        _drawStops(start, _lastDispatcherStops);
-      }
+      _drawStops(_lastDispatcherStops);
 
       _animateToRoute(route);
     }
@@ -290,8 +359,8 @@ class RouteMapController extends ChangeNotifier {
     _ensureLocationIndicatorEnabled();
     _updateHereLocationIndicator(start);
 
-    // narysuj stop points (start + stops)
-    _drawStops(start, dispatcherStops);
+    // narysuj punkty dyspozytora; start kierowcy pokazuje LocationIndicator.
+    _drawStops(dispatcherStops);
 
     final waypoints = <Waypoint>[
       Waypoint.withDefaults(start),
@@ -366,7 +435,6 @@ class RouteMapController extends ChangeNotifier {
       routePlan,
       fitCamera: false,
     );
-    _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
     _ensureLocationIndicatorEnabled();
     _updateHereLocationIndicator(start);
 
@@ -469,6 +537,7 @@ class RouteMapController extends ChangeNotifier {
   RouteOptions _buildRouteOptions(DriverRouteRoutingProfile profile) {
     return RouteOptions.withDefaults()
       ..enableRouteHandle = true
+      ..enableTolls = true
       ..optimizationMode = profile.routingMode.toLowerCase() == 'short'
           ? OptimizationMode.shortest
           : OptimizationMode.fastest
@@ -536,12 +605,9 @@ class RouteMapController extends ChangeNotifier {
         .toList(growable: false);
   }
 
-  void _drawStops(GeoCoordinates start, List<GeoCoordinates> stops) {
+  void _drawStops(List<GeoCoordinates> stops) {
     final map = _map;
     if (map == null) return;
-
-    // start kierowcy (niebieski)
-    _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
 
     // punkty dyspozytora (pomarańczowe), ostatni czerwony
     for (int i = 0; i < stops.length; i++) {
@@ -576,23 +642,34 @@ class RouteMapController extends ChangeNotifier {
 
     _locationIndicator?.disable();
     _locationIndicator = null;
+    _milestonesReached = 0;
+    _isRerouting = false;
 
     final map = _map;
     if (map != null) {
       visualNavigator.startRendering(map);
     }
 
-    final locationService = _ref.read(locationServiceProvider);
-    final currentPosition = await locationService.getCurrentPosition();
-    _handlePositionUpdate(currentPosition);
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    try {
+      await locationService.prepare();
+      final currentLocation = locationService.lastKnownHereLocation;
+      if (currentLocation != null) {
+        _handleHereLocationUpdate(currentLocation);
+      }
 
-    _positionSub = locationService.getPositionStream().listen(
-      _handlePositionUpdate,
-      onError: (Object e) {
-        _navigationError = e.toString();
-        notifyListeners();
-      },
-    );
+      _positionSub = locationService.locationStream.listen(
+        _handleHereLocationUpdate,
+        onError: (Object e) {
+          _navigationError = e.toString();
+          notifyListeners();
+        },
+      );
+    } catch (_) {
+      visualNavigator.route = null;
+      visualNavigator.stopRendering();
+      rethrow;
+    }
 
     notifyListeners();
   }
@@ -600,9 +677,71 @@ class RouteMapController extends ChangeNotifier {
   void stopFollowing() {
     _positionSub?.cancel();
     _positionSub = null;
+    _isRerouting = false;
+    _ref.read(driverLocationReportingServiceProvider).stopPeriodicReporting();
+    if (_mapLocationSub == null) {
+      _ref.read(driverHereLocationServiceProvider).stop();
+    }
     _visualNavigator?.route = null;
     _visualNavigator?.stopRendering();
     notifyListeners();
+  }
+
+  void _onRouteDeviation(RouteDeviation deviation) {
+    if (_isRerouting) return;
+    if (_lastDispatcherStops.isEmpty) return;
+    final routingEngine = _routingEngine;
+    if (routingEngine == null) return;
+
+    _isRerouting = true;
+    notifyListeners();
+
+    final startCoords =
+        deviation.currentLocation.mapMatchedLocation?.coordinates ??
+        deviation.currentLocation.originalLocation.coordinates;
+
+    final waypoints = <Waypoint>[
+      Waypoint.withDefaults(startCoords),
+      ..._lastDispatcherStops.map(Waypoint.withDefaults),
+    ];
+
+    void onResult(RoutingError? error, List<Route>? routes) {
+      _isRerouting = false;
+      if (error != null || routes == null || routes.isEmpty) {
+        notifyListeners();
+        return;
+      }
+      final route = routes.first;
+      _currentRoute = route;
+      _visualNavigator?.route = route;
+      notifyListeners();
+    }
+
+    final routePlan = _lastDispatcherRoutePlan;
+    if (routePlan != null &&
+        routePlan.routingProfile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(
+        waypoints,
+        _buildCarOptions(routePlan.routingProfile),
+        onResult,
+      );
+    } else if (routePlan != null) {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(routePlan.routingProfile, routePlan.vehicleSpec),
+        onResult,
+      );
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        TruckOptions()
+          ..routeOptions.enableTolls = true
+          ..routeOptions.enableRouteHandle = true
+          ..routeOptions.trafficOptimizationMode =
+              TrafficOptimizationMode.timeDependent,
+        onResult,
+      );
+    }
   }
 
   VisualNavigator _ensureVisualNavigator() {
@@ -648,9 +787,22 @@ class RouteMapController extends ChangeNotifier {
         notifyListeners();
       });
 
+      _routeDeviationListener = RouteDeviationListener((deviation) {
+        _onRouteDeviation(deviation);
+      });
+
+      _milestoneStatusListener = MilestoneStatusListener((milestone, status) {
+        if (status == MilestoneStatus.reached) {
+          _milestonesReached++;
+          notifyListeners();
+        }
+      });
+
       visualNavigator.routeProgressListener = _routeProgressListener;
       visualNavigator.eventTextListener = _eventTextListener;
       visualNavigator.destinationReachedListener = _destinationReachedListener;
+      visualNavigator.routeDeviationListener = _routeDeviationListener;
+      visualNavigator.milestoneStatusListener = _milestoneStatusListener;
 
       _visualNavigator = visualNavigator;
       return visualNavigator;
@@ -659,22 +811,12 @@ class RouteMapController extends ChangeNotifier {
     }
   }
 
-  void _handlePositionUpdate(
-    geo.Position position, {
+  void _handleHereLocationUpdate(
+    Location location, {
     bool centerCamera = false,
   }) {
-    final coords = GeoCoordinates(position.latitude, position.longitude);
+    final coords = location.coordinates;
     _lastUserCoordinates = coords;
-
-    final location = Location.withCoordinates(coords)
-      ..time = position.timestamp
-      ..horizontalAccuracyInMeters = position.accuracy.isFinite
-          ? position.accuracy
-          : null
-      ..bearingInDegrees = position.heading.isFinite ? position.heading : null
-      ..speedInMetersPerSecond = position.speed.isFinite
-          ? position.speed
-          : null;
 
     _visualNavigator?.onLocationUpdated(location);
 
@@ -714,23 +856,66 @@ class RouteMapController extends ChangeNotifier {
     map.camera.lookAtPointWithMeasure(coords, measure);
   }
 
-  Future<GeoCoordinates> _getUserCoordinates() async {
-    if (_useTemporaryDriverLocation) {
-      return _temporaryDriverLocation;
-    }
+  Future<void> _showCurrentLocationOnMap({required bool centerCamera}) async {
+    if (_map == null) return;
 
-    final loc = await _ref
-        .read(locationControllerProvider.notifier)
-        .getCurrent();
-    return GeoCoordinates(loc.lat, loc.lon);
+    try {
+      final coords = await _getMapIndicatorCoordinates();
+      final map = _map;
+      if (map == null) return;
+
+      _lastUserCoordinates = coords;
+      _ensureLocationIndicatorEnabled();
+      _updateHereLocationIndicator(coords);
+
+      if (centerCamera && !isFollowing) {
+        final measure = MapMeasure(MapMeasureKind.distanceInMeters, 1200);
+        map.camera.lookAtPointWithMeasure(coords, measure);
+      }
+
+      notifyListeners();
+    } catch (_) {
+      // The stream listener will update the marker when HERE emits a fix.
+    }
+  }
+
+  Future<void> _showCurrentLocationFromLastKnown() async {
+    final map = _map;
+    if (map == null || isFollowing) return;
+
+    try {
+      final coords = await _getMapIndicatorCoordinates();
+      if (_map != map || isFollowing) return;
+
+      _lastUserCoordinates = coords;
+      _ensureLocationIndicatorEnabled();
+      _updateHereLocationIndicator(coords);
+      notifyListeners();
+    } catch (_) {
+      // The stream listener will update the marker when HERE emits a fix.
+    }
+  }
+
+  Future<GeoCoordinates> _getUserCoordinates() async {
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    final lastKnown = locationService.lastKnownHereLocation;
+    if (lastKnown != null) return lastKnown.coordinates;
+
+    final location = await locationService.getCurrentHereLocation(
+      maxAge: const Duration(minutes: 5),
+      timeout: const Duration(seconds: 30),
+    );
+    return location.coordinates;
   }
 
   Future<void> _showUserLocationIndicatorWithoutCentering() async {
     final previewToken = _dispatcherPreviewFitToken;
     if (_map == null) return;
 
+    _ensureMapLocationUpdates();
+
     try {
-      final coords = await _getUserCoordinates();
+      final coords = await _getMapIndicatorCoordinates();
       if (_map == null) return;
       if (_lastDispatcherRoutePlan == null) return;
       if (previewToken != _dispatcherPreviewFitToken) return;
@@ -738,10 +923,21 @@ class RouteMapController extends ChangeNotifier {
       _lastUserCoordinates = coords;
       _ensureLocationIndicatorEnabled();
       _updateHereLocationIndicator(coords);
-    } catch (e) {
-      // ignore: avoid_print
-      print('Location indicator error: $e');
+    } catch (_) {
+      // The stream listener will update the marker when HERE emits a fix.
     }
+  }
+
+  Future<GeoCoordinates> _getMapIndicatorCoordinates() async {
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    final lastKnown = locationService.lastKnownHereLocation;
+    if (lastKnown != null) return lastKnown.coordinates;
+
+    final location = await locationService.getCurrentHereLocation(
+      maxAge: const Duration(days: 365),
+      timeout: const Duration(seconds: 1),
+    );
+    return location.coordinates;
   }
 
   void _setCurrentRoute(Route? route) {
@@ -1003,20 +1199,22 @@ class RouteMapController extends ChangeNotifier {
     _locationIndicator!.enable(map);
   }
 
-  void _updateHereLocationIndicator(GeoCoordinates coords) {
+  void _updateHereLocationIndicator(GeoCoordinates coords, {double? bearing}) {
     final map = _map;
     if (map == null) return;
 
-    double bearing = 0.0;
-    final prev = _prevCoordsForBearing;
-    if (prev != null) {
-      bearing = _bearingDegrees(from: prev, to: coords);
+    final double finalBearing;
+    if (bearing != null) {
+      finalBearing = bearing;
+    } else {
+      final prev = _prevCoordsForBearing;
+      finalBearing = prev != null ? _bearingDegrees(from: prev, to: coords) : 0.0;
     }
     _prevCoordsForBearing = coords;
 
     final location = Location.withCoordinates(coords)
       ..time = DateTime.now()
-      ..bearingInDegrees = bearing;
+      ..bearingInDegrees = finalBearing;
 
     _locationIndicator?.updateLocation(location);
   }
@@ -1045,9 +1243,16 @@ class RouteMapController extends ChangeNotifier {
   void dispose() {
     _positionSub?.cancel();
     _positionSub = null;
+    _mapLocationSub?.cancel();
+    _mapLocationSub = null;
+    _isRerouting = false;
+    _ref.read(driverLocationReportingServiceProvider).stopPeriodicReporting();
+    _ref.read(driverHereLocationServiceProvider).stop();
     _visualNavigator?.stopRendering();
     _visualNavigator?.route = null;
     _visualNavigator = null;
+    _routeDeviationListener = null;
+    _milestoneStatusListener = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;

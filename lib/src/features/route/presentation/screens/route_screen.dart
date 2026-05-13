@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:here_sdk/core.dart';
 
+import 'package:mobile/src/core/here/driver_here_location_service.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/core/location/location_permission_channel.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 import 'package:mobile/src/features/orders/application/update_order_status_controller.dart';
 import 'package:mobile/src/features/orders/domain/driver_transport_order_details.dart';
+import 'package:mobile/src/features/route/data/driver_location_reporting_service.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_controls_panel.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_incident_bottom_sheet.dart';
@@ -23,11 +26,44 @@ final routeMapControllerProvider = ChangeNotifierProvider<RouteMapController>((
   return c;
 });
 
+typedef RouteMapLayerBuilder =
+    Widget Function({
+      required RouteMapController controller,
+      required VoidCallback onBack,
+      required double bottomPaddingForFab,
+      ValueNotifier<double>? sheetHeightNotifier,
+    });
+
+final routeMapLayerBuilderProvider = Provider<RouteMapLayerBuilder>((ref) {
+  return ({
+    required RouteMapController controller,
+    required VoidCallback onBack,
+    required double bottomPaddingForFab,
+    ValueNotifier<double>? sheetHeightNotifier,
+  }) {
+    return RouteMapLayer(
+      controller: controller,
+      bottomPaddingForFab: bottomPaddingForFab,
+      sheetHeightNotifier: sheetHeightNotifier,
+      onBack: onBack,
+    );
+  };
+});
+
 class RouteScreen extends ConsumerStatefulWidget {
   const RouteScreen({super.key});
 
   @override
   ConsumerState<RouteScreen> createState() => _RouteScreenState();
+}
+
+enum _RouteLocationAccessState {
+  checking,
+  granted,
+  denied,
+  deniedForever,
+  serviceDisabled,
+  unavailable,
 }
 
 class _RouteScreenState extends ConsumerState<RouteScreen> {
@@ -36,6 +72,13 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   static const _sheetMax = 0.70;
 
   String? _lastDispatcherPreviewKey;
+  String? _locationPreparationMessage;
+  _RouteLocationAccessState _locationAccessState =
+      _RouteLocationAccessState.checking;
+  RouteMapController? _routeMapController;
+  late final DriverLocationReportingService _locationReportingService;
+  bool _isPreparingLocationAccess = false;
+  bool _isStartingNavigation = false;
 
   String _formatKm(int meters) => (meters / 1000).toStringAsFixed(1);
   String _formatMin(AppLocalizations t, Duration d) =>
@@ -49,8 +92,19 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _locationReportingService = ref.read(driverLocationReportingServiceProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _prepareHereLocationOnMapOpen();
+    });
+  }
+
+  @override
   void dispose() {
-    ref.read(routeMapControllerProvider).detachMap();
+    _locationReportingService.stopPeriodicReporting();
+    _routeMapController?.detachMap();
     super.dispose();
   }
 
@@ -90,6 +144,149 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
   Future<void> _openReportEventSheet({required String orderId}) async {
     await showReportEventBottomSheet(context, orderId: orderId);
+  }
+
+  bool get _isLocationAccessGranted =>
+      _locationAccessState == _RouteLocationAccessState.granted;
+
+  Future<void> _prepareHereLocationOnMapOpen() async {
+    if (_isPreparingLocationAccess) return;
+    _isPreparingLocationAccess = true;
+
+    if (mounted) {
+      setState(() {
+        _locationAccessState = _RouteLocationAccessState.checking;
+        _locationPreparationMessage = null;
+      });
+    }
+
+    try {
+      await ref.read(driverHereLocationServiceProvider).prepare();
+      if (!mounted) return;
+      setState(() {
+        _locationAccessState = _RouteLocationAccessState.granted;
+        _locationPreparationMessage = null;
+      });
+      ref
+          .read(routeMapControllerProvider)
+          .showCurrentLocationWhenReady(centerCamera: true);
+    } on DriverHereLocationPermissionException catch (e) {
+      if (!mounted) return;
+      setState(() => _locationAccessState = _stateFromPermissionError(e));
+      _showSnack(e.message);
+    } on DriverHereLocationUnavailableException {
+      if (!mounted) return;
+      setState(() {
+        _locationAccessState = _RouteLocationAccessState.unavailable;
+        _locationPreparationMessage = driverLocationUnavailableMessage;
+      });
+      _showSnack(driverLocationUnavailableMessage);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _locationAccessState = _RouteLocationAccessState.unavailable;
+        _locationPreparationMessage = driverLocationUnavailableMessage;
+      });
+      _showSnack(driverLocationUnavailableMessage);
+      // ignore: avoid_print
+      print('HERE location prepare error: $e');
+    } finally {
+      _isPreparingLocationAccess = false;
+    }
+  }
+
+  _RouteLocationAccessState _stateFromPermissionError(
+    DriverHereLocationPermissionException e,
+  ) {
+    return switch (e.status) {
+      AppLocationPermissionStatus.deniedForever =>
+        _RouteLocationAccessState.deniedForever,
+      AppLocationPermissionStatus.serviceDisabled =>
+        _RouteLocationAccessState.serviceDisabled,
+      _ => _RouteLocationAccessState.denied,
+    };
+  }
+
+  String _locationAccessMessage() {
+    return switch (_locationAccessState) {
+      _RouteLocationAccessState.serviceDisabled =>
+        driverLocationServiceDisabledMessage,
+      _RouteLocationAccessState.deniedForever =>
+        driverLocationPermissionDeniedForeverMessage,
+      _RouteLocationAccessState.denied => driverLocationPermissionMessage,
+      _RouteLocationAccessState.unavailable =>
+        _locationPreparationMessage ?? driverLocationUnavailableMessage,
+      _ => driverLocationPermissionMessage,
+    };
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _startNavigationAndReportLocation({
+    required String orderId,
+  }) async {
+    if (_isStartingNavigation) return;
+
+    setState(() => _isStartingNavigation = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      await ref.read(routeMapControllerProvider).startFollowing();
+      if (!mounted) return;
+      setState(() => _locationPreparationMessage = null);
+    } on DriverHereLocationPermissionException catch (e) {
+      if (!mounted) return;
+      setState(() => _locationPreparationMessage = e.message);
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      return;
+    } on DriverHereLocationUnavailableException {
+      if (!mounted) return;
+      setState(
+        () => _locationPreparationMessage = driverLocationUnavailableMessage,
+      );
+      messenger.showSnackBar(
+        const SnackBar(content: Text(driverLocationUnavailableMessage)),
+      );
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      setState(
+        () => _locationPreparationMessage = driverLocationUnavailableMessage,
+      );
+      final t = AppLocalizations.of(context)!;
+      messenger.showSnackBar(
+        SnackBar(content: Text('${t.common_location}: $e')),
+      );
+      return;
+    } finally {
+      if (mounted) setState(() => _isStartingNavigation = false);
+    }
+
+    try {
+      await _locationReportingService.startPeriodicReporting(
+        transportOrderId: orderId,
+      );
+    } on DriverHereLocationUnavailableException {
+      if (!mounted) return;
+      setState(
+        () => _locationPreparationMessage = driverLocationUnavailableMessage,
+      );
+      messenger.showSnackBar(
+        const SnackBar(content: Text(driverLocationUnavailableMessage)),
+      );
+    } on DriverLocationReportingException catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text(driverLocationReportFailedMessage)),
+      );
+    }
   }
 
   String _dispatcherPreviewKey({
@@ -142,13 +339,119 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     });
   }
 
+  Widget _buildLocationAccessScaffold(AppLocalizations t) {
+    final isChecking =
+        _locationAccessState == _RouteLocationAccessState.checking;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: 2,
+                  child: IconButton(
+                    tooltip: t.common_back,
+                    onPressed: () => context.go('/home'),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 58,
+                      width: 58,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE7EFE7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.my_location_rounded,
+                        color: Color(0xFF0F4D46),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      t.common_location,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Figtree',
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _locationAccessMessage(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Figtree',
+                        color: Color(0xFF6B7280),
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    if (isChecking)
+                      const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF0F4D46),
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    else
+                      FilledButton.icon(
+                        onPressed: _prepareHereLocationOnMapOpen,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(t.home_refresh_location_tooltip),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F4D46),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final controller = ref.watch(routeMapControllerProvider);
+    _routeMapController = controller;
+
+    if (!_isLocationAccessGranted) {
+      return _buildLocationAccessScaffold(t);
+    }
 
     final currentOrderAsync = ref.watch(currentDriverOrderProvider);
     final currentOrder = currentOrderAsync.asData?.value;
+    final buildRouteMapLayer = ref.watch(routeMapLayerBuilderProvider);
     final hasOrder = currentOrder != null;
     final orderDetailsAsync = hasOrder
         ? ref.watch(driverOrderDetailsProvider(currentOrder.id))
@@ -189,7 +492,10 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     final String routeActionLabel;
     final IconData routeActionIcon;
-    if (controller.isFollowing) {
+    if (_isStartingNavigation) {
+      routeActionLabel = 'Getting current location';
+      routeActionIcon = Icons.my_location_rounded;
+    } else if (controller.isFollowing) {
       routeActionLabel = t.route_stop;
       routeActionIcon = Icons.pause_rounded;
     } else if (!canStart && savedRoutePlan != null) {
@@ -206,11 +512,11 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          RouteMapLayer(
+          buildRouteMapLayer(
             controller: controller,
+            onBack: () => context.go('/home'),
             bottomPaddingForFab: bottomPaddingForFab,
             sheetHeightNotifier: sheetHeightNotifier,
-            onBack: () => context.go('/home'),
           ),
 
           Align(
@@ -309,7 +615,15 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                       color: Color(0xFF111827),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  if (_locationPreparationMessage != null) ...[
+                                    const SizedBox(height: 8),
+                                    _LocationNotice(
+                                      message: _locationPreparationMessage!,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ] else ...[
+                                    const SizedBox(height: 8),
+                                  ],
 
                                   if (orderDetailsAsync?.isLoading == true) ...[
                                     Text(
@@ -490,6 +804,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                     height: 54,
                                     child: FilledButton(
                                       onPressed: controller.isCalculating ||
+                                              _isStartingNavigation ||
                                               (!canStart &&
                                                   !canCalculateApproach)
                                           ? null
@@ -531,20 +846,33 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                                   );
                                                   return;
                                                 }
+                                                final approachRoute =
+                                                    controller.currentRoute;
+                                                if (approachRoute != null) {
+                                                  try {
+                                                    await _locationReportingService
+                                                        .reportApproachRoute(
+                                                      transportOrderId:
+                                                          currentOrder.id,
+                                                      distanceMeters:
+                                                          approachRoute
+                                                              .lengthInMeters,
+                                                      duration:
+                                                          approachRoute.duration,
+                                                    );
+                                                  } catch (_) {
+                                                    // Raport jest nieblokujący –
+                                                    // błąd nie zatrzymuje UI.
+                                                  }
+                                                }
                                                 return;
                                               }
                                               try {
-                                                await controller
-                                                    .startFollowing();
-                                              } catch (e) {
-                                                if (!mounted) return;
-                                                messenger.showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      '${t.common_location}: $e',
-                                                    ),
-                                                  ),
+                                                await _startNavigationAndReportLocation(
+                                                  orderId: currentOrder.id,
                                                 );
+                                              } catch (_) {
+                                                // _startNavigationAndReportLocation handles user-visible errors.
                                               }
                                             },
                                       style: FilledButton.styleFrom(
@@ -559,7 +887,8 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                         ),
                                         elevation: 2,
                                       ),
-                                      child: controller.isCalculating
+                                      child: controller.isCalculating ||
+                                              _isStartingNavigation
                                           ? const SizedBox(
                                               height: 22,
                                               width: 22,
@@ -634,7 +963,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                             RouteControlsPanel(
                               isFollowing: controller.isFollowing,
                               onReportEvent: () => _openReportEventSheet(
-                                orderId: currentOrder!.id,
+                                orderId: currentOrder.id,
                               ),
                               onPause: controller.stopFollowing,
                               onResume: () async {
@@ -694,6 +1023,47 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                     ),
                   );
                 },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LocationNotice extends StatelessWidget {
+  const _LocationNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.location_off_rounded,
+            size: 18,
+            color: Color(0xFFC2410C),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Figtree',
+                color: Color(0xFF9A3412),
+                height: 1.3,
               ),
             ),
           ),
