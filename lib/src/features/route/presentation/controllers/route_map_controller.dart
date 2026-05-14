@@ -658,7 +658,9 @@ class RouteMapController extends ChangeNotifier {
 
     final visualNavigator = _ensureVisualNavigator();
     _cancelNavigationCameraAutoResume();
-    visualNavigator.cameraBehavior = FixedCameraBehavior();
+    final cameraBehavior = SpeedBasedCameraBehavior()
+      ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
+    visualNavigator.cameraBehavior = cameraBehavior;
     visualNavigator.route = route;
     _navigationError = null;
     _navigationInstruction = null;
@@ -906,7 +908,9 @@ class RouteMapController extends ChangeNotifier {
     final visualNavigator = _visualNavigator;
     if (visualNavigator == null) return;
 
-    visualNavigator.cameraBehavior = FixedCameraBehavior();
+    final cameraBehavior = SpeedBasedCameraBehavior()
+      ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
+    visualNavigator.cameraBehavior = cameraBehavior;
 
     final currentLocation = _ref
         .read(driverHereLocationServiceProvider)
