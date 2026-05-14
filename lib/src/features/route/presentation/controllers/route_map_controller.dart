@@ -70,6 +70,15 @@ class RouteMapController extends ChangeNotifier {
   String? _navigationError;
   String? get navigationError => _navigationError;
 
+  double? _currentSpeedLimitKmh;
+  double? get currentSpeedLimitKmh => _currentSpeedLimitKmh;
+
+  double? _currentSpeedKmh;
+  double? get currentSpeedKmh => _currentSpeedKmh;
+
+  bool _isSpeedExceeded = false;
+  bool get isSpeedExceeded => _isSpeedExceeded;
+
   int? _remainingDistanceInMeters;
   int? get remainingDistanceInMeters => _remainingDistanceInMeters;
 
@@ -87,6 +96,8 @@ class RouteMapController extends ChangeNotifier {
   DestinationReachedListener? _destinationReachedListener;
   RouteDeviationListener? _routeDeviationListener;
   MilestoneStatusListener? _milestoneStatusListener;
+  SpeedLimitListener? _speedLimitListener;
+  SpeedWarningListener? _speedWarningListener;
 
   bool _isRerouting = false;
   bool get isRerouting => _isRerouting;
@@ -676,6 +687,9 @@ class RouteMapController extends ChangeNotifier {
     _nextManeuverAction = null;
     _distanceToNextManeuverMeters = null;
     _nextRoadName = null;
+    _currentSpeedKmh = 0.0;
+    _currentSpeedLimitKmh = null;
+    _isSpeedExceeded = false;
     _remainingDistanceInMeters = route.lengthInMeters;
     _remainingDuration = route.duration;
 
@@ -733,6 +747,9 @@ class RouteMapController extends ChangeNotifier {
     _nextManeuverAction = null;
     _distanceToNextManeuverMeters = null;
     _nextRoadName = null;
+    _currentSpeedKmh = null;
+    _currentSpeedLimitKmh = null;
+    _isSpeedExceeded = false;
     notifyListeners();
   }
 
@@ -859,11 +876,24 @@ class RouteMapController extends ChangeNotifier {
         }
       });
 
+      _speedLimitListener = SpeedLimitListener((speedLimit) {
+        final limitMs = speedLimit.effectiveSpeedLimitInMetersPerSecond();
+        _currentSpeedLimitKmh = limitMs != null ? limitMs * 3.6 : null;
+        notifyListeners();
+      });
+
+      _speedWarningListener = SpeedWarningListener((status) {
+        _isSpeedExceeded = status == SpeedWarningStatus.speedLimitExceeded;
+        notifyListeners();
+      });
+
       visualNavigator.routeProgressListener = _routeProgressListener;
       visualNavigator.eventTextListener = _eventTextListener;
       visualNavigator.destinationReachedListener = _destinationReachedListener;
       visualNavigator.routeDeviationListener = _routeDeviationListener;
       visualNavigator.milestoneStatusListener = _milestoneStatusListener;
+      visualNavigator.speedLimitListener = _speedLimitListener;
+      visualNavigator.speedWarningListener = _speedWarningListener;
 
       _visualNavigator = visualNavigator;
       return visualNavigator;
@@ -878,6 +908,10 @@ class RouteMapController extends ChangeNotifier {
   }) {
     final coords = location.coordinates;
     _lastUserCoordinates = coords;
+
+    if (isFollowing) {
+      _currentSpeedKmh = (location.speedInMetersPerSecond ?? 0.0) * 3.6;
+    }
 
     _visualNavigator?.onLocationUpdated(location);
 
@@ -1363,6 +1397,8 @@ class RouteMapController extends ChangeNotifier {
     _visualNavigator = null;
     _routeDeviationListener = null;
     _milestoneStatusListener = null;
+    _speedLimitListener = null;
+    _speedWarningListener = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;

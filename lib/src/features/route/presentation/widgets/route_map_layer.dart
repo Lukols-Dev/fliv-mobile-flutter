@@ -72,7 +72,7 @@ class RouteMapLayer extends StatelessWidget {
             ),
           ),
 
-        // CENTER
+        // BOTTOM-RIGHT: center button + speed panel (when following)
         SafeArea(
           child: Align(
             alignment: Alignment.bottomRight,
@@ -85,7 +85,6 @@ class RouteMapLayer extends StatelessWidget {
                           sheetHeight +
                           10 +
                           MediaQuery.of(context).padding.bottom;
-
                       final hideThreshold = screenHeight * 0.5;
                       final shouldHide = sheetHeight > hideThreshold;
 
@@ -95,34 +94,39 @@ class RouteMapLayer extends StatelessWidget {
                         child: IgnorePointer(
                           ignoring: shouldHide,
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              16,
-                              16,
-                              16,
-                              bottomPadding,
-                            ),
-                            child: Material(
-                              color: Colors.white,
-                              shape: const CircleBorder(),
-                              elevation: 3,
-                              child: IconButton(
-                                tooltip: t.route_center_on_my_location,
-                                icon: const Icon(Icons.my_location_rounded),
-                                onPressed: () async {
-                                  try {
-                                    await controller.refreshAndCenter();
-                                  } catch (e) {
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '${t.common_location}: $e',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
+                            padding: EdgeInsets.fromLTRB(16, 16, 12, bottomPadding),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Material(
+                                  color: Colors.white,
+                                  shape: const CircleBorder(),
+                                  elevation: 3,
+                                  child: IconButton(
+                                    tooltip: t.route_center_on_my_location,
+                                    icon: const Icon(Icons.my_location_rounded),
+                                    onPressed: () async {
+                                      try {
+                                        await controller.refreshAndCenter();
+                                      } catch (e) {
+                                        if (!context.mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('${t.common_location}: $e')),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                                if (controller.isFollowing) ...[
+                                  const SizedBox(height: 10),
+                                  _SpeedWidget(
+                                    speedLimitKmh: controller.currentSpeedLimitKmh,
+                                    currentSpeedKmh: controller.currentSpeedKmh!,
+                                    isExceeded: controller.isSpeedExceeded,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ),
@@ -130,32 +134,39 @@ class RouteMapLayer extends StatelessWidget {
                     },
                   )
                 : Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      16,
-                      16,
-                      bottomPaddingForFab,
-                    ),
-                    child: Material(
-                      color: Colors.white,
-                      shape: const CircleBorder(),
-                      elevation: 3,
-                      child: IconButton(
-                        tooltip: t.route_center_on_my_location,
-                        icon: const Icon(Icons.my_location_rounded),
-                        onPressed: () async {
-                          try {
-                            await controller.refreshAndCenter();
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${t.common_location}: $e'),
-                              ),
-                            );
-                          }
-                        },
-                      ),
+                    padding: EdgeInsets.fromLTRB(16, 16, 12, bottomPaddingForFab),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Material(
+                          color: Colors.white,
+                          shape: const CircleBorder(),
+                          elevation: 3,
+                          child: IconButton(
+                            tooltip: t.route_center_on_my_location,
+                            icon: const Icon(Icons.my_location_rounded),
+                            onPressed: () async {
+                              try {
+                                await controller.refreshAndCenter();
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('${t.common_location}: $e')),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                        if (controller.isFollowing) ...[
+                          const SizedBox(height: 10),
+                          _SpeedWidget(
+                            speedLimitKmh: controller.currentSpeedLimitKmh,
+                            currentSpeedKmh: controller.currentSpeedKmh!,
+                            isExceeded: controller.isSpeedExceeded,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
           ),
@@ -288,4 +299,103 @@ class _ManeuverBanner extends StatelessWidget {
     ManeuverAction.rightRoundaboutExit11 ||
     ManeuverAction.rightRoundaboutExit12 => Icons.roundabout_right_rounded,
   };
+}
+
+class _SpeedWidget extends StatelessWidget {
+  const _SpeedWidget({
+    required this.speedLimitKmh,
+    required this.currentSpeedKmh,
+    required this.isExceeded,
+  });
+
+  final double? speedLimitKmh;
+  final double currentSpeedKmh;
+  final bool isExceeded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 64,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Speed limit circle
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 6, 6, 0),
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isExceeded ? const Color(0xFFDC2626) : Colors.white,
+                border: Border.all(
+                  color: const Color(0xFFDC2626),
+                  width: 4,
+                ),
+              ),
+              child: Center(
+                child: speedLimitKmh != null
+                    ? Text(
+                        speedLimitKmh!.round().toString(),
+                        style: TextStyle(
+                          fontSize: speedLimitKmh! >= 100 ? 15 : 18,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'Figtree',
+                          color: isExceeded ? Colors.white : const Color(0xFF111827),
+                          height: 1.0,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ),
+          // Divider
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Divider(height: 8, thickness: 1, color: Color(0xFFE5E7EB)),
+          ),
+          // Current speed
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  currentSpeedKmh.round().toString(),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Figtree',
+                    color: isExceeded ? const Color(0xFFDC2626) : const Color(0xFF111827),
+                    height: 1.1,
+                  ),
+                ),
+                Text(
+                  'km/h',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Figtree',
+                    color: Color(0xFF6B7280),
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
