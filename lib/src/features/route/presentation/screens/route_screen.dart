@@ -76,6 +76,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   RouteMapController? _routeMapController;
   late final DriverLocationReportingService _locationReportingService;
   late final DraggableScrollableController _sheetController;
+  late double _sheetInitialSize;
   bool _isPreparingLocationAccess = false;
   bool _isStartingNavigation = false;
   bool _isFetchingRoute = false;
@@ -104,6 +105,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
       driverLocationReportingServiceProvider,
     );
     _sheetController = DraggableScrollableController();
+    _sheetInitialSize = ref.read(routeMapControllerProvider).isFollowing
+        ? _sheetMin
+        : _sheetMax;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _prepareHereLocationOnMapOpen();
@@ -112,7 +116,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
   @override
   void dispose() {
-    _locationReportingService.stopPeriodicReporting();
+    if (!(_routeMapController?.isFollowing ?? false)) {
+      _locationReportingService.stopPeriodicReporting();
+    }
     _routeMapController?.detachMap();
     _sheetController.dispose();
     super.dispose();
@@ -191,9 +197,10 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
         _locationAccessState = _RouteLocationAccessState.granted;
         _locationPreparationMessage = null;
       });
-      ref
-          .read(routeMapControllerProvider)
-          .showCurrentLocationWhenReady(centerCamera: true);
+      final controller = ref.read(routeMapControllerProvider);
+      if (!controller.isFollowing) {
+        controller.showCurrentLocationWhenReady(centerCamera: true);
+      }
     } on DriverHereLocationPermissionException catch (e) {
       if (!mounted) return;
       setState(() => _locationAccessState = _stateFromPermissionError(e));
@@ -498,14 +505,17 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
         routePlan != null && routePlan.polyline.trim().isNotEmpty
         ? routePlan
         : null;
-    // Reset route state when order changes
+    // Reset route state when order changes (but not during active navigation)
     final incomingOrderId = currentOrder?.id;
     if (incomingOrderId != _currentOrderId) {
       _currentOrderId = incomingOrderId;
       _routeReady = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ref.read(routeMapControllerProvider).clearDispatcherRoutePreview();
+        final c = ref.read(routeMapControllerProvider);
+        if (!c.isFollowing) {
+          c.clearDispatcherRoutePreview();
+        }
       });
     }
 
@@ -649,7 +659,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
               snap: true,
               snapSizes: const [_sheetMin, _sheetMax],
               minChildSize: _sheetMin,
-              initialChildSize: _sheetMax,
+              initialChildSize: _sheetInitialSize,
               maxChildSize: _sheetMax,
               builder: (context, scrollController) {
                 return Container(
