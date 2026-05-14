@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:here_sdk/mapview.dart';
+import 'package:here_sdk/routing.dart';
 
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
@@ -55,6 +56,22 @@ class RouteMapLayer extends StatelessWidget {
           ),
         ),
 
+        // MANEUVER BANNER (top, visible only during active navigation)
+        if (controller.isFollowing && controller.nextManeuverAction != null)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(72, 8, 16, 0),
+                child: _ManeuverBanner(
+                  action: controller.nextManeuverAction!,
+                  distanceMeters: controller.distanceToNextManeuverMeters,
+                  roadName: controller.nextRoadName,
+                ),
+              ),
+            ),
+          ),
+
         // CENTER
         SafeArea(
           child: Align(
@@ -69,7 +86,6 @@ class RouteMapLayer extends StatelessWidget {
                           10 +
                           MediaQuery.of(context).padding.bottom;
 
-                      // Próg, przy którym przycisk się ukrywa (np. 50% wysokości ekranu)
                       final hideThreshold = screenHeight * 0.5;
                       final shouldHide = sheetHeight > hideThreshold;
 
@@ -147,4 +163,129 @@ class RouteMapLayer extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ManeuverBanner extends StatelessWidget {
+  const _ManeuverBanner({
+    required this.action,
+    required this.distanceMeters,
+    required this.roadName,
+  });
+
+  final ManeuverAction action;
+  final int? distanceMeters;
+  final String? roadName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(16),
+      color: const Color(0xFF0F4D46),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _maneuverIcon(action),
+              color: Colors.white,
+              size: 36,
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (distanceMeters != null)
+                    Text(
+                      _formatDistance(distanceMeters!),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Figtree',
+                        color: Colors.white,
+                        height: 1.1,
+                      ),
+                    ),
+                  if (roadName != null && roadName!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      roadName!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Figtree',
+                        color: Color(0xFFB2DDD8),
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDistance(int meters) {
+    if (meters < 1000) return '$meters m';
+    return '${(meters / 1000).toStringAsFixed(1)} km';
+  }
+
+  IconData _maneuverIcon(ManeuverAction action) => switch (action) {
+    ManeuverAction.depart => Icons.navigation_rounded,
+    ManeuverAction.arrive => Icons.flag_rounded,
+    ManeuverAction.leftUTurn => Icons.u_turn_left_rounded,
+    ManeuverAction.rightUTurn => Icons.u_turn_right_rounded,
+    ManeuverAction.sharpLeftTurn ||
+    ManeuverAction.leftTurn => Icons.turn_left_rounded,
+    ManeuverAction.slightLeftTurn => Icons.turn_slight_left_rounded,
+    ManeuverAction.sharpRightTurn ||
+    ManeuverAction.rightTurn => Icons.turn_right_rounded,
+    ManeuverAction.slightRightTurn => Icons.turn_slight_right_rounded,
+    ManeuverAction.continueOn ||
+    ManeuverAction.middleFork => Icons.straight_rounded,
+    ManeuverAction.leftExit ||
+    ManeuverAction.leftRamp ||
+    ManeuverAction.enterHighwayFromLeft => Icons.ramp_left_rounded,
+    ManeuverAction.rightExit ||
+    ManeuverAction.rightRamp ||
+    ManeuverAction.enterHighwayFromRight => Icons.ramp_right_rounded,
+    ManeuverAction.leftFork => Icons.fork_left_rounded,
+    ManeuverAction.rightFork => Icons.fork_right_rounded,
+    ManeuverAction.leftRoundaboutEnter ||
+    ManeuverAction.leftRoundaboutPass ||
+    ManeuverAction.leftRoundaboutExit1 ||
+    ManeuverAction.leftRoundaboutExit2 ||
+    ManeuverAction.leftRoundaboutExit3 ||
+    ManeuverAction.leftRoundaboutExit4 ||
+    ManeuverAction.leftRoundaboutExit5 ||
+    ManeuverAction.leftRoundaboutExit6 ||
+    ManeuverAction.leftRoundaboutExit7 ||
+    ManeuverAction.leftRoundaboutExit8 ||
+    ManeuverAction.leftRoundaboutExit9 ||
+    ManeuverAction.leftRoundaboutExit10 ||
+    ManeuverAction.leftRoundaboutExit11 ||
+    ManeuverAction.leftRoundaboutExit12 => Icons.roundabout_left_rounded,
+    ManeuverAction.rightRoundaboutEnter ||
+    ManeuverAction.rightRoundaboutPass ||
+    ManeuverAction.rightRoundaboutExit1 ||
+    ManeuverAction.rightRoundaboutExit2 ||
+    ManeuverAction.rightRoundaboutExit3 ||
+    ManeuverAction.rightRoundaboutExit4 ||
+    ManeuverAction.rightRoundaboutExit5 ||
+    ManeuverAction.rightRoundaboutExit6 ||
+    ManeuverAction.rightRoundaboutExit7 ||
+    ManeuverAction.rightRoundaboutExit8 ||
+    ManeuverAction.rightRoundaboutExit9 ||
+    ManeuverAction.rightRoundaboutExit10 ||
+    ManeuverAction.rightRoundaboutExit11 ||
+    ManeuverAction.rightRoundaboutExit12 => Icons.roundabout_right_rounded,
+  };
 }

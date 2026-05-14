@@ -708,15 +708,6 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: 12),
-                                      if (controller.navigationInstruction !=
-                                          null) ...[
-                                        _InstructionCard(
-                                          label: t.route_next_instruction_label,
-                                          value:
-                                              controller.navigationInstruction!,
-                                        ),
-                                        const SizedBox(height: 12),
-                                      ],
                                     ],
                                     if (controller.navigationError != null) ...[
                                       Text(
@@ -765,15 +756,6 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 12),
-                                    if (controller.navigationInstruction !=
-                                        null) ...[
-                                      _InstructionCard(
-                                        label: t.route_next_instruction_label,
-                                        value:
-                                            controller.navigationInstruction!,
-                                      ),
-                                      const SizedBox(height: 12),
-                                    ],
                                     if (controller.navigationError != null) ...[
                                       Text(
                                         controller.navigationError!,
@@ -1086,52 +1068,6 @@ class _LocationNotice extends StatelessWidget {
                 color: Color(0xFF9A3412),
                 height: 1.3,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InstructionCard extends StatelessWidget {
-  const _InstructionCard({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE7EFE7),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD6E4D6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Figtree',
-              color: Color(0xFF0F4D46),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Figtree',
-              color: Color(0xFF111827),
-              height: 1.25,
             ),
           ),
         ],

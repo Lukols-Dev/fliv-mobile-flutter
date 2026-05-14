@@ -58,6 +58,15 @@ class RouteMapController extends ChangeNotifier {
   String? _navigationInstruction;
   String? get navigationInstruction => _navigationInstruction;
 
+  ManeuverAction? _nextManeuverAction;
+  ManeuverAction? get nextManeuverAction => _nextManeuverAction;
+
+  int? _distanceToNextManeuverMeters;
+  int? get distanceToNextManeuverMeters => _distanceToNextManeuverMeters;
+
+  String? _nextRoadName;
+  String? get nextRoadName => _nextRoadName;
+
   String? _navigationError;
   String? get navigationError => _navigationError;
 
@@ -664,6 +673,9 @@ class RouteMapController extends ChangeNotifier {
     visualNavigator.route = route;
     _navigationError = null;
     _navigationInstruction = null;
+    _nextManeuverAction = null;
+    _distanceToNextManeuverMeters = null;
+    _nextRoadName = null;
     _remainingDistanceInMeters = route.lengthInMeters;
     _remainingDuration = route.duration;
 
@@ -718,6 +730,9 @@ class RouteMapController extends ChangeNotifier {
     }
     _visualNavigator?.route = null;
     _visualNavigator?.stopRendering();
+    _nextManeuverAction = null;
+    _distanceToNextManeuverMeters = null;
+    _nextRoadName = null;
     notifyListeners();
   }
 
@@ -807,6 +822,9 @@ class RouteMapController extends ChangeNotifier {
           final maneuver = visualNavigator.getManeuver(
             maneuverProgress.maneuverIndex,
           );
+          _nextManeuverAction = maneuver?.action;
+          _distanceToNextManeuverMeters = maneuverProgress.remainingDistanceInMeters;
+          _nextRoadName = maneuver?.nextRoadTexts.names.getDefaultValue();
           final text = maneuver?.text;
           if (text != null && text.trim().isNotEmpty) {
             _navigationInstruction = text.trim();
