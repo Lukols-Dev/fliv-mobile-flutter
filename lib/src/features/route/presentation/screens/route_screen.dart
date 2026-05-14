@@ -505,9 +505,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
         validRoutePoints.isNotEmpty &&
         orderDetailsAsync?.isLoading != true;
 
-    final showRouteControls = route != null && hasOrder;
+    final showRouteControls = controller.isFollowing && hasOrder;
 
-    final showChangeStatus = hasOrder;
+    final showChangeStatus = controller.isFollowing && hasOrder;
 
     final String routeActionLabel;
     final IconData routeActionIcon;
