@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:here_sdk/mapview.dart';
+import 'package:here_sdk/navigation.dart';
 import 'package:here_sdk/routing.dart';
 
 import 'package:mobile/src/core/l10n/app_localizations.dart';
@@ -56,17 +57,28 @@ class RouteMapLayer extends StatelessWidget {
           ),
         ),
 
-        // MANEUVER BANNER (top, visible only during active navigation)
-        if (controller.isFollowing && controller.nextManeuverAction != null)
+        // MANEUVER BANNER + LANE ASSISTANCE (top, visible only during active navigation)
+        if (controller.isFollowing)
           SafeArea(
             child: Align(
               alignment: Alignment.topCenter,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(72, 8, 16, 0),
-                child: _ManeuverBanner(
-                  action: controller.nextManeuverAction!,
-                  distanceMeters: controller.distanceToNextManeuverMeters,
-                  roadName: controller.nextRoadName,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (controller.nextManeuverAction != null)
+                      _ManeuverBanner(
+                        action: controller.nextManeuverAction!,
+                        distanceMeters: controller.distanceToNextManeuverMeters,
+                        roadName: controller.nextRoadName,
+                      ),
+                    if (controller.lanesForNextManeuver != null) ...[
+                      const SizedBox(height: 6),
+                      _LaneAssistanceBar(lanes: controller.lanesForNextManeuver!),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -398,4 +410,106 @@ class _SpeedWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LaneAssistanceBar extends StatelessWidget {
+  const _LaneAssistanceBar({required this.lanes});
+
+  final List<Lane> lanes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(14),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: lanes
+              .map((lane) => _LaneTile(lane: lane))
+              .toList(growable: false),
+        ),
+      ),
+    );
+  }
+}
+
+class _LaneTile extends StatelessWidget {
+  const _LaneTile({required this.lane});
+
+  final Lane lane;
+
+  static const _tileSize = 40.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final isHighly = lane.recommendationState == LaneRecommendationState.highlyRecommended;
+    final isRecommended = lane.recommendationState == LaneRecommendationState.recommended;
+    final isActive = isHighly || isRecommended;
+
+    final bgColor = isHighly
+        ? const Color(0xFF0F4D46)
+        : isRecommended
+            ? const Color(0xFFD1FAE5)
+            : const Color(0xFFF3F4F6);
+
+    final iconColor = isHighly
+        ? Colors.white
+        : isRecommended
+            ? const Color(0xFF065F46)
+            : const Color(0xFF9CA3AF);
+
+    // Primary direction: prefer directionsOnRoute, fall back to first direction
+    final directions = lane.directionsOnRoute.isNotEmpty
+        ? lane.directionsOnRoute
+        : lane.directions;
+    final primary = directions.isNotEmpty ? directions.first : null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: _tileSize,
+        height: _tileSize,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+          border: isActive
+              ? Border.all(
+                  color: isHighly
+                      ? const Color(0xFF0F4D46)
+                      : const Color(0xFF6EE7B7),
+                  width: 1.5,
+                )
+              : null,
+        ),
+        child: Icon(
+          _directionIcon(primary),
+          color: iconColor,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  IconData _directionIcon(LaneDirection? direction) => switch (direction) {
+    LaneDirection.straight => Icons.straight_rounded,
+    LaneDirection.slightLeft => Icons.turn_slight_left_rounded,
+    LaneDirection.quiteLeft => Icons.turn_left_rounded,
+    LaneDirection.hardLeft => Icons.turn_sharp_left_rounded,
+    LaneDirection.uTurnLeft => Icons.u_turn_left_rounded,
+    LaneDirection.slightRight => Icons.turn_slight_right_rounded,
+    LaneDirection.quiteRight => Icons.turn_right_rounded,
+    LaneDirection.hardRight => Icons.turn_sharp_right_rounded,
+    LaneDirection.uTurnRight => Icons.u_turn_right_rounded,
+    LaneDirection.mergeLeft => Icons.merge_rounded,
+    LaneDirection.mergeRight => Icons.merge_rounded,
+    LaneDirection.mergeLanes => Icons.merge_rounded,
+    LaneDirection.secondLeft => Icons.fork_left_rounded,
+    LaneDirection.secondRight => Icons.fork_right_rounded,
+    null => Icons.straight_rounded,
+  };
 }

@@ -67,6 +67,9 @@ class RouteMapController extends ChangeNotifier {
   String? _nextRoadName;
   String? get nextRoadName => _nextRoadName;
 
+  List<Lane>? _lanesForNextManeuver;
+  List<Lane>? get lanesForNextManeuver => _lanesForNextManeuver;
+
   String? _navigationError;
   String? get navigationError => _navigationError;
 
@@ -98,6 +101,7 @@ class RouteMapController extends ChangeNotifier {
   MilestoneStatusListener? _milestoneStatusListener;
   SpeedLimitListener? _speedLimitListener;
   SpeedWarningListener? _speedWarningListener;
+  ManeuverViewLaneAssistanceListener? _maneuverViewLaneAssistanceListener;
 
   bool _isRerouting = false;
   bool get isRerouting => _isRerouting;
@@ -687,6 +691,7 @@ class RouteMapController extends ChangeNotifier {
     _nextManeuverAction = null;
     _distanceToNextManeuverMeters = null;
     _nextRoadName = null;
+    _lanesForNextManeuver = null;
     _currentSpeedKmh = 0.0;
     _currentSpeedLimitKmh = null;
     _isSpeedExceeded = false;
@@ -747,6 +752,7 @@ class RouteMapController extends ChangeNotifier {
     _nextManeuverAction = null;
     _distanceToNextManeuverMeters = null;
     _nextRoadName = null;
+    _lanesForNextManeuver = null;
     _currentSpeedKmh = null;
     _currentSpeedLimitKmh = null;
     _isSpeedExceeded = false;
@@ -887,6 +893,14 @@ class RouteMapController extends ChangeNotifier {
         notifyListeners();
       });
 
+      _maneuverViewLaneAssistanceListener =
+          ManeuverViewLaneAssistanceListener((assistance) {
+        _lanesForNextManeuver = assistance.lanesForNextManeuver.isEmpty
+            ? null
+            : List.unmodifiable(assistance.lanesForNextManeuver);
+        notifyListeners();
+      });
+
       visualNavigator.routeProgressListener = _routeProgressListener;
       visualNavigator.eventTextListener = _eventTextListener;
       visualNavigator.destinationReachedListener = _destinationReachedListener;
@@ -894,6 +908,8 @@ class RouteMapController extends ChangeNotifier {
       visualNavigator.milestoneStatusListener = _milestoneStatusListener;
       visualNavigator.speedLimitListener = _speedLimitListener;
       visualNavigator.speedWarningListener = _speedWarningListener;
+      visualNavigator.maneuverViewLaneAssistanceListener =
+          _maneuverViewLaneAssistanceListener;
 
       _visualNavigator = visualNavigator;
       return visualNavigator;
@@ -1399,6 +1415,7 @@ class RouteMapController extends ChangeNotifier {
     _milestoneStatusListener = null;
     _speedLimitListener = null;
     _speedWarningListener = null;
+    _maneuverViewLaneAssistanceListener = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;
