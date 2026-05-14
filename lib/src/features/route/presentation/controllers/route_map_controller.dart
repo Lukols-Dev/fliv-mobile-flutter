@@ -135,6 +135,14 @@ class RouteMapController extends ChangeNotifier {
   bool get isFollowing => _positionSub != null;
   bool get canStartNavigation => _currentRoute != null;
 
+  static const double _autoStartSpeedThresholdKmh = 5.0;
+  bool _pendingAutoStart = false;
+  bool get pendingAutoStart => _pendingAutoStart;
+
+  void consumeAutoStart() {
+    _pendingAutoStart = false;
+  }
+
   // ----------------------------
   // LIFECYCLE MAPY
   // ----------------------------
@@ -238,6 +246,14 @@ class RouteMapController extends ChangeNotifier {
     _lastUserCoordinates = coords;
     _ensureLocationIndicatorEnabled();
     _updateHereLocationIndicator(coords, bearing: location.bearingInDegrees);
+
+    if (canStartNavigation && !_pendingAutoStart) {
+      final speedKmh = (location.speedInMetersPerSecond ?? 0.0) * 3.6;
+      if (speedKmh >= _autoStartSpeedThresholdKmh) {
+        _pendingAutoStart = true;
+      }
+    }
+
     notifyListeners();
   }
 

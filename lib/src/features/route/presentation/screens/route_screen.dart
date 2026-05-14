@@ -483,6 +483,20 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     final controller = ref.watch(routeMapControllerProvider);
     _routeMapController = controller;
 
+    ref.listen<RouteMapController>(routeMapControllerProvider, (_, next) {
+      if (!next.pendingAutoStart) return;
+      next.consumeAutoStart();
+      final orderId = _currentOrderId;
+      if (orderId == null || _isStartingNavigation) return;
+      _startNavigationAndReportLocation(orderId: orderId).then((_) {
+        if (!mounted || !next.isFollowing) return;
+        ref
+            .read(updateOrderStatusControllerProvider.notifier)
+            .updateStatus(orderId: orderId, status: 'IN_PROGRESS')
+            .ignore();
+      });
+    });
+
     if (!_isLocationAccessGranted) {
       return _buildLocationAccessScaffold(t);
     }
