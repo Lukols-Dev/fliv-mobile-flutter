@@ -986,6 +986,12 @@ abstract class AppLocalizations {
   /// **'Czas'**
   String get route_time_label;
 
+  /// No description provided for @route_eta_arrival.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przyjazd'**
+  String get route_eta_arrival;
+
   /// No description provided for @route_route_not_calculated.
   ///
   /// In pl, this message translates to:

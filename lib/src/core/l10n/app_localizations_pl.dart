@@ -468,6 +468,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get route_time_label => 'Czas';
 
   @override
+  String get route_eta_arrival => 'Przyjazd';
+
+  @override
   String get route_route_not_calculated => 'Trasa: jeszcze nie wyznaczona.';
 
   @override

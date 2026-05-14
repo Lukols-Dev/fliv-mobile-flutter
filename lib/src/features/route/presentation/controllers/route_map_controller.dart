@@ -121,6 +121,9 @@ class RouteMapController extends ChangeNotifier {
   bool _isCalculating = false;
   bool get isCalculating => _isCalculating;
 
+  bool _isCameraTracking = false;
+  bool get isCameraTracking => _isCameraTracking;
+
   bool get isFollowing => _positionSub != null;
   bool get canStartNavigation => _currentRoute != null;
 
@@ -713,6 +716,7 @@ class RouteMapController extends ChangeNotifier {
     _locationIndicator = null;
     _milestonesReached = 0;
     _isRerouting = false;
+    _isCameraTracking = true;
 
     final map = _map;
     if (map != null) {
@@ -748,6 +752,7 @@ class RouteMapController extends ChangeNotifier {
     _positionSub?.cancel();
     _positionSub = null;
     _isRerouting = false;
+    _isCameraTracking = false;
     final reportingService = _ref.read(driverLocationReportingServiceProvider);
     reportingService.updateNavigationProgress(
       remainingDistanceMeters: null,
@@ -1030,6 +1035,7 @@ class RouteMapController extends ChangeNotifier {
     final cameraBehavior = SpeedBasedCameraBehavior()
       ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
     visualNavigator.cameraBehavior = cameraBehavior;
+    _isCameraTracking = true;
 
     final currentLocation = _ref
         .read(driverHereLocationServiceProvider)
@@ -1044,6 +1050,7 @@ class RouteMapController extends ChangeNotifier {
   void _pauseNavigationCameraTracking() {
     _cancelNavigationCameraAutoResume();
     _visualNavigator?.cameraBehavior = null;
+    _isCameraTracking = false;
     notifyListeners();
   }
 

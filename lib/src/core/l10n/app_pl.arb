@@ -148,6 +148,7 @@
   "route_no_order_description": "Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.",
   "route_distance_label": "Dystans",
   "route_time_label": "Czas",
+  "route_eta_arrival": "Przyjazd",
   "route_route_not_calculated": "Trasa: jeszcze nie wyznaczona.",
   "route_no_configured_route": "Brak skonfigurowanej trasy.",
   "route_loading_route": "Ładowanie trasy...",

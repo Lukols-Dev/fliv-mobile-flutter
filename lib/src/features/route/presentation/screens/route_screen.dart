@@ -32,6 +32,7 @@ typedef RouteMapLayerBuilder =
       required VoidCallback onBack,
       required double bottomPaddingForFab,
       ValueNotifier<double>? sheetHeightNotifier,
+      VoidCallback? onReportEvent,
     });
 
 final routeMapLayerBuilderProvider = Provider<RouteMapLayerBuilder>((ref) {
@@ -40,12 +41,14 @@ final routeMapLayerBuilderProvider = Provider<RouteMapLayerBuilder>((ref) {
     required VoidCallback onBack,
     required double bottomPaddingForFab,
     ValueNotifier<double>? sheetHeightNotifier,
+    VoidCallback? onReportEvent,
   }) {
     return RouteMapLayer(
       controller: controller,
       bottomPaddingForFab: bottomPaddingForFab,
       sheetHeightNotifier: sheetHeightNotifier,
       onBack: onBack,
+      onReportEvent: onReportEvent,
     );
   };
 });
@@ -517,6 +520,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
             onBack: () => context.go('/home'),
             bottomPaddingForFab: bottomPaddingForFab,
             sheetHeightNotifier: sheetHeightNotifier,
+            onReportEvent: hasOrder
+                ? () => _openReportEventSheet(orderId: currentOrder.id)
+                : null,
           ),
 
           Align(
@@ -554,6 +560,17 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (controller.isFollowing && hasOrder) ...[
+                            // Pasek postępu nawigacji (bez drag handle)
+                            const SizedBox(height: 14),
+                            _NavigationProgressPanel(
+                              remainingDistanceInMeters:
+                                  controller.remainingDistanceInMeters,
+                              remainingDuration: controller.remainingDuration,
+                              totalDistanceInMeters:
+                                  controller.currentRoute?.lengthInMeters,
+                            ),
+                          ] else ...[
                           Padding(
                             padding: EdgeInsets.fromLTRB(18, 10, 18, 0),
                             child: Column(
@@ -959,6 +976,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                               ],
                             ),
                           ),
+                          ], // end else (non-navigation layout)
 
                           // Route controls
                           if (showRouteControls) ...[
@@ -1114,6 +1132,115 @@ class _InfoChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NavigationProgressPanel extends StatelessWidget {
+  const _NavigationProgressPanel({
+    required this.remainingDistanceInMeters,
+    required this.remainingDuration,
+    required this.totalDistanceInMeters,
+  });
+
+  final int? remainingDistanceInMeters;
+  final Duration? remainingDuration;
+  final int? totalDistanceInMeters;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
+    final eta = remainingDuration != null
+        ? DateTime.now().add(remainingDuration!)
+        : null;
+    final etaString = eta != null
+        ? '${eta.hour.toString().padLeft(2, '0')}:${eta.minute.toString().padLeft(2, '0')}'
+        : '--:--';
+
+    final hoursLeft = remainingDuration?.inHours ?? 0;
+    final minutesLeft = ((remainingDuration?.inSeconds ?? 0) % 3600) ~/ 60;
+    final kmLeft = remainingDistanceInMeters != null
+        ? (remainingDistanceInMeters! / 1000).toStringAsFixed(1)
+        : '--';
+
+    final double progress;
+    if (totalDistanceInMeters != null &&
+        totalDistanceInMeters! > 0 &&
+        remainingDistanceInMeters != null) {
+      final traveled = totalDistanceInMeters! - remainingDistanceInMeters!;
+      progress = (traveled / totalDistanceInMeters!).clamp(0.0, 1.0);
+    } else {
+      progress = 0.0;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _ProgressStat(value: etaString, label: t.route_eta_arrival),
+              _ProgressStat(value: '$hoursLeft', label: 'h'),
+              _ProgressStat(value: '$minutesLeft', label: 'min'),
+              _ProgressStat(value: kmLeft, label: 'km'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 4,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              overlayShape: SliderComponentShape.noOverlay,
+              activeTrackColor: const Color(0xFF0F4D46),
+              inactiveTrackColor: const Color(0xFFE5E7EB),
+              thumbColor: const Color(0xFF0F4D46),
+            ),
+            child: Slider(
+              value: progress,
+              onChanged: null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressStat extends StatelessWidget {
+  const _ProgressStat({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Figtree',
+            color: Color(0xFF111827),
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'Figtree',
+            color: Color(0xFF6B7280),
+          ),
+        ),
+      ],
     );
   }
 }

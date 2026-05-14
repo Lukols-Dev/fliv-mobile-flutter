@@ -474,6 +474,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get route_time_label => 'Время';
 
   @override
+  String get route_eta_arrival => 'Прибытие';
+
+  @override
   String get route_route_not_calculated => 'Маршрут: еще не рассчитан.';
 
   @override
