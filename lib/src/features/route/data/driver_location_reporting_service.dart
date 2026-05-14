@@ -85,6 +85,11 @@ class DriverLocationReportingService {
   String? _periodicTransportOrderId;
   Future<void>? _periodicSendInFlight;
   _NavigationProgress? _navProgress;
+  here.Location? _simulatedLocation;
+
+  void setSimulatedLocation(here.Location? location) {
+    _simulatedLocation = location;
+  }
 
   bool get isReporting => _periodicTransportOrderId != null;
 
@@ -218,7 +223,8 @@ class DriverLocationReportingService {
     try {
       if (_periodicTransportOrderId != transportOrderId) return;
 
-      final location = _hereLocationReader.lastKnownHereLocation;
+      final location =
+          _simulatedLocation ?? _hereLocationReader.lastKnownHereLocation;
       if (location == null) {
         throw const DriverHereLocationUnavailableException();
       }

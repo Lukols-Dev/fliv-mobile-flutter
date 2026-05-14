@@ -12,6 +12,7 @@ import 'package:here_sdk/mapview.dart';
 import 'package:here_sdk/navigation.dart';
 import 'package:here_sdk/routing.dart';
 import 'package:here_sdk/transport.dart';
+import 'package:mobile/src/core/config/env.dart';
 import 'package:mobile/src/core/here/driver_here_location_service.dart';
 import 'package:mobile/src/features/orders/domain/driver_transport_order_details.dart';
 import 'package:mobile/src/features/route/data/driver_location_reporting_service.dart';
@@ -99,6 +100,7 @@ class RouteMapController extends ChangeNotifier {
   GeoCoordinates? _lastStartUsed;
 
   StreamSubscription<Location>? _positionSub;
+  LocationSimulator? _locationSimulator;
   StreamSubscription<Location>? _mapLocationSub;
   Timer? _navigationCameraResumeTimer;
   RouteProgressListener? _routeProgressListener;
@@ -132,7 +134,8 @@ class RouteMapController extends ChangeNotifier {
   bool _isCameraTracking = false;
   bool get isCameraTracking => _isCameraTracking;
 
-  bool get isFollowing => _positionSub != null;
+  bool get isSimulating => _locationSimulator != null;
+  bool get isFollowing => _positionSub != null || isSimulating;
   bool get canStartNavigation => _currentRoute != null;
 
   static const double _autoStartSpeedThresholdKmh = 5.0;
@@ -749,6 +752,30 @@ class RouteMapController extends ChangeNotifier {
       visualNavigator.startRendering(map);
     }
 
+    if (Env.simulateNavigation) {
+      try {
+        final options = LocationSimulatorOptions()
+          ..speedFactor = Env.simulationSpeedFactor.toDouble()
+          ..notificationInterval = const Duration(milliseconds: 500);
+        _locationSimulator = LocationSimulator.withRoute(route, options);
+        _locationSimulator!.listener = LocationListener((location) {
+          _handleHereLocationUpdate(location);
+          _ref
+              .read(driverLocationReportingServiceProvider)
+              .setSimulatedLocation(location);
+        });
+        _locationSimulator!.start();
+      } catch (_) {
+        visualNavigator.route = null;
+        visualNavigator.stopRendering();
+        _locationSimulator = null;
+        rethrow;
+      }
+
+      notifyListeners();
+      return;
+    }
+
     final locationService = _ref.read(driverHereLocationServiceProvider);
     Location? initialLocation;
     try {
@@ -789,9 +816,13 @@ class RouteMapController extends ChangeNotifier {
     _cancelNavigationCameraAutoResume();
     _positionSub?.cancel();
     _positionSub = null;
+    _locationSimulator?.stop();
+    _locationSimulator?.listener = null;
+    _locationSimulator = null;
     _isRerouting = false;
     _isCameraTracking = false;
     final reportingService = _ref.read(driverLocationReportingServiceProvider);
+    reportingService.setSimulatedLocation(null);
     reportingService.updateNavigationProgress(
       remainingDistanceMeters: null,
       traveledDistanceMeters: null,
@@ -1499,6 +1530,9 @@ class RouteMapController extends ChangeNotifier {
     _cancelNavigationCameraAutoResume();
     _positionSub?.cancel();
     _positionSub = null;
+    _locationSimulator?.stop();
+    _locationSimulator?.listener = null;
+    _locationSimulator = null;
     _mapLocationSub?.cancel();
     _mapLocationSub = null;
     _isRerouting = false;

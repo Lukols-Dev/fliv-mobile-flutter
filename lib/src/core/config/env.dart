@@ -19,6 +19,16 @@ class Env {
     defaultValue: '',
   );
 
+  static const bool simulateNavigation = bool.fromEnvironment(
+    'SIMULATE_NAVIGATION',
+    defaultValue: false,
+  );
+
+  static const int simulationSpeedFactor = int.fromEnvironment(
+    'SIMULATE_NAVIGATION_SPEED',
+    defaultValue: 2,
+  );
+
   static void validate() {
     if (kReleaseMode && apiBaseUrl.isEmpty) {
       throw StateError('Missing API_BASE_URL. Use --dart-define-from-file.');
