@@ -568,4 +568,23 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get route_order_number_prefix => 'Zlecenie #';
+
+  @override
+  String get route_fetch_route => 'Oblicz trasę';
+
+  @override
+  String get route_fetching_route => 'Obliczanie trasy...';
+
+  @override
+  String get route_total_distance_label => 'Łącznie';
+
+  @override
+  String get route_my_location => 'Moja lokalizacja';
+
+  @override
+  String get route_no_order_map_title => 'Brak aktywnego zlecenia';
+
+  @override
+  String get route_no_order_map_description =>
+      'Dyspozytor nie przypisał jeszcze zlecenia.';
 }

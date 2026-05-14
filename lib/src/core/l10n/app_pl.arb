@@ -181,5 +181,11 @@
   "route_status_change_title": "Zmiana statusu",
   "route_status_in_progress_label": "W realizacji",
   "common_minutes_short": "min",
-  "route_order_number_prefix": "Zlecenie #"
+  "route_order_number_prefix": "Zlecenie #",
+  "route_fetch_route": "Oblicz trasę",
+  "route_fetching_route": "Obliczanie trasy...",
+  "route_total_distance_label": "Łącznie",
+  "route_my_location": "Moja lokalizacja",
+  "route_no_order_map_title": "Brak aktywnego zlecenia",
+  "route_no_order_map_description": "Dyspozytor nie przypisał jeszcze zlecenia."
 }

@@ -1189,6 +1189,42 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Zlecenie #'**
   String get route_order_number_prefix;
+
+  /// No description provided for @route_fetch_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Oblicz trasę'**
+  String get route_fetch_route;
+
+  /// No description provided for @route_fetching_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Obliczanie trasy...'**
+  String get route_fetching_route;
+
+  /// No description provided for @route_total_distance_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Łącznie'**
+  String get route_total_distance_label;
+
+  /// No description provided for @route_my_location.
+  ///
+  /// In pl, this message translates to:
+  /// **'Moja lokalizacja'**
+  String get route_my_location;
+
+  /// No description provided for @route_no_order_map_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak aktywnego zlecenia'**
+  String get route_no_order_map_title;
+
+  /// No description provided for @route_no_order_map_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dyspozytor nie przypisał jeszcze zlecenia.'**
+  String get route_no_order_map_description;
 }
 
 class _AppLocalizationsDelegate

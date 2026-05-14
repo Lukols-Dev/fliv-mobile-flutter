@@ -575,4 +575,23 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get route_order_number_prefix => 'Заказ #';
+
+  @override
+  String get route_fetch_route => 'Рассчитать маршрут';
+
+  @override
+  String get route_fetching_route => 'Расчёт маршрута...';
+
+  @override
+  String get route_total_distance_label => 'Всего';
+
+  @override
+  String get route_my_location => 'Моя локализация';
+
+  @override
+  String get route_no_order_map_title => 'Нет активного заказа';
+
+  @override
+  String get route_no_order_map_description =>
+      'Диспетчер ещё не назначил заказ.';
 }
