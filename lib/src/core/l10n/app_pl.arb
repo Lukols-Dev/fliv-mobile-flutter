@@ -153,6 +153,7 @@
   "route_no_configured_route": "Brak skonfigurowanej trasy.",
   "route_loading_route": "Ładowanie trasy...",
   "route_route_error": "Nie udało się pobrać lub wyznaczyć trasy",
+  "route_next_point": "Następny punkt",
   "route_next_instruction_label": "Następny manewr",
   "route_calculate_route": "Wyznacz trasę",
   "route_calculate_approach": "Wylicz dojazd",

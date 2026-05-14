@@ -15,14 +15,12 @@ class RouteMapLayer extends StatelessWidget {
     required this.controller,
     required this.onBack,
     required this.bottomPaddingForFab,
-    this.sheetHeightNotifier,
     this.onReportEvent,
   });
 
   final RouteMapController controller;
   final VoidCallback onBack;
   final double bottomPaddingForFab;
-  final ValueNotifier<double>? sheetHeightNotifier;
   final VoidCallback? onReportEvent;
 
   static final Set<Factory<OneSequenceGestureRecognizer>>
@@ -33,6 +31,7 @@ class RouteMapLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+
     return Stack(
       children: [
         HereMap(
@@ -95,116 +94,51 @@ class RouteMapLayer extends StatelessWidget {
         SafeArea(
           child: Align(
             alignment: Alignment.bottomRight,
-            child: sheetHeightNotifier != null
-                ? ValueListenableBuilder<double>(
-                    valueListenable: sheetHeightNotifier!,
-                    builder: (context, sheetHeight, _) {
-                      final screenHeight = MediaQuery.of(context).size.height;
-                      final bottomPadding =
-                          sheetHeight +
-                          10 +
-                          MediaQuery.of(context).padding.bottom;
-                      final hideThreshold = screenHeight * 0.5;
-                      final shouldHide = sheetHeight > hideThreshold;
-
-                      final hideCenterButton =
-                          controller.isFollowing && controller.isCameraTracking;
-
-                      return AnimatedOpacity(
-                        opacity: shouldHide ? 0.0 : 1.0,
-                        duration: const Duration(milliseconds: 200),
-                        child: IgnorePointer(
-                          ignoring: shouldHide,
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(16, 16, 12, bottomPadding),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                if (!hideCenterButton)
-                                  Material(
-                                    color: Colors.white,
-                                    shape: const CircleBorder(),
-                                    elevation: 3,
-                                    child: IconButton(
-                                      tooltip: t.route_center_on_my_location,
-                                      icon: const Icon(Icons.my_location_rounded),
-                                      onPressed: () async {
-                                        try {
-                                          await controller.refreshAndCenter();
-                                        } catch (e) {
-                                          if (!context.mounted) return;
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('${t.common_location}: $e')),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                if (controller.isFollowing) ...[
-                                  const SizedBox(height: 10),
-                                  ...controller.activeTruckRestrictions.map(
-                                    (r) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: _TruckRestrictionBadge(restriction: r),
-                                    ),
-                                  ),
-                                  _SpeedWidget(
-                                    speedLimitKmh: controller.currentSpeedLimitKmh,
-                                    currentSpeedKmh: controller.currentSpeedKmh!,
-                                    isExceeded: controller.isSpeedExceeded,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                : Padding(
-                    padding: EdgeInsets.fromLTRB(16, 16, 12, bottomPaddingForFab),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (!(controller.isFollowing && controller.isCameraTracking))
-                          Material(
-                            color: Colors.white,
-                            shape: const CircleBorder(),
-                            elevation: 3,
-                            child: IconButton(
-                              tooltip: t.route_center_on_my_location,
-                              icon: const Icon(Icons.my_location_rounded),
-                              onPressed: () async {
-                                try {
-                                  await controller.refreshAndCenter();
-                                } catch (e) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('${t.common_location}: $e')),
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                        if (controller.isFollowing) ...[
-                          const SizedBox(height: 10),
-                          ...controller.activeTruckRestrictions.map(
-                            (r) => Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: _TruckRestrictionBadge(restriction: r),
-                            ),
-                          ),
-                          _SpeedWidget(
-                            speedLimitKmh: controller.currentSpeedLimitKmh,
-                            currentSpeedKmh: controller.currentSpeedKmh!,
-                            isExceeded: controller.isSpeedExceeded,
-                          ),
-                        ],
-                      ],
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 12, bottomPaddingForFab),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (!(controller.isFollowing && controller.isCameraTracking))
+                    Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 3,
+                      child: IconButton(
+                        tooltip: t.route_center_on_my_location,
+                        icon: const Icon(Icons.my_location_rounded),
+                        onPressed: () async {
+                          try {
+                            await controller.refreshAndCenter();
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${t.common_location}: $e'),
+                              ),
+                            );
+                          }
+                        },
+                      ),
                     ),
-                  ),
+                  if (controller.isFollowing) ...[
+                    const SizedBox(height: 10),
+                    ...controller.activeTruckRestrictions.map(
+                      (r) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: _TruckRestrictionBadge(restriction: r),
+                      ),
+                    ),
+                    _SpeedWidget(
+                      speedLimitKmh: controller.currentSpeedLimitKmh,
+                      currentSpeedKmh: controller.currentSpeedKmh!,
+                      isExceeded: controller.isSpeedExceeded,
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
 
@@ -213,59 +147,22 @@ class RouteMapLayer extends StatelessWidget {
           SafeArea(
             child: Align(
               alignment: Alignment.bottomLeft,
-              child: sheetHeightNotifier != null
-                  ? ValueListenableBuilder<double>(
-                      valueListenable: sheetHeightNotifier!,
-                      builder: (context, sheetHeight, _) {
-                        final bottomPadding = sheetHeight +
-                            10 +
-                            MediaQuery.of(context).padding.bottom;
-                        final hideThreshold =
-                            MediaQuery.of(context).size.height * 0.5;
-                        final shouldHide = sheetHeight > hideThreshold;
-                        return AnimatedOpacity(
-                          opacity: shouldHide ? 0.0 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: IgnorePointer(
-                            ignoring: shouldHide,
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                  12, 16, 16, bottomPadding),
-                              child: Material(
-                                color: Colors.white,
-                                shape: const CircleBorder(),
-                                elevation: 3,
-                                child: IconButton(
-                                  tooltip: t.route_report_event_title,
-                                  icon: const Icon(
-                                    Icons.warning_amber_rounded,
-                                    color: Color(0xFFF2542F),
-                                  ),
-                                  onPressed: onReportEvent,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : Padding(
-                      padding:
-                          EdgeInsets.fromLTRB(12, 16, 16, bottomPaddingForFab),
-                      child: Material(
-                        color: Colors.white,
-                        shape: const CircleBorder(),
-                        elevation: 3,
-                        child: IconButton(
-                          tooltip: t.route_report_event_title,
-                          icon: const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Color(0xFFF2542F),
-                          ),
-                          onPressed: onReportEvent,
-                        ),
-                      ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12, 16, 16, bottomPaddingForFab),
+                child: Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: 3,
+                  child: IconButton(
+                    tooltip: t.route_report_event_title,
+                    icon: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Color(0xFFF2542F),
                     ),
+                    onPressed: onReportEvent,
+                  ),
+                ),
+              ),
             ),
           ),
 

@@ -489,6 +489,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get route_route_error => 'Не удалось загрузить или рассчитать маршрут';
 
   @override
+  String get route_next_point => 'Следующая точка';
+
+  @override
   String get route_next_instruction_label => 'Следующий маневр';
 
   @override

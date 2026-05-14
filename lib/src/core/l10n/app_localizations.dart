@@ -1016,6 +1016,12 @@ abstract class AppLocalizations {
   /// **'Nie udało się pobrać lub wyznaczyć trasy'**
   String get route_route_error;
 
+  /// No description provided for @route_next_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny punkt'**
+  String get route_next_point;
+
   /// No description provided for @route_next_instruction_label.
   ///
   /// In pl, this message translates to:

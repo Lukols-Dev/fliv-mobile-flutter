@@ -483,6 +483,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get route_route_error => 'Nie udało się pobrać lub wyznaczyć trasy';
 
   @override
+  String get route_next_point => 'Następny punkt';
+
+  @override
   String get route_next_instruction_label => 'Następny manewr';
 
   @override

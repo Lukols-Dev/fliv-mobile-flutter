@@ -118,6 +118,14 @@ class RouteMapController extends ChangeNotifier {
   int _milestonesReached = 0;
   int get milestonesReached => _milestonesReached;
 
+  String? get nextPointAddress {
+    if (_lastDispatcherRoutePoints.isEmpty) return null;
+    final sorted = [..._lastDispatcherRoutePoints]
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    if (_milestonesReached >= sorted.length) return null;
+    return sorted[_milestonesReached].address;
+  }
+
   bool _isCalculating = false;
   bool get isCalculating => _isCalculating;
 
