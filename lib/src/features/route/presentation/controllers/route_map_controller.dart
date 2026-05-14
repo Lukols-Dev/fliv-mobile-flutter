@@ -475,6 +475,7 @@ class RouteMapController extends ChangeNotifier {
   Future<void> calculateApproachRouteToFirstStop({
     required GeoCoordinates firstStop,
     required DriverTransportOrderRoutePlan routePlan,
+    List<DriverTransportOrderRoutePoint> routePoints = const [],
   }) async {
     if (isFollowing) {
       stopFollowing();
@@ -491,6 +492,7 @@ class RouteMapController extends ChangeNotifier {
     _lastUserCoordinates = start;
     _lastStartUsed = start;
     _lastDispatcherStops = [firstStop];
+    _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(routePoints);
     _navigationError = null;
     _navigationInstruction = null;
     _remainingDistanceInMeters = null;
@@ -732,11 +734,12 @@ class RouteMapController extends ChangeNotifier {
     }
 
     final locationService = _ref.read(driverHereLocationServiceProvider);
+    Location? initialLocation;
     try {
       await locationService.prepare();
-      final currentLocation = locationService.lastKnownHereLocation;
-      if (currentLocation != null) {
-        _handleHereLocationUpdate(currentLocation);
+      initialLocation = locationService.lastKnownHereLocation;
+      if (initialLocation != null) {
+        _handleHereLocationUpdate(initialLocation);
       }
 
       _positionSub = locationService.locationStream.listen(
@@ -753,6 +756,17 @@ class RouteMapController extends ChangeNotifier {
     }
 
     notifyListeners();
+
+    // HERE SDK's SpeedLimitListener may not fire on the first onLocationUpdated
+    // call after startRendering. A second update after the widget tree rebuilds
+    // ensures the speed limit is shown immediately without waiting for the next
+    // GPS stream event.
+    final loc = initialLocation ?? locationService.lastKnownHereLocation;
+    if (loc != null) {
+      Future.microtask(() {
+        if (isFollowing) _handleHereLocationUpdate(loc);
+      });
+    }
   }
 
   void stopFollowing() {

@@ -342,6 +342,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
       await controller.calculateApproachRouteToFirstStop(
         firstStop: GeoCoordinates(firstStop.latitude, firstStop.longitude),
         routePlan: routePlan,
+        routePoints: routePoints,
       );
       if (!mounted) return;
 
