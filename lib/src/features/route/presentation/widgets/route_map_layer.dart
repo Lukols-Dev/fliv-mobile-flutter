@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:here_sdk/mapview.dart';
 import 'package:here_sdk/navigation.dart';
 import 'package:here_sdk/routing.dart';
+import 'package:here_sdk/transport.dart';
 
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/route/presentation/controllers/route_map_controller.dart';
@@ -78,6 +79,10 @@ class RouteMapLayer extends StatelessWidget {
                       const SizedBox(height: 6),
                       _LaneAssistanceBar(lanes: controller.lanesForNextManeuver!),
                     ],
+                    if (controller.safetyCameraWarning != null) ...[
+                      const SizedBox(height: 6),
+                      _SafetyCameraCard(warning: controller.safetyCameraWarning!),
+                    ],
                   ],
                 ),
               ),
@@ -132,6 +137,12 @@ class RouteMapLayer extends StatelessWidget {
                                 ),
                                 if (controller.isFollowing) ...[
                                   const SizedBox(height: 10),
+                                  ...controller.activeTruckRestrictions.map(
+                                    (r) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: _TruckRestrictionBadge(restriction: r),
+                                    ),
+                                  ),
                                   _SpeedWidget(
                                     speedLimitKmh: controller.currentSpeedLimitKmh,
                                     currentSpeedKmh: controller.currentSpeedKmh!,
@@ -172,6 +183,12 @@ class RouteMapLayer extends StatelessWidget {
                         ),
                         if (controller.isFollowing) ...[
                           const SizedBox(height: 10),
+                          ...controller.activeTruckRestrictions.map(
+                            (r) => Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: _TruckRestrictionBadge(restriction: r),
+                            ),
+                          ),
                           _SpeedWidget(
                             speedLimitKmh: controller.currentSpeedLimitKmh,
                             currentSpeedKmh: controller.currentSpeedKmh!,
@@ -183,6 +200,10 @@ class RouteMapLayer extends StatelessWidget {
                   ),
           ),
         ),
+
+        // REROUTING OVERLAY
+        if (controller.isRerouting)
+          _ReroutingOverlay(label: t.route_rerouting),
       ],
     );
   }
@@ -512,4 +533,225 @@ class _LaneTile extends StatelessWidget {
     LaneDirection.secondRight => Icons.fork_right_rounded,
     null => Icons.straight_rounded,
   };
+}
+
+class _SafetyCameraCard extends StatelessWidget {
+  const _SafetyCameraCard({required this.warning});
+
+  final SafetyCameraWarning warning;
+
+  @override
+  Widget build(BuildContext context) {
+    final cardColor = _cardColor(warning.type);
+    final limitKmh = warning.speedLimitInMetersPerSecond > 0
+        ? (warning.speedLimitInMetersPerSecond * 3.6).round()
+        : null;
+
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(16),
+      color: cardColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _cameraIcon(warning.type),
+              color: Colors.white,
+              size: 30,
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatDistance(warning.distanceToCameraInMeters),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Figtree',
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
+                  ),
+                  if (limitKmh != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '$limitKmh km/h',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Figtree',
+                        color: Color(0xFFFFE4E4),
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDistance(double meters) {
+    if (meters < 1000) return '${meters.round()} m';
+    return '${(meters / 1000).toStringAsFixed(1)} km';
+  }
+
+  Color _cardColor(SafetyCameraType type) => switch (type) {
+    SafetyCameraType.redLight => const Color(0xFFB91C1C),
+    SafetyCameraType.redLightAndSpeed => const Color(0xFFB91C1C),
+    SafetyCameraType.speed => const Color(0xFFD97706),
+    SafetyCameraType.sectionStart => const Color(0xFFD97706),
+    SafetyCameraType.sectionEnd => const Color(0xFFD97706),
+    SafetyCameraType.busLane => const Color(0xFF1D4ED8),
+    SafetyCameraType.distance => const Color(0xFF1D4ED8),
+  };
+
+  IconData _cameraIcon(SafetyCameraType type) => switch (type) {
+    SafetyCameraType.redLight => Icons.traffic_rounded,
+    SafetyCameraType.redLightAndSpeed => Icons.traffic_rounded,
+    SafetyCameraType.speed => Icons.speed_rounded,
+    SafetyCameraType.sectionStart => Icons.photo_camera_rounded,
+    SafetyCameraType.sectionEnd => Icons.photo_camera_rounded,
+    SafetyCameraType.busLane => Icons.directions_bus_rounded,
+    SafetyCameraType.distance => Icons.social_distance_rounded,
+  };
+}
+
+class _TruckRestrictionBadge extends StatelessWidget {
+  const _TruckRestrictionBadge({required this.restriction});
+
+  final TruckRestrictionWarning restriction;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, label, borderColor) = _badgeContent(restriction);
+
+    return Container(
+      width: 64,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor, width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 22, color: borderColor),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Figtree',
+              color: borderColor,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  (IconData, String, Color) _badgeContent(TruckRestrictionWarning r) {
+    if (r.hazardousMaterials.isNotEmpty) {
+      return (
+        Icons.warning_amber_rounded,
+        'ADR',
+        const Color(0xFFDC2626),
+      );
+    }
+    final dim = r.dimensionRestriction;
+    if (dim != null) {
+      final meters = (dim.valueInCentimeters / 100);
+      final label = meters == meters.truncateToDouble()
+          ? '${meters.toInt()} m'
+          : '${meters.toStringAsFixed(1)} m';
+      return switch (dim.type) {
+        DimensionRestrictionType.truckHeight => (
+            Icons.height_rounded,
+            label,
+            const Color(0xFFD97706),
+          ),
+        DimensionRestrictionType.truckWidth => (
+            Icons.swap_horiz_rounded,
+            label,
+            const Color(0xFFD97706),
+          ),
+        DimensionRestrictionType.truckLength => (
+            Icons.straighten_rounded,
+            label,
+            const Color(0xFFD97706),
+          ),
+      };
+    }
+    final weight = r.weightRestriction;
+    if (weight != null) {
+      final tons = weight.valueInKilograms / 1000;
+      final label = tons == tons.truncateToDouble()
+          ? '${tons.toInt()} t'
+          : '${tons.toStringAsFixed(1)} t';
+      return (Icons.monitor_weight_rounded, label, const Color(0xFFD97706));
+    }
+    return (Icons.local_shipping_rounded, '!', const Color(0xFFD97706));
+  }
+}
+
+class _ReroutingOverlay extends StatelessWidget {
+  const _ReroutingOverlay({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Material(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          elevation: 12,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(
+                  color: Color(0xFF0F4D46),
+                  strokeWidth: 3,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Figtree',
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

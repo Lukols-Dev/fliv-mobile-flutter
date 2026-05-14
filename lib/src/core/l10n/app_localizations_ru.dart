@@ -520,6 +520,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Центрировать на моем местоположении';
 
   @override
+  String get route_rerouting => 'Пересчёт маршрута...';
+
+  @override
   String get route_report_problem => 'Сообщить о проблеме';
 
   @override

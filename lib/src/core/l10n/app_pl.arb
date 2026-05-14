@@ -163,6 +163,7 @@
   "route_status_change_failed": "Nie udało się zmienić statusu",
   "common_back": "Wstecz",
   "route_center_on_my_location": "Wycentruj na mojej lokalizacji",
+  "route_rerouting": "Przeliczam trasę...",
   "route_report_problem": "Zgłoś Problem",
   "route_report_problem_sheet_title": "Zgłoś problem",
   "route_report_problem_description_label": "Opis problemu",

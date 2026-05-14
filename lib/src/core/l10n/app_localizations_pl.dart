@@ -513,6 +513,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get route_center_on_my_location => 'Wycentruj na mojej lokalizacji';
 
   @override
+  String get route_rerouting => 'Przeliczam trasę...';
+
+  @override
   String get route_report_problem => 'Zgłoś Problem';
 
   @override

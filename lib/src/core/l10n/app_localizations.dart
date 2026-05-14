@@ -1076,6 +1076,12 @@ abstract class AppLocalizations {
   /// **'Wycentruj na mojej lokalizacji'**
   String get route_center_on_my_location;
 
+  /// No description provided for @route_rerouting.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przeliczam trasę...'**
+  String get route_rerouting;
+
   /// No description provided for @route_report_problem.
   ///
   /// In pl, this message translates to:

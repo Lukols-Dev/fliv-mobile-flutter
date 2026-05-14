@@ -70,6 +70,13 @@ class RouteMapController extends ChangeNotifier {
   List<Lane>? _lanesForNextManeuver;
   List<Lane>? get lanesForNextManeuver => _lanesForNextManeuver;
 
+  SafetyCameraWarning? _safetyCameraWarning;
+  SafetyCameraWarning? get safetyCameraWarning => _safetyCameraWarning;
+
+  final List<TruckRestrictionWarning> _activeTruckRestrictions = [];
+  List<TruckRestrictionWarning> get activeTruckRestrictions =>
+      List.unmodifiable(_activeTruckRestrictions);
+
   String? _navigationError;
   String? get navigationError => _navigationError;
 
@@ -102,6 +109,8 @@ class RouteMapController extends ChangeNotifier {
   SpeedLimitListener? _speedLimitListener;
   SpeedWarningListener? _speedWarningListener;
   ManeuverViewLaneAssistanceListener? _maneuverViewLaneAssistanceListener;
+  SafetyCameraWarningListener? _safetyCameraWarningListener;
+  TruckRestrictionsWarningListener? _truckRestrictionsWarningListener;
 
   bool _isRerouting = false;
   bool get isRerouting => _isRerouting;
@@ -692,6 +701,8 @@ class RouteMapController extends ChangeNotifier {
     _distanceToNextManeuverMeters = null;
     _nextRoadName = null;
     _lanesForNextManeuver = null;
+    _safetyCameraWarning = null;
+    _activeTruckRestrictions.clear();
     _currentSpeedKmh = 0.0;
     _currentSpeedLimitKmh = null;
     _isSpeedExceeded = false;
@@ -753,6 +764,8 @@ class RouteMapController extends ChangeNotifier {
     _distanceToNextManeuverMeters = null;
     _nextRoadName = null;
     _lanesForNextManeuver = null;
+    _safetyCameraWarning = null;
+    _activeTruckRestrictions.clear();
     _currentSpeedKmh = null;
     _currentSpeedLimitKmh = null;
     _isSpeedExceeded = false;
@@ -910,6 +923,44 @@ class RouteMapController extends ChangeNotifier {
       visualNavigator.speedWarningListener = _speedWarningListener;
       visualNavigator.maneuverViewLaneAssistanceListener =
           _maneuverViewLaneAssistanceListener;
+
+      _safetyCameraWarningListener = SafetyCameraWarningListener((warning) {
+        if (warning.distanceType == DistanceType.passed ||
+            warning.distanceType == DistanceType.reached) {
+          _safetyCameraWarning = null;
+        } else {
+          _safetyCameraWarning = warning;
+        }
+        notifyListeners();
+      });
+
+      visualNavigator.safetyCameraWarningListener =
+          _safetyCameraWarningListener;
+
+      _truckRestrictionsWarningListener =
+          TruckRestrictionsWarningListener((warnings) {
+        for (final w in warnings) {
+          _activeTruckRestrictions.removeWhere(
+            (e) =>
+                e.weightRestriction == w.weightRestriction &&
+                e.dimensionRestriction == w.dimensionRestriction &&
+                e.truckRoadType == w.truckRoadType &&
+                e.hazardousMaterials.length == w.hazardousMaterials.length &&
+                e.hazardousMaterials
+                    .toSet()
+                    .containsAll(w.hazardousMaterials),
+          );
+          if (w.distanceType == DistanceType.ahead) {
+            _activeTruckRestrictions.add(w);
+          }
+        }
+        notifyListeners();
+      });
+      visualNavigator.truckRestrictionsWarningListener =
+          _truckRestrictionsWarningListener;
+      visualNavigator.truckRestrictionsWarningOptions =
+          TruckRestrictionsWarningOptions()
+            ..filterOutInactiveTimeDependentRestrictions = true;
 
       _visualNavigator = visualNavigator;
       return visualNavigator;
@@ -1416,6 +1467,8 @@ class RouteMapController extends ChangeNotifier {
     _speedLimitListener = null;
     _speedWarningListener = null;
     _maneuverViewLaneAssistanceListener = null;
+    _safetyCameraWarningListener = null;
+    _truckRestrictionsWarningListener = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;

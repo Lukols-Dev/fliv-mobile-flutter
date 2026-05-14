@@ -163,6 +163,7 @@
   "route_status_change_failed": "Не удалось изменить статус",
   "common_back": "Назад",
   "route_center_on_my_location": "Центрировать на моем местоположении",
+  "route_rerouting": "Пересчёт маршрута...",
   "route_report_problem": "Сообщить о проблеме",
   "route_report_problem_sheet_title": "Сообщить о проблеме",
   "route_report_problem_description_label": "Описание проблемы",
