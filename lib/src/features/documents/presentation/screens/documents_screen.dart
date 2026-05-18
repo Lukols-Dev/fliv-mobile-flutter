@@ -236,6 +236,228 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                               ),
                             ),
                           ),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Brak przypisanego ZT',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Aby dodać dokument, najpierw przypisz zlecenie (ZT).',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  }
+
+                  if (!hasResolvedOrder) return const SizedBox.shrink();
+
+                  final orderId = resolvedOrderId;
+                  final localAsync = ref.watch(
+                    localOrderDocumentsProvider(orderId),
+                  );
+
+                  final remoteAsync = isOffline
+                      ? const AsyncValue.data(<TransportOrderDocument>[])
+                      : ref.watch(transportOrderDocumentsProvider(orderId));
+
+                  final localRows = localAsync.maybeWhen(
+                    data: (d) => d,
+                    orElse: () => const [],
+                  );
+                  final remoteDocs = remoteAsync.maybeWhen(
+                    data: (d) => d,
+                    orElse: () => const [],
+                  );
+
+                  // de-dupe: jeśli lokalny ma remoteId i serwer też go ma, nie pokazuj serwerowego
+                  final localRemoteIds = localRows
+                      .map((r) => r.remoteId)
+                      .whereType<String>()
+                      .toSet();
+                  final localRemoteUrls = localRows
+                      .map((r) => r.remoteUrl)
+                      .whereType<String>()
+                      .map((s) => s.trim())
+                      .where((s) => s.isNotEmpty)
+                      .toSet();
+
+                  final remoteUnique = remoteDocs
+                      .where(
+                        (d) =>
+                            !localRemoteIds.contains(d.id) &&
+                            !localRemoteUrls.contains(d.url.trim()),
+                      )
+                      .toList();
+
+                  // Heal legacy rows (when upload endpoint returned Document.id instead of OrderDocument.id):
+                  // if local has remoteUrl that matches a remote document url, update local.remoteId to remote.id
+                  if (!isOffline &&
+                      remoteAsync.hasValue &&
+                      // remoteDocs.isNotEmpty &&
+                      localRows.isNotEmpty) {
+                    final remoteByUrl = <String, TransportOrderDocument>{
+                      for (final d in remoteDocs) d.url.trim(): d,
+                    };
+                    final remoteIds = remoteDocs.map((d) => d.id).toSet();
+                    final remoteUrls = remoteDocs
+                        .map((d) => d.url.trim())
+                        .toSet();
+                    for (final r in localRows) {
+                      final localId = r.localId;
+                      final rUrl = (r.remoteUrl ?? '').trim();
+                      if (localId.isEmpty) continue;
+
+                      // Reconcile "synced" rows that were deleted on server:
+                      // If local says synced but server no longer has this remoteId/url, downgrade to localOnly.
+                      if (r.status == LocalDocumentStatus.synced) {
+                        final rid = (r.remoteId ?? '').trim();
+                        final hasOnServer =
+                            (rid.isNotEmpty && remoteIds.contains(rid)) ||
+                            (rUrl.isNotEmpty && remoteUrls.contains(rUrl));
+                        if (!hasOnServer) {
+                          Future.microtask(() {
+                            ref
+                                .read(orderDocumentsControllerProvider.notifier)
+                                .markLocalOnly(localId: localId);
+                          });
+                          continue;
+                        }
+                      }
+
+                      // Heal legacy id mismatch (Document.id stored as remoteId)
+                      if (rUrl.isEmpty) continue;
+                      final match = remoteByUrl[rUrl];
+                      if (match == null) continue;
+                      if (r.remoteId == match.id) continue;
+                      Future.microtask(() {
+                        ref
+                            .read(orderDocumentsControllerProvider.notifier)
+                            .linkRemoteToLocal(
+                              localId: localId,
+                              remoteId: match.id,
+                              remoteUrl: match.url,
+                            );
+                      });
+                    }
+                  }
+
+                  final localItems = localRows.map((r) {
+                    final statusUi = _mapLocalStatus(r.status);
+                    return _DocItem(
+                      title: r.title,
+                      subtitle: _subtitleFromCreatedAt(r.createdAt),
+                      status: statusUi,
+                      localId: r.localId,
+                      localPath: r.localPath,
+                      remoteId: r.remoteId,
+                      remoteUrl: r.remoteUrl,
+                      lastError: r.lastError,
+                    );
+                  }).toList();
+
+                  final remoteItems = remoteUnique.map((d) {
+                    final title = (d.title?.trim().isNotEmpty ?? false)
+                        ? d.title!.trim()
+                        : (d.description?.trim().isNotEmpty ?? false)
+                        ? d.description!.trim()
+                        : (d.originalFilename?.trim().isNotEmpty ?? false)
+                        ? d.originalFilename!.trim()
+                        : 'Dokument';
+
+                    return _DocItem(
+                      title: title,
+                      subtitle: _subtitleFromCreatedAt(d.createdAt),
+                      status: DocumentStatusUi.synchronized,
+                      remoteId: d.id,
+                      remoteUrl: d.url,
+                    );
+                  }).toList();
+
+                  final allItems = [...localItems, ...remoteItems];
+
+                  final filtered = switch (_selectedFilter) {
+                    DocumentFilter.all => allItems,
+                    DocumentFilter.synchronized =>
+                      allItems
+                          .where(
+                            (i) => i.status == DocumentStatusUi.synchronized,
+                          )
+                          .toList(),
+                    DocumentFilter.local =>
+                      allItems
+                          .where(
+                            (i) => i.status != DocumentStatusUi.synchronized,
+                          )
+                          .toList(),
+                  };
+
+                  final allCount = allItems.length;
+                  final syncedCount = allItems
+                      .where((i) => i.status == DocumentStatusUi.synchronized)
+                      .length;
+                  final localCount = allItems
+                      .where((i) => i.status != DocumentStatusUi.synchronized)
+                      .length;
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_all,
+                                count: allCount,
+                                isSelected:
+                                    _selectedFilter == DocumentFilter.all,
+                                onTap: () => setState(
+                                  () => _selectedFilter = DocumentFilter.all,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_synchronized,
+                                count: syncedCount,
+                                isSelected:
+                                    _selectedFilter ==
+                                    DocumentFilter.synchronized,
+                                onTap: () => setState(
+                                  () => _selectedFilter =
+                                      DocumentFilter.synchronized,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_local,
+                                count: localCount,
+                                isSelected:
+                                    _selectedFilter == DocumentFilter.local,
+                                onTap: () => setState(
+                                  () => _selectedFilter = DocumentFilter.local,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }

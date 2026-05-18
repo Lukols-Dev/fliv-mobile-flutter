@@ -121,6 +121,17 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
             ),
           ),
           data: (profile) {
+            if (profile == null) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Brak danych profilu (offline i brak cache).',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
             // Ensure controllers are populated even if listener doesn't fire
             _applyProfileOnce(profile);
             return SingleChildScrollView(
