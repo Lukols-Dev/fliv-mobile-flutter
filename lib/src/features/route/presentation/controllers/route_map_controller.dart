@@ -117,6 +117,9 @@ class RouteMapController extends ChangeNotifier {
   bool _isRerouting = false;
   bool get isRerouting => _isRerouting;
 
+  static const Duration _rerouteCooldown = Duration(seconds: 8);
+  Timer? _rerouteCooldownTimer;
+
   int _milestonesReached = 0;
   int get milestonesReached => _milestonesReached;
 
@@ -844,6 +847,8 @@ class RouteMapController extends ChangeNotifier {
     _locationSimulator?.stop();
     _locationSimulator?.listener = null;
     _locationSimulator = null;
+    _rerouteCooldownTimer?.cancel();
+    _rerouteCooldownTimer = null;
     _isRerouting = false;
     _isCameraTracking = false;
     final reportingService = _ref.read(driverLocationReportingServiceProvider);
@@ -873,9 +878,20 @@ class RouteMapController extends ChangeNotifier {
 
   void _onRouteDeviation(RouteDeviation deviation) {
     if (_isRerouting) return;
+    if (_rerouteCooldownTimer != null) return;            // Fix #4: cooldown guard
     if (_lastDispatcherStops.isEmpty) return;
     final routingEngine = _routingEngine;
     if (routingEngine == null) return;
+
+    // Fix #3: ignore GPS-noise deviations smaller than 25 m
+    final mapMatched = deviation.currentLocation.mapMatchedLocation;
+    if (mapMatched != null) {
+      final distMeters = _approxDistanceMeters(
+        deviation.currentLocation.originalLocation.coordinates,
+        mapMatched.coordinates,
+      );
+      if (distMeters < 25) return;
+    }
 
     _isRerouting = true;
     notifyListeners();
@@ -884,20 +900,34 @@ class RouteMapController extends ChangeNotifier {
         deviation.currentLocation.mapMatchedLocation?.coordinates ??
         deviation.currentLocation.originalLocation.coordinates;
 
+    // Fix #2: only route to stops not yet reached
+    final remainingStops = _milestonesReached < _lastDispatcherStops.length
+        ? _lastDispatcherStops.sublist(_milestonesReached)
+        : const <GeoCoordinates>[];
+    if (remainingStops.isEmpty) {
+      _isRerouting = false;
+      return;
+    }
+
     final waypoints = <Waypoint>[
       Waypoint.withDefaults(startCoords),
-      ..._lastDispatcherStops.map(Waypoint.withDefaults),
+      ...remainingStops.map(Waypoint.withDefaults),
     ];
 
     void onResult(RoutingError? error, List<Route>? routes) {
-      _isRerouting = false;
       if (error != null || routes == null || routes.isEmpty) {
+        _isRerouting = false;                             // Fix #1: reset before notify
         notifyListeners();
         return;
       }
       final route = routes.first;
       _currentRoute = route;
       _visualNavigator?.route = route;
+      _isRerouting = false;                               // Fix #1: after route assignment
+      _rerouteCooldownTimer?.cancel();                    // Fix #4: start cooldown
+      _rerouteCooldownTimer = Timer(_rerouteCooldown, () {
+        _rerouteCooldownTimer = null;
+      });
       notifyListeners();
     }
 
@@ -1548,6 +1578,19 @@ class RouteMapController extends ChangeNotifier {
     return brng;
   }
 
+  double _approxDistanceMeters(GeoCoordinates a, GeoCoordinates b) {
+    const r = 6371000.0;
+    final dLat = (b.latitude - a.latitude) * math.pi / 180;
+    final dLon = (b.longitude - a.longitude) * math.pi / 180;
+    final sinLat = math.sin(dLat / 2);
+    final sinLon = math.sin(dLon / 2);
+    final chord = sinLat * sinLat +
+        math.cos(a.latitude * math.pi / 180) *
+            math.cos(b.latitude * math.pi / 180) *
+            sinLon * sinLon;
+    return r * 2 * math.asin(math.sqrt(chord));
+  }
+
   @override
   void dispose() {
     _cancelNavigationCameraAutoResume();
@@ -1558,6 +1601,8 @@ class RouteMapController extends ChangeNotifier {
     _locationSimulator = null;
     _mapLocationSub?.cancel();
     _mapLocationSub = null;
+    _rerouteCooldownTimer?.cancel();
+    _rerouteCooldownTimer = null;
     _isRerouting = false;
     _ref.read(driverLocationReportingServiceProvider).stopPeriodicReporting();
     _ref.read(driverHereLocationServiceProvider).stop();
