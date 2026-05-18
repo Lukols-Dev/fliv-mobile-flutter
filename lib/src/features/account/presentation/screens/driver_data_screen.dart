@@ -15,6 +15,8 @@ class DriverDataScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverDataScreenState extends ConsumerState<DriverDataScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   final _visaDeadlineController = TextEditingController();
   final _licenseDeadlineController = TextEditingController();
   final _workPermitDeadlineController = TextEditingController();
@@ -25,6 +27,7 @@ class _DriverDataScreenState extends ConsumerState<DriverDataScreen> {
   final _driverCertificateDeadlineController = TextEditingController();
   bool _didSetInitialValues = false;
   bool _isSaving = false;
+  bool _submittedOnce = false;
 
   @override
   void dispose() {
@@ -74,7 +77,18 @@ class _DriverDataScreenState extends ConsumerState<DriverDataScreen> {
     final month = int.tryParse(parts[1]);
     final year = int.tryParse(parts[2]);
     if (day == null || month == null || year == null) return null;
-    return DateTime.utc(year, month, day);
+    final dt = DateTime.utc(year, month, day);
+    // Ensure the date wasn't auto-normalized (e.g. 32.01.2026 -> 01.02.2026)
+    if (dt.year != year || dt.month != month || dt.day != day) return null;
+    return dt;
+  }
+
+  String? _validateOptionalDate(String? value, AppLocalizations t) {
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return null;
+    final dt = _parseDate(v);
+    if (dt == null) return t.driver_data_invalid_date;
+    return null;
   }
 
   String? _toIsoOrNull(TextEditingController c) {
@@ -155,193 +169,232 @@ class _DriverDataScreenState extends ConsumerState<DriverDataScreen> {
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: _submittedOnce
+                      ? AutovalidateMode.onUserInteraction
+                      : AutovalidateMode.disabled,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 8),
 
-                    // TITLE
-                    Center(
-                      child: Text(
-                        t.profile_driver_data,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF111827),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // VISA DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_visa_deadline,
-                      controller: _visaDeadlineController,
-                      onTap: () =>
-                          _selectDate(context, _visaDeadlineController),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // LICENSE DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_license_deadline,
-                      controller: _licenseDeadlineController,
-                      onTap: () =>
-                          _selectDate(context, _licenseDeadlineController),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // WORK PERMIT DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_work_permit_deadline,
-                      controller: _workPermitDeadlineController,
-                      onTap: () =>
-                          _selectDate(context, _workPermitDeadlineController),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // MEDICAL EXAM DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_medical_exam_deadline,
-                      controller: _medicalExamDeadlineController,
-                      onTap: () =>
-                          _selectDate(context, _medicalExamDeadlineController),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // PSYCHOLOGICAL EXAM DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_psychological_exam_deadline,
-                      controller: _psychologicalExamDeadlineController,
-                      onTap: () => _selectDate(
-                        context,
-                        _psychologicalExamDeadlineController,
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // DRIVER CARD DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_driver_card_deadline,
-                      controller: _driverCardDeadlineController,
-                      onTap: () =>
-                          _selectDate(context, _driverCardDeadlineController),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // RESIDENCE CARD DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_residence_card_deadline,
-                      controller: _residenceCardDeadlineController,
-                      onTap: () => _selectDate(
-                        context,
-                        _residenceCardDeadlineController,
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // DRIVER CERTIFICATE DEADLINE
-                    _DateInputField(
-                      label: t.driver_data_driver_certificate_deadline,
-                      controller: _driverCertificateDeadlineController,
-                      onTap: () => _selectDate(
-                        context,
-                        _driverCertificateDeadlineController,
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // SAVE BUTTON
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: FilledButton(
-                        onPressed: _isSaving
-                            ? null
-                            : () async {
-                                setState(() => _isSaving = true);
-                                try {
-                                  final repo = ref.read(
-                                    driverRepositoryProvider,
-                                  );
-                                  await repo.updateDocuments(
-                                    UpdateDriverDocumentsPayload(
-                                      // companyInternalId: null for now (UI doesn't expose it)
-                                      visaExpiresAt: _toIsoOrNull(
-                                        _visaDeadlineController,
-                                      ),
-                                      drivingLicenseExpiresAt: _toIsoOrNull(
-                                        _licenseDeadlineController,
-                                      ),
-                                      workPermitExpiresAt: _toIsoOrNull(
-                                        _workPermitDeadlineController,
-                                      ),
-                                      medicalCheckExpiresAt: _toIsoOrNull(
-                                        _medicalExamDeadlineController,
-                                      ),
-                                      psychCheckExpiresAt: _toIsoOrNull(
-                                        _psychologicalExamDeadlineController,
-                                      ),
-                                      driverCardExpiresAt: _toIsoOrNull(
-                                        _driverCardDeadlineController,
-                                      ),
-                                      residenceCardExpiresAt: _toIsoOrNull(
-                                        _residenceCardDeadlineController,
-                                      ),
-                                      driverCertificateExpiresAt: _toIsoOrNull(
-                                        _driverCertificateDeadlineController,
-                                      ),
-                                    ),
-                                  );
-
-                                  ref.invalidate(driverProfileProvider);
-                                  if (context.mounted) context.pop();
-                                } catch (e) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Błąd zapisu: $e')),
-                                  );
-                                } finally {
-                                  if (mounted)
-                                    setState(() => _isSaving = false);
-                                }
-                              },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F4D46),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                      // TITLE
+                      Center(
+                        child: Text(
+                          t.profile_driver_data,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827),
                           ),
                         ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                t.common_save,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
-                  ],
+                      const SizedBox(height: 32),
+
+                      // VISA DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_visa_deadline,
+                        controller: _visaDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () =>
+                            _selectDate(context, _visaDeadlineController),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // LICENSE DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_license_deadline,
+                        controller: _licenseDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () =>
+                            _selectDate(context, _licenseDeadlineController),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // WORK PERMIT DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_work_permit_deadline,
+                        controller: _workPermitDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () =>
+                            _selectDate(context, _workPermitDeadlineController),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // MEDICAL EXAM DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_medical_exam_deadline,
+                        controller: _medicalExamDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () => _selectDate(
+                          context,
+                          _medicalExamDeadlineController,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // PSYCHOLOGICAL EXAM DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_psychological_exam_deadline,
+                        controller: _psychologicalExamDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () => _selectDate(
+                          context,
+                          _psychologicalExamDeadlineController,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // DRIVER CARD DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_driver_card_deadline,
+                        controller: _driverCardDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () =>
+                            _selectDate(context, _driverCardDeadlineController),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // RESIDENCE CARD DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_residence_card_deadline,
+                        controller: _residenceCardDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () => _selectDate(
+                          context,
+                          _residenceCardDeadlineController,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // DRIVER CERTIFICATE DEADLINE
+                      _DateInputField(
+                        label: t.driver_data_driver_certificate_deadline,
+                        controller: _driverCertificateDeadlineController,
+                        enabled: !_isSaving,
+                        validator: (v) => _validateOptionalDate(v, t),
+                        onTap: () => _selectDate(
+                          context,
+                          _driverCertificateDeadlineController,
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // SAVE BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: FilledButton(
+                          onPressed: _isSaving
+                              ? null
+                              : () async {
+                                  setState(() => _submittedOnce = true);
+                                  final ok =
+                                      _formKey.currentState?.validate() ??
+                                      false;
+                                  if (!ok) return;
+
+                                  setState(() => _isSaving = true);
+                                  try {
+                                    final repo = ref.read(
+                                      driverRepositoryProvider,
+                                    );
+                                    await repo.updateDocuments(
+                                      UpdateDriverDocumentsPayload(
+                                        // companyInternalId: null for now (UI doesn't expose it)
+                                        visaExpiresAt: _toIsoOrNull(
+                                          _visaDeadlineController,
+                                        ),
+                                        drivingLicenseExpiresAt: _toIsoOrNull(
+                                          _licenseDeadlineController,
+                                        ),
+                                        workPermitExpiresAt: _toIsoOrNull(
+                                          _workPermitDeadlineController,
+                                        ),
+                                        medicalCheckExpiresAt: _toIsoOrNull(
+                                          _medicalExamDeadlineController,
+                                        ),
+                                        psychCheckExpiresAt: _toIsoOrNull(
+                                          _psychologicalExamDeadlineController,
+                                        ),
+                                        driverCardExpiresAt: _toIsoOrNull(
+                                          _driverCardDeadlineController,
+                                        ),
+                                        residenceCardExpiresAt: _toIsoOrNull(
+                                          _residenceCardDeadlineController,
+                                        ),
+                                        driverCertificateExpiresAt: _toIsoOrNull(
+                                          _driverCertificateDeadlineController,
+                                        ),
+                                      ),
+                                    );
+
+                                    ref.invalidate(driverProfileProvider);
+                                    if (context.mounted) context.pop();
+                                  } catch (_) {
+                                    if (!context.mounted) return;
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    messenger.clearSnackBars();
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          t.driver_data_save_failed,
+                                        ),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isSaving = false);
+                                    }
+                                  }
+                                },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F4D46),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  t.common_save,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -356,11 +409,15 @@ class _DateInputField extends StatelessWidget {
   const _DateInputField({
     required this.label,
     required this.controller,
+    required this.enabled,
+    required this.validator,
     required this.onTap,
   });
 
   final String label;
   final TextEditingController controller;
+  final bool enabled;
+  final String? Function(String?) validator;
   final VoidCallback onTap;
 
   @override
@@ -377,10 +434,12 @@ class _DateInputField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
           readOnly: true,
-          onTap: onTap,
+          enabled: enabled,
+          validator: validator,
+          onTap: enabled ? onTap : null,
           decoration: InputDecoration(
             filled: true,
             fillColor: const Color(0xFFF5F5DC),
@@ -400,6 +459,7 @@ class _DateInputField extends StatelessWidget {
               horizontal: 16,
               vertical: 16,
             ),
+            errorStyle: const TextStyle(fontSize: 12, height: 1.2),
             suffixIcon: const Icon(
               Icons.calendar_today_outlined,
               color: Color(0xFF6B7280),

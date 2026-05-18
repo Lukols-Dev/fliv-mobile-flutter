@@ -5,6 +5,10 @@ abstract class AuthRepository {
   Future<AuthSession> signUpEmail({
     required String email,
     required String password,
+    required String firstName,
+    required String lastName,
+    required bool isAgreedToTerms,
+    required bool isAgreedToPrivacyPolicy,
   });
   Future<void> signOut();
 }

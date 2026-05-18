@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_email_hint.
   ///
   /// In pl, this message translates to:
-  /// **'jan.nowak@example.com'**
+  /// **'email@example.com'**
   String get auth_email_hint;
 
   /// No description provided for @auth_password_label.
@@ -230,6 +230,18 @@ abstract class AppLocalizations {
   /// **'Nieprawidłowy adres email'**
   String get auth_invalid_email;
 
+  /// No description provided for @auth_login_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nieprawidłowy email lub hasło'**
+  String get auth_login_failed;
+
+  /// No description provided for @auth_register_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się utworzyć konta'**
+  String get auth_register_failed;
+
   /// No description provided for @common_or.
   ///
   /// In pl, this message translates to:
@@ -320,6 +332,12 @@ abstract class AppLocalizations {
   /// **'Telefon'**
   String get profile_phone_label;
 
+  /// No description provided for @profile_save_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zapisać danych'**
+  String get profile_save_failed;
+
   /// No description provided for @common_save.
   ///
   /// In pl, this message translates to:
@@ -373,6 +391,18 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Termin świadectwa kierowcy'**
   String get driver_data_driver_certificate_deadline;
+
+  /// No description provided for @driver_data_invalid_date.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nieprawidłowa data'**
+  String get driver_data_invalid_date;
+
+  /// No description provided for @driver_data_save_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zapisać danych'**
+  String get driver_data_save_failed;
 
   /// No description provided for @order_details_title.
   ///
@@ -476,6 +506,12 @@ abstract class AppLocalizations {
   /// **'Zobacz dokumenty'**
   String get order_view_documents;
 
+  /// No description provided for @order_eta.
+  ///
+  /// In pl, this message translates to:
+  /// **'ETA'**
+  String get order_eta;
+
   /// No description provided for @documents_title.
   ///
   /// In pl, this message translates to:
@@ -565,6 +601,672 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Dodaj dokument'**
   String get documents_add_button;
+
+  /// No description provided for @route_report_event_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoś'**
+  String get route_report_event_title;
+
+  /// No description provided for @route_report_event_detour.
+  ///
+  /// In pl, this message translates to:
+  /// **'Objazd'**
+  String get route_report_event_detour;
+
+  /// No description provided for @route_report_event_accident.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wypadek'**
+  String get route_report_event_accident;
+
+  /// No description provided for @route_report_event_delay.
+  ///
+  /// In pl, this message translates to:
+  /// **'Opóźnienie'**
+  String get route_report_event_delay;
+
+  /// No description provided for @common_close.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zamknij'**
+  String get common_close;
+
+  /// No description provided for @route_report_success.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoszono zdarzenie'**
+  String get route_report_success;
+
+  /// No description provided for @route_report_error.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zgłosić zdarzenia'**
+  String get route_report_error;
+
+  /// No description provided for @home_welcome_back.
+  ///
+  /// In pl, this message translates to:
+  /// **'Witaj z powrotem!'**
+  String get home_welcome_back;
+
+  /// No description provided for @order_status_in_progress.
+  ///
+  /// In pl, this message translates to:
+  /// **'W trasie'**
+  String get order_status_in_progress;
+
+  /// No description provided for @order_status_loading.
+  ///
+  /// In pl, this message translates to:
+  /// **'Załadunek'**
+  String get order_status_loading;
+
+  /// No description provided for @order_status_unloading.
+  ///
+  /// In pl, this message translates to:
+  /// **'Rozładunek'**
+  String get order_status_unloading;
+
+  /// No description provided for @order_status_paused.
+  ///
+  /// In pl, this message translates to:
+  /// **'Pauza'**
+  String get order_status_paused;
+
+  /// No description provided for @order_status_completed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zakończone'**
+  String get order_status_completed;
+
+  /// No description provided for @order_status_problem.
+  ///
+  /// In pl, this message translates to:
+  /// **'Problem'**
+  String get order_status_problem;
+
+  /// No description provided for @order_status_pending.
+  ///
+  /// In pl, this message translates to:
+  /// **'Oczekuje'**
+  String get order_status_pending;
+
+  /// No description provided for @order_status_accepted.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zaakceptowane'**
+  String get order_status_accepted;
+
+  /// No description provided for @common_id_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'ID'**
+  String get common_id_label;
+
+  /// No description provided for @common_location.
+  ///
+  /// In pl, this message translates to:
+  /// **'Lokalizacja'**
+  String get common_location;
+
+  /// No description provided for @common_yes.
+  ///
+  /// In pl, this message translates to:
+  /// **'Tak'**
+  String get common_yes;
+
+  /// No description provided for @common_no.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie'**
+  String get common_no;
+
+  /// No description provided for @common_kg_short.
+  ///
+  /// In pl, this message translates to:
+  /// **'kg'**
+  String get common_kg_short;
+
+  /// No description provided for @common_email.
+  ///
+  /// In pl, this message translates to:
+  /// **'Email'**
+  String get common_email;
+
+  /// No description provided for @home_current_location_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Obecna lokalizacja'**
+  String get home_current_location_title;
+
+  /// No description provided for @home_location_fetching.
+  ///
+  /// In pl, this message translates to:
+  /// **'Pobieranie lokalizacji…'**
+  String get home_location_fetching;
+
+  /// No description provided for @home_location_tap_refresh.
+  ///
+  /// In pl, this message translates to:
+  /// **'Kliknij odśwież, aby pobrać'**
+  String get home_location_tap_refresh;
+
+  /// No description provided for @home_location_resolving_address.
+  ///
+  /// In pl, this message translates to:
+  /// **'Ustalanie adresu…'**
+  String get home_location_resolving_address;
+
+  /// No description provided for @home_location_address_not_found.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się ustalić adresu'**
+  String get home_location_address_not_found;
+
+  /// No description provided for @home_location_fetch_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać'**
+  String get home_location_fetch_failed;
+
+  /// No description provided for @home_refresh_location_tooltip.
+  ///
+  /// In pl, this message translates to:
+  /// **'Odśwież lokalizację'**
+  String get home_refresh_location_tooltip;
+
+  /// No description provided for @home_current_order_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Aktualne Zlecenie'**
+  String get home_current_order_title;
+
+  /// No description provided for @home_enter_zt_number.
+  ///
+  /// In pl, this message translates to:
+  /// **'Podaj numer ZT.'**
+  String get home_enter_zt_number;
+
+  /// No description provided for @home_order_assigned.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zlecenie przypisane.'**
+  String get home_order_assigned;
+
+  /// No description provided for @home_assign_order_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się przypisać zlecenia'**
+  String get home_assign_order_failed;
+
+  /// No description provided for @home_no_assigned_order_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak przypisanego zlecenia'**
+  String get home_no_assigned_order_title;
+
+  /// No description provided for @home_no_assigned_order_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Aby przypisać zlecenie, wpisz numer ZT otrzymany od dyspozytora.'**
+  String get home_no_assigned_order_description;
+
+  /// No description provided for @home_zt_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'np. ZT-123456'**
+  String get home_zt_hint;
+
+  /// No description provided for @home_assign_order_button.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przypisz zlecenie'**
+  String get home_assign_order_button;
+
+  /// No description provided for @home_order_number_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Numer zlecenia'**
+  String get home_order_number_label;
+
+  /// No description provided for @home_open_navigation.
+  ///
+  /// In pl, this message translates to:
+  /// **'Otwórz nawigację'**
+  String get home_open_navigation;
+
+  /// No description provided for @order_missing_id.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak ID zlecenia'**
+  String get order_missing_id;
+
+  /// No description provided for @order_fetch_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Błąd pobierania zlecenia'**
+  String get order_fetch_failed;
+
+  /// No description provided for @order_company_name_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nazwa firmy'**
+  String get order_company_name_label;
+
+  /// No description provided for @order_temperature_sensitive_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wrażliwość na temperaturę'**
+  String get order_temperature_sensitive_label;
+
+  /// No description provided for @documents_offline_message.
+  ///
+  /// In pl, this message translates to:
+  /// **'Offline: możesz dodawać dokumenty lokalnie i synchronizować później.'**
+  String get documents_offline_message;
+
+  /// No description provided for @documents_no_assigned_zt_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak przypisanego ZT'**
+  String get documents_no_assigned_zt_title;
+
+  /// No description provided for @documents_no_assigned_zt_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Aby dodać dokument, najpierw przypisz zlecenie (ZT).'**
+  String get documents_no_assigned_zt_description;
+
+  /// No description provided for @documents_default_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dokument'**
+  String get documents_default_title;
+
+  /// No description provided for @documents_empty_list.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak dokumentów. Dodaj pierwszy dokument.'**
+  String get documents_empty_list;
+
+  /// No description provided for @documents_delete_document_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Usuń dokument'**
+  String get documents_delete_document_title;
+
+  /// No description provided for @common_cancel.
+  ///
+  /// In pl, this message translates to:
+  /// **'Anuluj'**
+  String get common_cancel;
+
+  /// No description provided for @common_delete.
+  ///
+  /// In pl, this message translates to:
+  /// **'Usuń'**
+  String get common_delete;
+
+  /// No description provided for @documents_delete_local_confirm.
+  ///
+  /// In pl, this message translates to:
+  /// **'Usunąć dokument lokalnie z telefonu?'**
+  String get documents_delete_local_confirm;
+
+  /// No description provided for @documents_delete_remote_confirm.
+  ///
+  /// In pl, this message translates to:
+  /// **'Usunąć dokument z serwera?'**
+  String get documents_delete_remote_confirm;
+
+  /// No description provided for @documents_offline_error.
+  ///
+  /// In pl, this message translates to:
+  /// **'Jesteś offline. Możesz dodawać dokumenty lokalnie i zsynchronizować później.'**
+  String get documents_offline_error;
+
+  /// No description provided for @documents_fetch_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać dokumentów z serwera.'**
+  String get documents_fetch_failed;
+
+  /// No description provided for @documents_sync_action.
+  ///
+  /// In pl, this message translates to:
+  /// **'Synchronizuj'**
+  String get documents_sync_action;
+
+  /// No description provided for @documents_status_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Błąd synchronizacji'**
+  String get documents_status_failed;
+
+  /// No description provided for @documents_options_tooltip.
+  ///
+  /// In pl, this message translates to:
+  /// **'Opcje'**
+  String get documents_options_tooltip;
+
+  /// No description provided for @documents_preview_load_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się załadować podglądu.'**
+  String get documents_preview_load_failed;
+
+  /// No description provided for @route_navigation_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nawigacja'**
+  String get route_navigation_title;
+
+  /// No description provided for @route_no_order_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak przypisanego aktualnie zlecenia.'**
+  String get route_no_order_title;
+
+  /// No description provided for @route_no_order_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.'**
+  String get route_no_order_description;
+
+  /// No description provided for @route_distance_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dystans'**
+  String get route_distance_label;
+
+  /// No description provided for @route_time_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Czas'**
+  String get route_time_label;
+
+  /// No description provided for @route_eta_arrival.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przyjazd'**
+  String get route_eta_arrival;
+
+  /// No description provided for @route_route_not_calculated.
+  ///
+  /// In pl, this message translates to:
+  /// **'Trasa: jeszcze nie wyznaczona.'**
+  String get route_route_not_calculated;
+
+  /// No description provided for @route_no_configured_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak skonfigurowanej trasy.'**
+  String get route_no_configured_route;
+
+  /// No description provided for @route_loading_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Ładowanie trasy...'**
+  String get route_loading_route;
+
+  /// No description provided for @route_route_error.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać lub wyznaczyć trasy'**
+  String get route_route_error;
+
+  /// No description provided for @route_next_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny punkt'**
+  String get route_next_point;
+
+  /// No description provided for @route_next_instruction_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny manewr'**
+  String get route_next_instruction_label;
+
+  /// No description provided for @route_calculate_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wyznacz trasę'**
+  String get route_calculate_route;
+
+  /// No description provided for @route_calculate_approach.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wylicz dojazd'**
+  String get route_calculate_approach;
+
+  /// No description provided for @route_approach_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dojazd do startu'**
+  String get route_approach_label;
+
+  /// No description provided for @route_stop.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zatrzymaj'**
+  String get route_stop;
+
+  /// No description provided for @route_start_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Rozpocznij trasę'**
+  String get route_start_route;
+
+  /// No description provided for @route_change_status.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zmień status'**
+  String get route_change_status;
+
+  /// No description provided for @route_status_changed_prefix.
+  ///
+  /// In pl, this message translates to:
+  /// **'Status zmieniony na:'**
+  String get route_status_changed_prefix;
+
+  /// No description provided for @route_status_change_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zmienić statusu'**
+  String get route_status_change_failed;
+
+  /// No description provided for @common_back.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wstecz'**
+  String get common_back;
+
+  /// No description provided for @route_center_on_my_location.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wycentruj na mojej lokalizacji'**
+  String get route_center_on_my_location;
+
+  /// No description provided for @route_rerouting.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przeliczam trasę...'**
+  String get route_rerouting;
+
+  /// No description provided for @route_report_problem.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoś Problem'**
+  String get route_report_problem;
+
+  /// No description provided for @route_report_problem_sheet_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoś problem'**
+  String get route_report_problem_sheet_title;
+
+  /// No description provided for @route_report_problem_description_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Opis problemu'**
+  String get route_report_problem_description_label;
+
+  /// No description provided for @route_report_problem_description_hint.
+  ///
+  /// In pl, this message translates to:
+  /// **'Opisz'**
+  String get route_report_problem_description_hint;
+
+  /// No description provided for @route_report_problem_submit.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dodaj zgłoszenie'**
+  String get route_report_problem_submit;
+
+  /// No description provided for @route_report_problem_success.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoszono problem'**
+  String get route_report_problem_success;
+
+  /// No description provided for @route_report_problem_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zgłosić problemu'**
+  String get route_report_problem_failed;
+
+  /// No description provided for @route_controls_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Sterowanie'**
+  String get route_controls_title;
+
+  /// No description provided for @route_controls_report_event.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zgłoś zdarzenie'**
+  String get route_controls_report_event;
+
+  /// No description provided for @route_controls_pause.
+  ///
+  /// In pl, this message translates to:
+  /// **'Pauza'**
+  String get route_controls_pause;
+
+  /// No description provided for @route_controls_resume.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wznów'**
+  String get route_controls_resume;
+
+  /// No description provided for @route_controls_finish_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zakończ trasę'**
+  String get route_controls_finish_route;
+
+  /// No description provided for @route_status_change_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zmiana statusu'**
+  String get route_status_change_title;
+
+  /// No description provided for @route_status_in_progress_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'W realizacji'**
+  String get route_status_in_progress_label;
+
+  /// No description provided for @common_minutes_short.
+  ///
+  /// In pl, this message translates to:
+  /// **'min'**
+  String get common_minutes_short;
+
+  /// No description provided for @route_order_number_prefix.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zlecenie #'**
+  String get route_order_number_prefix;
+
+  /// No description provided for @route_fetch_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Oblicz trasę'**
+  String get route_fetch_route;
+
+  /// No description provided for @route_fetching_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Obliczanie trasy...'**
+  String get route_fetching_route;
+
+  /// No description provided for @route_total_distance_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Łącznie'**
+  String get route_total_distance_label;
+
+  /// No description provided for @route_my_location.
+  ///
+  /// In pl, this message translates to:
+  /// **'Moja lokalizacja'**
+  String get route_my_location;
+
+  /// No description provided for @route_no_order_map_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak aktywnego zlecenia'**
+  String get route_no_order_map_title;
+
+  /// No description provided for @route_no_order_map_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dyspozytor nie przypisał jeszcze zlecenia.'**
+  String get route_no_order_map_description;
+
+  /// No description provided for @route_arrival_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Punkt {index} z {total}'**
+  String route_arrival_title(int index, int total);
+
+  /// No description provided for @route_confirm_arrival.
+  ///
+  /// In pl, this message translates to:
+  /// **'Potwierdź dotarcie'**
+  String get route_confirm_arrival;
+
+  /// No description provided for @route_drive_to_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Jedź do punktu {index} z {total}'**
+  String route_drive_to_point(int index, int total);
+
+  /// No description provided for @route_arrival_confirmation_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się wysłać potwierdzenia'**
+  String get route_arrival_confirmation_failed;
+
+  /// No description provided for @order_route_progress_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Postęp trasy'**
+  String get order_route_progress_title;
+
+  /// No description provided for @order_route_point_arrived_at.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dotarcie: {time}'**
+  String order_route_point_arrived_at(String time);
+
+  /// No description provided for @order_route_point_next.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny cel'**
+  String get order_route_point_next;
 }
 
 class _AppLocalizationsDelegate

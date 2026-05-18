@@ -55,4 +55,38 @@ class DriverTransportOrdersApi {
       res.data as Map<String, dynamic>,
     );
   }
+
+  Future<UpdateDriverTransportOrderStatusResponseDto> updateStatus({
+    required String id,
+    required String status,
+    String? description,
+  }) async {
+    final requestDto = UpdateDriverTransportOrderStatusRequestDto(
+      status: status,
+      description: description,
+    );
+
+    final res = await _dio.patch(
+      '/api/v1/driver/transport-orders/$id/status',
+      data: requestDto.toJson(),
+    );
+
+    return UpdateDriverTransportOrderStatusResponseDto.fromJson(
+      res.data as Map<String, dynamic>,
+    );
+  }
+
+  Future<UpdateDriverTransportOrderStatusResponseDto> reportProblem({
+    required String id,
+    required String description,
+  }) async {
+    final res = await _dio.post(
+      '/api/v1/driver/transport-orders/$id/problem',
+      data: {'description': description.trim()},
+    );
+
+    return UpdateDriverTransportOrderStatusResponseDto.fromJson(
+      res.data as Map<String, dynamic>,
+    );
+  }
 }

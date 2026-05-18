@@ -57,6 +57,14 @@ dependencies:
   uuid: ^4.5.2
   http_parser: ^4.1.2
   mime: ^2.0.0
+  # The following adds the HERE SDK to your application.
+  # Install the package by executing 'flutter packages get'.
+  # Note that the path must point to your downloaded HERE SDK plugin folder.
+  here_sdk:
+    path: plugins/here_sdk
+  geocoding: ^4.0.0
+  auto_size_text: ^3.0.0
+  flexible_polyline_dart: ^1.0.1
 
 dev_dependencies:
   flutter_test:

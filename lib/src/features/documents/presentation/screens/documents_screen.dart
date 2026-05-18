@@ -158,9 +158,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   ],
                   const SizedBox(height: 12),
                   if (isOffline)
-                    const Text(
-                      'Offline: możesz dodawać dokumenty lokalnie i synchronizować później.',
-                      style: TextStyle(
+                    Text(
+                      t.documents_offline_message,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF6B7280),
@@ -180,7 +180,6 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             Expanded(
               child: Builder(
                 builder: (context) {
-                  // Jeśli wejście z dolnej nawigacji i brak przypisanego ZT – pokaż info
                   if (widget.orderId == null) {
                     if (currentOrderAsync.isLoading) {
                       return const Center(
@@ -192,13 +191,50 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     if (currentOrder == null) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                        child: Align(
+                          alignment: Alignment
+                              .topCenter, // albo Alignment.center, jak wolisz
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth:
+                                  560, // opcjonalnie, żeby nie było "na pół metra" na tabletach
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      t.documents_no_assigned_zt_title,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF111827),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      t.documents_no_assigned_zt_description,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                           child: const Column(
                             mainAxisSize: MainAxisSize.min,
@@ -423,6 +459,205 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                             ),
                           ],
                         ),
+                      );
+                    }
+                  }
+
+                  if (!hasResolvedOrder) return const SizedBox.shrink();
+
+                  final orderId = resolvedOrderId;
+                  final localAsync = ref.watch(
+                    localOrderDocumentsProvider(orderId),
+                  );
+
+                  final remoteAsync = isOffline
+                      ? const AsyncValue.data(<TransportOrderDocument>[])
+                      : ref.watch(transportOrderDocumentsProvider(orderId));
+
+                  final localRows = localAsync.maybeWhen(
+                    data: (d) => d,
+                    orElse: () => const [],
+                  );
+                  final remoteDocs = remoteAsync.maybeWhen(
+                    data: (d) => d,
+                    orElse: () => const [],
+                  );
+
+                  // de-dupe: jeśli lokalny ma remoteId i serwer też go ma, nie pokazuj serwerowego
+                  final localRemoteIds = localRows
+                      .map((r) => r.remoteId)
+                      .whereType<String>()
+                      .toSet();
+                  final localRemoteUrls = localRows
+                      .map((r) => r.remoteUrl)
+                      .whereType<String>()
+                      .map((s) => s.trim())
+                      .where((s) => s.isNotEmpty)
+                      .toSet();
+
+                  final remoteUnique = remoteDocs
+                      .where(
+                        (d) =>
+                            !localRemoteIds.contains(d.id) &&
+                            !localRemoteUrls.contains(d.url.trim()),
+                      )
+                      .toList();
+
+                  // Heal legacy rows (when upload endpoint returned Document.id instead of OrderDocument.id):
+                  // if local has remoteUrl that matches a remote document url, update local.remoteId to remote.id
+                  if (!isOffline &&
+                      remoteAsync.hasValue &&
+                      // remoteDocs.isNotEmpty &&
+                      localRows.isNotEmpty) {
+                    final remoteByUrl = <String, TransportOrderDocument>{
+                      for (final d in remoteDocs) d.url.trim(): d,
+                    };
+                    final remoteIds = remoteDocs.map((d) => d.id).toSet();
+                    final remoteUrls = remoteDocs
+                        .map((d) => d.url.trim())
+                        .toSet();
+                    for (final r in localRows) {
+                      final localId = r.localId;
+                      final rUrl = (r.remoteUrl ?? '').trim();
+                      if (localId.isEmpty) continue;
+
+                      // Reconcile "synced" rows that were deleted on server:
+                      // If local says synced but server no longer has this remoteId/url, downgrade to localOnly.
+                      if (r.status == LocalDocumentStatus.synced) {
+                        final rid = (r.remoteId ?? '').trim();
+                        final hasOnServer =
+                            (rid.isNotEmpty && remoteIds.contains(rid)) ||
+                            (rUrl.isNotEmpty && remoteUrls.contains(rUrl));
+                        if (!hasOnServer) {
+                          Future.microtask(() {
+                            ref
+                                .read(orderDocumentsControllerProvider.notifier)
+                                .markLocalOnly(localId: localId);
+                          });
+                          continue;
+                        }
+                      }
+
+                      // Heal legacy id mismatch (Document.id stored as remoteId)
+                      if (rUrl.isEmpty) continue;
+                      final match = remoteByUrl[rUrl];
+                      if (match == null) continue;
+                      if (r.remoteId == match.id) continue;
+                      Future.microtask(() {
+                        ref
+                            .read(orderDocumentsControllerProvider.notifier)
+                            .linkRemoteToLocal(
+                              localId: localId,
+                              remoteId: match.id,
+                              remoteUrl: match.url,
+                            );
+                      });
+                    }
+                  }
+
+                  final localItems = localRows.map((r) {
+                    final statusUi = _mapLocalStatus(r.status);
+                    return _DocItem(
+                      title: r.title,
+                      subtitle: _subtitleFromCreatedAt(r.createdAt),
+                      status: statusUi,
+                      localId: r.localId,
+                      localPath: r.localPath,
+                      remoteId: r.remoteId,
+                      remoteUrl: r.remoteUrl,
+                      lastError: r.lastError,
+                    );
+                  }).toList();
+
+                  final remoteItems = remoteUnique.map((d) {
+                    final title = (d.title?.trim().isNotEmpty ?? false)
+                        ? d.title!.trim()
+                        : (d.description?.trim().isNotEmpty ?? false)
+                        ? d.description!.trim()
+                        : (d.originalFilename?.trim().isNotEmpty ?? false)
+                        ? d.originalFilename!.trim()
+                        : t.documents_default_title;
+
+                    return _DocItem(
+                      title: title,
+                      subtitle: _subtitleFromCreatedAt(d.createdAt),
+                      status: DocumentStatusUi.synchronized,
+                      remoteId: d.id,
+                      remoteUrl: d.url,
+                    );
+                  }).toList();
+
+                  final allItems = [...localItems, ...remoteItems];
+
+                  final filtered = switch (_selectedFilter) {
+                    DocumentFilter.all => allItems,
+                    DocumentFilter.synchronized =>
+                      allItems
+                          .where(
+                            (i) => i.status == DocumentStatusUi.synchronized,
+                          )
+                          .toList(),
+                    DocumentFilter.local =>
+                      allItems
+                          .where(
+                            (i) => i.status != DocumentStatusUi.synchronized,
+                          )
+                          .toList(),
+                  };
+
+                  final allCount = allItems.length;
+                  final syncedCount = allItems
+                      .where((i) => i.status == DocumentStatusUi.synchronized)
+                      .length;
+                  final localCount = allItems
+                      .where((i) => i.status != DocumentStatusUi.synchronized)
+                      .length;
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_all,
+                                count: allCount,
+                                isSelected:
+                                    _selectedFilter == DocumentFilter.all,
+                                onTap: () => setState(
+                                  () => _selectedFilter = DocumentFilter.all,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_synchronized,
+                                count: syncedCount,
+                                isSelected:
+                                    _selectedFilter ==
+                                    DocumentFilter.synchronized,
+                                onTap: () => setState(
+                                  () => _selectedFilter =
+                                      DocumentFilter.synchronized,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _FilterChip(
+                                label: t.documents_filter_local,
+                                count: localCount,
+                                isSelected:
+                                    _selectedFilter == DocumentFilter.local,
+                                onTap: () => setState(
+                                  () => _selectedFilter = DocumentFilter.local,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 12),
 
@@ -433,13 +668,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                               ? ListView(
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  children: const [
-                                    SizedBox(height: 140),
-                                    Center(
-                                      child: Text(
-                                        'Brak dokumentów. Dodaj pierwszy dokument.',
-                                      ),
-                                    ),
+                                  children: [
+                                    const SizedBox(height: 140),
+                                    Center(child: Text(t.documents_empty_list)),
                                   ],
                                 )
                               : ListView.separated(
@@ -459,18 +690,20 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                       final ok = await showDialog<bool>(
                                         context: context,
                                         builder: (ctx) => AlertDialog(
-                                          title: const Text('Usuń dokument'),
+                                          title: Text(
+                                            t.documents_delete_document_title,
+                                          ),
                                           content: Text(message),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.of(ctx).pop(false),
-                                              child: const Text('Anuluj'),
+                                              child: Text(t.common_cancel),
                                             ),
                                             FilledButton(
                                               onPressed: () =>
                                                   Navigator.of(ctx).pop(true),
-                                              child: const Text('Usuń'),
+                                              child: Text(t.common_delete),
                                             ),
                                           ],
                                         ),
@@ -516,7 +749,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                         ? null
                                         : () async {
                                             if (!await confirmDelete(
-                                              'Usunąć dokument lokalnie z telefonu?',
+                                              t.documents_delete_local_confirm,
                                             ))
                                               return;
                                             try {
@@ -546,7 +779,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                         ? null
                                         : () async {
                                             if (!await confirmDelete(
-                                              'Usunąć dokument z serwera?',
+                                              t.documents_delete_remote_confirm,
                                             ))
                                               return;
                                             try {
@@ -593,8 +826,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                           padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
                           child: Text(
                             _isOfflineLikeRemoteError(remoteAsync.error)
-                                ? 'Jesteś offline. Możesz dodawać dokumenty lokalnie i zsynchronizować później.'
-                                : 'Nie udało się pobrać dokumentów z serwera.\n${remoteAsync.error}',
+                                ? t.documents_offline_error
+                                : '${t.documents_fetch_failed}\n${remoteAsync.error}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -720,7 +953,7 @@ class _DocumentCard extends StatelessWidget {
                       Icons.cloud_upload_outlined,
                       color: Color(0xFF0F4D46),
                     ),
-                    title: const Text('Synchronizuj'),
+                    title: Text(t.documents_sync_action),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onSync?.call();
@@ -729,10 +962,10 @@ class _DocumentCard extends StatelessWidget {
                 if (onDeleteRemote != null)
                   ListTile(
                     leading: const Icon(
-                      Icons.cloud_off_outlined,
+                      Icons.delete_outline,
                       color: Colors.red,
                     ),
-                    title: const Text('Usuń'),
+                    title: Text(t.common_delete),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onDeleteRemote?.call();
@@ -744,7 +977,7 @@ class _DocumentCard extends StatelessWidget {
                       Icons.delete_outline,
                       color: Colors.red,
                     ),
-                    title: const Text('Usuń'),
+                    title: Text(t.common_delete),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       onDeleteLocal?.call();
@@ -797,7 +1030,6 @@ class _DocumentCard extends StatelessWidget {
     switch (item.status) {
       case DocumentStatusUi.synchronized:
         statusColor = const Color(0xFF10B981);
-        // Badge on thumbnail: cloud + check. Row icon: check next to text.
         statusBadgeIcon = Icons.cloud_done_outlined;
         statusRowIcon = Icons.check_circle_outline;
         statusText = t.documents_status_synchronized;
@@ -818,7 +1050,7 @@ class _DocumentCard extends StatelessWidget {
         statusColor = const Color(0xFFEF4444);
         statusBadgeIcon = Icons.error_outline;
         statusRowIcon = Icons.error_outline;
-        statusText = 'Błąd synchronizacji';
+        statusText = t.documents_status_failed;
         break;
     }
 
@@ -1004,7 +1236,7 @@ class _DocumentCard extends StatelessWidget {
             )
           else if (hasAnyActions)
             IconButton(
-              tooltip: 'Opcje',
+              tooltip: t.documents_options_tooltip,
               onPressed: () => _showActionsSheet(context),
               icon: const Icon(Icons.more_vert),
             ),
@@ -1027,6 +1259,7 @@ class _DocumentImagePreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     Widget child;
 
     final local = filePath?.trim();
@@ -1040,7 +1273,7 @@ class _DocumentImagePreviewScreen extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) {
           return Center(
             child: Text(
-              'Nie udało się załadować podglądu.\n$error',
+              '${t.documents_preview_load_failed}\n$error',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white),
             ),

@@ -1617,12 +1617,34 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _fromAddressMeta = const VerificationMeta(
+    'fromAddress',
+  );
+  @override
+  late final GeneratedColumn<String> fromAddress = GeneratedColumn<String>(
+    'from_address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _toCountryMeta = const VerificationMeta(
     'toCountry',
   );
   @override
   late final GeneratedColumn<String> toCountry = GeneratedColumn<String>(
     'to_country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toAddressMeta = const VerificationMeta(
+    'toAddress',
+  );
+  @override
+  late final GeneratedColumn<String> toAddress = GeneratedColumn<String>(
+    'to_address',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -1683,6 +1705,28 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _routePointsJsonMeta = const VerificationMeta(
+    'routePointsJson',
+  );
+  @override
+  late final GeneratedColumn<String> routePointsJson = GeneratedColumn<String>(
+    'route_points_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _gpsOdometerMetersMeta = const VerificationMeta(
+    'gpsOdometerMeters',
+  );
+  @override
+  late final GeneratedColumn<int> gpsOdometerMeters = GeneratedColumn<int>(
+    'gps_odometer_meters',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -1704,12 +1748,16 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     trailerPlate,
     clientName,
     fromCountry,
+    fromAddress,
     toCountry,
+    toAddress,
     cargoWeightKg,
     loadingDate,
     cargoDescription,
     temperatureSensitive,
     notes,
+    routePointsJson,
+    gpsOdometerMeters,
     updatedAt,
   ];
   @override
@@ -1774,10 +1822,25 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
         ),
       );
     }
+    if (data.containsKey('from_address')) {
+      context.handle(
+        _fromAddressMeta,
+        fromAddress.isAcceptableOrUnknown(
+          data['from_address']!,
+          _fromAddressMeta,
+        ),
+      );
+    }
     if (data.containsKey('to_country')) {
       context.handle(
         _toCountryMeta,
         toCountry.isAcceptableOrUnknown(data['to_country']!, _toCountryMeta),
+      );
+    }
+    if (data.containsKey('to_address')) {
+      context.handle(
+        _toAddressMeta,
+        toAddress.isAcceptableOrUnknown(data['to_address']!, _toAddressMeta),
       );
     }
     if (data.containsKey('cargo_weight_kg')) {
@@ -1820,6 +1883,24 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
       context.handle(
         _notesMeta,
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('route_points_json')) {
+      context.handle(
+        _routePointsJsonMeta,
+        routePointsJson.isAcceptableOrUnknown(
+          data['route_points_json']!,
+          _routePointsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('gps_odometer_meters')) {
+      context.handle(
+        _gpsOdometerMetersMeta,
+        gpsOdometerMeters.isAcceptableOrUnknown(
+          data['gps_odometer_meters']!,
+          _gpsOdometerMetersMeta,
+        ),
       );
     }
     if (data.containsKey('updated_at')) {
@@ -1868,9 +1949,17 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
         DriftSqlType.string,
         data['${effectivePrefix}from_country'],
       ),
+      fromAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_address'],
+      ),
       toCountry: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}to_country'],
+      ),
+      toAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_address'],
       ),
       cargoWeightKg: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -1891,6 +1980,14 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
+      ),
+      routePointsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}route_points_json'],
+      ),
+      gpsOdometerMeters: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}gps_odometer_meters'],
       ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -1914,12 +2011,16 @@ class DriverOrderDetailsTableData extends DataClass
   final String? trailerPlate;
   final String? clientName;
   final String? fromCountry;
+  final String? fromAddress;
   final String? toCountry;
+  final String? toAddress;
   final int? cargoWeightKg;
   final DateTime? loadingDate;
   final String? cargoDescription;
   final bool? temperatureSensitive;
   final String? notes;
+  final String? routePointsJson;
+  final int? gpsOdometerMeters;
   final DateTime updatedAt;
   const DriverOrderDetailsTableData({
     required this.id,
@@ -1929,12 +2030,16 @@ class DriverOrderDetailsTableData extends DataClass
     this.trailerPlate,
     this.clientName,
     this.fromCountry,
+    this.fromAddress,
     this.toCountry,
+    this.toAddress,
     this.cargoWeightKg,
     this.loadingDate,
     this.cargoDescription,
     this.temperatureSensitive,
     this.notes,
+    this.routePointsJson,
+    this.gpsOdometerMeters,
     required this.updatedAt,
   });
   @override
@@ -1959,8 +2064,14 @@ class DriverOrderDetailsTableData extends DataClass
     if (!nullToAbsent || fromCountry != null) {
       map['from_country'] = Variable<String>(fromCountry);
     }
+    if (!nullToAbsent || fromAddress != null) {
+      map['from_address'] = Variable<String>(fromAddress);
+    }
     if (!nullToAbsent || toCountry != null) {
       map['to_country'] = Variable<String>(toCountry);
+    }
+    if (!nullToAbsent || toAddress != null) {
+      map['to_address'] = Variable<String>(toAddress);
     }
     if (!nullToAbsent || cargoWeightKg != null) {
       map['cargo_weight_kg'] = Variable<int>(cargoWeightKg);
@@ -1976,6 +2087,12 @@ class DriverOrderDetailsTableData extends DataClass
     }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || routePointsJson != null) {
+      map['route_points_json'] = Variable<String>(routePointsJson);
+    }
+    if (!nullToAbsent || gpsOdometerMeters != null) {
+      map['gps_odometer_meters'] = Variable<int>(gpsOdometerMeters);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -2002,9 +2119,15 @@ class DriverOrderDetailsTableData extends DataClass
       fromCountry: fromCountry == null && nullToAbsent
           ? const Value.absent()
           : Value(fromCountry),
+      fromAddress: fromAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromAddress),
       toCountry: toCountry == null && nullToAbsent
           ? const Value.absent()
           : Value(toCountry),
+      toAddress: toAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAddress),
       cargoWeightKg: cargoWeightKg == null && nullToAbsent
           ? const Value.absent()
           : Value(cargoWeightKg),
@@ -2020,6 +2143,12 @@ class DriverOrderDetailsTableData extends DataClass
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      routePointsJson: routePointsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(routePointsJson),
+      gpsOdometerMeters: gpsOdometerMeters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gpsOdometerMeters),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2037,7 +2166,9 @@ class DriverOrderDetailsTableData extends DataClass
       trailerPlate: serializer.fromJson<String?>(json['trailerPlate']),
       clientName: serializer.fromJson<String?>(json['clientName']),
       fromCountry: serializer.fromJson<String?>(json['fromCountry']),
+      fromAddress: serializer.fromJson<String?>(json['fromAddress']),
       toCountry: serializer.fromJson<String?>(json['toCountry']),
+      toAddress: serializer.fromJson<String?>(json['toAddress']),
       cargoWeightKg: serializer.fromJson<int?>(json['cargoWeightKg']),
       loadingDate: serializer.fromJson<DateTime?>(json['loadingDate']),
       cargoDescription: serializer.fromJson<String?>(json['cargoDescription']),
@@ -2045,6 +2176,8 @@ class DriverOrderDetailsTableData extends DataClass
         json['temperatureSensitive'],
       ),
       notes: serializer.fromJson<String?>(json['notes']),
+      routePointsJson: serializer.fromJson<String?>(json['routePointsJson']),
+      gpsOdometerMeters: serializer.fromJson<int?>(json['gpsOdometerMeters']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2059,12 +2192,16 @@ class DriverOrderDetailsTableData extends DataClass
       'trailerPlate': serializer.toJson<String?>(trailerPlate),
       'clientName': serializer.toJson<String?>(clientName),
       'fromCountry': serializer.toJson<String?>(fromCountry),
+      'fromAddress': serializer.toJson<String?>(fromAddress),
       'toCountry': serializer.toJson<String?>(toCountry),
+      'toAddress': serializer.toJson<String?>(toAddress),
       'cargoWeightKg': serializer.toJson<int?>(cargoWeightKg),
       'loadingDate': serializer.toJson<DateTime?>(loadingDate),
       'cargoDescription': serializer.toJson<String?>(cargoDescription),
       'temperatureSensitive': serializer.toJson<bool?>(temperatureSensitive),
       'notes': serializer.toJson<String?>(notes),
+      'routePointsJson': serializer.toJson<String?>(routePointsJson),
+      'gpsOdometerMeters': serializer.toJson<int?>(gpsOdometerMeters),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -2077,12 +2214,16 @@ class DriverOrderDetailsTableData extends DataClass
     Value<String?> trailerPlate = const Value.absent(),
     Value<String?> clientName = const Value.absent(),
     Value<String?> fromCountry = const Value.absent(),
+    Value<String?> fromAddress = const Value.absent(),
     Value<String?> toCountry = const Value.absent(),
+    Value<String?> toAddress = const Value.absent(),
     Value<int?> cargoWeightKg = const Value.absent(),
     Value<DateTime?> loadingDate = const Value.absent(),
     Value<String?> cargoDescription = const Value.absent(),
     Value<bool?> temperatureSensitive = const Value.absent(),
     Value<String?> notes = const Value.absent(),
+    Value<String?> routePointsJson = const Value.absent(),
+    Value<int?> gpsOdometerMeters = const Value.absent(),
     DateTime? updatedAt,
   }) => DriverOrderDetailsTableData(
     id: id ?? this.id,
@@ -2092,7 +2233,9 @@ class DriverOrderDetailsTableData extends DataClass
     trailerPlate: trailerPlate.present ? trailerPlate.value : this.trailerPlate,
     clientName: clientName.present ? clientName.value : this.clientName,
     fromCountry: fromCountry.present ? fromCountry.value : this.fromCountry,
+    fromAddress: fromAddress.present ? fromAddress.value : this.fromAddress,
     toCountry: toCountry.present ? toCountry.value : this.toCountry,
+    toAddress: toAddress.present ? toAddress.value : this.toAddress,
     cargoWeightKg: cargoWeightKg.present
         ? cargoWeightKg.value
         : this.cargoWeightKg,
@@ -2104,6 +2247,12 @@ class DriverOrderDetailsTableData extends DataClass
         ? temperatureSensitive.value
         : this.temperatureSensitive,
     notes: notes.present ? notes.value : this.notes,
+    routePointsJson: routePointsJson.present
+        ? routePointsJson.value
+        : this.routePointsJson,
+    gpsOdometerMeters: gpsOdometerMeters.present
+        ? gpsOdometerMeters.value
+        : this.gpsOdometerMeters,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   DriverOrderDetailsTableData copyWithCompanion(
@@ -2125,7 +2274,11 @@ class DriverOrderDetailsTableData extends DataClass
       fromCountry: data.fromCountry.present
           ? data.fromCountry.value
           : this.fromCountry,
+      fromAddress: data.fromAddress.present
+          ? data.fromAddress.value
+          : this.fromAddress,
       toCountry: data.toCountry.present ? data.toCountry.value : this.toCountry,
+      toAddress: data.toAddress.present ? data.toAddress.value : this.toAddress,
       cargoWeightKg: data.cargoWeightKg.present
           ? data.cargoWeightKg.value
           : this.cargoWeightKg,
@@ -2139,6 +2292,12 @@ class DriverOrderDetailsTableData extends DataClass
           ? data.temperatureSensitive.value
           : this.temperatureSensitive,
       notes: data.notes.present ? data.notes.value : this.notes,
+      routePointsJson: data.routePointsJson.present
+          ? data.routePointsJson.value
+          : this.routePointsJson,
+      gpsOdometerMeters: data.gpsOdometerMeters.present
+          ? data.gpsOdometerMeters.value
+          : this.gpsOdometerMeters,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2153,12 +2312,16 @@ class DriverOrderDetailsTableData extends DataClass
           ..write('trailerPlate: $trailerPlate, ')
           ..write('clientName: $clientName, ')
           ..write('fromCountry: $fromCountry, ')
+          ..write('fromAddress: $fromAddress, ')
           ..write('toCountry: $toCountry, ')
+          ..write('toAddress: $toAddress, ')
           ..write('cargoWeightKg: $cargoWeightKg, ')
           ..write('loadingDate: $loadingDate, ')
           ..write('cargoDescription: $cargoDescription, ')
           ..write('temperatureSensitive: $temperatureSensitive, ')
           ..write('notes: $notes, ')
+          ..write('routePointsJson: $routePointsJson, ')
+          ..write('gpsOdometerMeters: $gpsOdometerMeters, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2173,12 +2336,16 @@ class DriverOrderDetailsTableData extends DataClass
     trailerPlate,
     clientName,
     fromCountry,
+    fromAddress,
     toCountry,
+    toAddress,
     cargoWeightKg,
     loadingDate,
     cargoDescription,
     temperatureSensitive,
     notes,
+    routePointsJson,
+    gpsOdometerMeters,
     updatedAt,
   );
   @override
@@ -2192,12 +2359,16 @@ class DriverOrderDetailsTableData extends DataClass
           other.trailerPlate == this.trailerPlate &&
           other.clientName == this.clientName &&
           other.fromCountry == this.fromCountry &&
+          other.fromAddress == this.fromAddress &&
           other.toCountry == this.toCountry &&
+          other.toAddress == this.toAddress &&
           other.cargoWeightKg == this.cargoWeightKg &&
           other.loadingDate == this.loadingDate &&
           other.cargoDescription == this.cargoDescription &&
           other.temperatureSensitive == this.temperatureSensitive &&
           other.notes == this.notes &&
+          other.routePointsJson == this.routePointsJson &&
+          other.gpsOdometerMeters == this.gpsOdometerMeters &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2210,12 +2381,16 @@ class DriverOrderDetailsTableCompanion
   final Value<String?> trailerPlate;
   final Value<String?> clientName;
   final Value<String?> fromCountry;
+  final Value<String?> fromAddress;
   final Value<String?> toCountry;
+  final Value<String?> toAddress;
   final Value<int?> cargoWeightKg;
   final Value<DateTime?> loadingDate;
   final Value<String?> cargoDescription;
   final Value<bool?> temperatureSensitive;
   final Value<String?> notes;
+  final Value<String?> routePointsJson;
+  final Value<int?> gpsOdometerMeters;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const DriverOrderDetailsTableCompanion({
@@ -2226,12 +2401,16 @@ class DriverOrderDetailsTableCompanion
     this.trailerPlate = const Value.absent(),
     this.clientName = const Value.absent(),
     this.fromCountry = const Value.absent(),
+    this.fromAddress = const Value.absent(),
     this.toCountry = const Value.absent(),
+    this.toAddress = const Value.absent(),
     this.cargoWeightKg = const Value.absent(),
     this.loadingDate = const Value.absent(),
     this.cargoDescription = const Value.absent(),
     this.temperatureSensitive = const Value.absent(),
     this.notes = const Value.absent(),
+    this.routePointsJson = const Value.absent(),
+    this.gpsOdometerMeters = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2243,12 +2422,16 @@ class DriverOrderDetailsTableCompanion
     this.trailerPlate = const Value.absent(),
     this.clientName = const Value.absent(),
     this.fromCountry = const Value.absent(),
+    this.fromAddress = const Value.absent(),
     this.toCountry = const Value.absent(),
+    this.toAddress = const Value.absent(),
     this.cargoWeightKg = const Value.absent(),
     this.loadingDate = const Value.absent(),
     this.cargoDescription = const Value.absent(),
     this.temperatureSensitive = const Value.absent(),
     this.notes = const Value.absent(),
+    this.routePointsJson = const Value.absent(),
+    this.gpsOdometerMeters = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
@@ -2260,12 +2443,16 @@ class DriverOrderDetailsTableCompanion
     Expression<String>? trailerPlate,
     Expression<String>? clientName,
     Expression<String>? fromCountry,
+    Expression<String>? fromAddress,
     Expression<String>? toCountry,
+    Expression<String>? toAddress,
     Expression<int>? cargoWeightKg,
     Expression<DateTime>? loadingDate,
     Expression<String>? cargoDescription,
     Expression<bool>? temperatureSensitive,
     Expression<String>? notes,
+    Expression<String>? routePointsJson,
+    Expression<int>? gpsOdometerMeters,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2277,13 +2464,17 @@ class DriverOrderDetailsTableCompanion
       if (trailerPlate != null) 'trailer_plate': trailerPlate,
       if (clientName != null) 'client_name': clientName,
       if (fromCountry != null) 'from_country': fromCountry,
+      if (fromAddress != null) 'from_address': fromAddress,
       if (toCountry != null) 'to_country': toCountry,
+      if (toAddress != null) 'to_address': toAddress,
       if (cargoWeightKg != null) 'cargo_weight_kg': cargoWeightKg,
       if (loadingDate != null) 'loading_date': loadingDate,
       if (cargoDescription != null) 'cargo_description': cargoDescription,
       if (temperatureSensitive != null)
         'temperature_sensitive': temperatureSensitive,
       if (notes != null) 'notes': notes,
+      if (routePointsJson != null) 'route_points_json': routePointsJson,
+      if (gpsOdometerMeters != null) 'gps_odometer_meters': gpsOdometerMeters,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2297,12 +2488,16 @@ class DriverOrderDetailsTableCompanion
     Value<String?>? trailerPlate,
     Value<String?>? clientName,
     Value<String?>? fromCountry,
+    Value<String?>? fromAddress,
     Value<String?>? toCountry,
+    Value<String?>? toAddress,
     Value<int?>? cargoWeightKg,
     Value<DateTime?>? loadingDate,
     Value<String?>? cargoDescription,
     Value<bool?>? temperatureSensitive,
     Value<String?>? notes,
+    Value<String?>? routePointsJson,
+    Value<int?>? gpsOdometerMeters,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2314,12 +2509,16 @@ class DriverOrderDetailsTableCompanion
       trailerPlate: trailerPlate ?? this.trailerPlate,
       clientName: clientName ?? this.clientName,
       fromCountry: fromCountry ?? this.fromCountry,
+      fromAddress: fromAddress ?? this.fromAddress,
       toCountry: toCountry ?? this.toCountry,
+      toAddress: toAddress ?? this.toAddress,
       cargoWeightKg: cargoWeightKg ?? this.cargoWeightKg,
       loadingDate: loadingDate ?? this.loadingDate,
       cargoDescription: cargoDescription ?? this.cargoDescription,
       temperatureSensitive: temperatureSensitive ?? this.temperatureSensitive,
       notes: notes ?? this.notes,
+      routePointsJson: routePointsJson ?? this.routePointsJson,
+      gpsOdometerMeters: gpsOdometerMeters ?? this.gpsOdometerMeters,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2349,8 +2548,14 @@ class DriverOrderDetailsTableCompanion
     if (fromCountry.present) {
       map['from_country'] = Variable<String>(fromCountry.value);
     }
+    if (fromAddress.present) {
+      map['from_address'] = Variable<String>(fromAddress.value);
+    }
     if (toCountry.present) {
       map['to_country'] = Variable<String>(toCountry.value);
+    }
+    if (toAddress.present) {
+      map['to_address'] = Variable<String>(toAddress.value);
     }
     if (cargoWeightKg.present) {
       map['cargo_weight_kg'] = Variable<int>(cargoWeightKg.value);
@@ -2366,6 +2571,12 @@ class DriverOrderDetailsTableCompanion
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
+    }
+    if (routePointsJson.present) {
+      map['route_points_json'] = Variable<String>(routePointsJson.value);
+    }
+    if (gpsOdometerMeters.present) {
+      map['gps_odometer_meters'] = Variable<int>(gpsOdometerMeters.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -2386,12 +2597,16 @@ class DriverOrderDetailsTableCompanion
           ..write('trailerPlate: $trailerPlate, ')
           ..write('clientName: $clientName, ')
           ..write('fromCountry: $fromCountry, ')
+          ..write('fromAddress: $fromAddress, ')
           ..write('toCountry: $toCountry, ')
+          ..write('toAddress: $toAddress, ')
           ..write('cargoWeightKg: $cargoWeightKg, ')
           ..write('loadingDate: $loadingDate, ')
           ..write('cargoDescription: $cargoDescription, ')
           ..write('temperatureSensitive: $temperatureSensitive, ')
           ..write('notes: $notes, ')
+          ..write('routePointsJson: $routePointsJson, ')
+          ..write('gpsOdometerMeters: $gpsOdometerMeters, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -3881,12 +4096,16 @@ typedef $$DriverOrderDetailsTableTableCreateCompanionBuilder =
       Value<String?> trailerPlate,
       Value<String?> clientName,
       Value<String?> fromCountry,
+      Value<String?> fromAddress,
       Value<String?> toCountry,
+      Value<String?> toAddress,
       Value<int?> cargoWeightKg,
       Value<DateTime?> loadingDate,
       Value<String?> cargoDescription,
       Value<bool?> temperatureSensitive,
       Value<String?> notes,
+      Value<String?> routePointsJson,
+      Value<int?> gpsOdometerMeters,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -3899,12 +4118,16 @@ typedef $$DriverOrderDetailsTableTableUpdateCompanionBuilder =
       Value<String?> trailerPlate,
       Value<String?> clientName,
       Value<String?> fromCountry,
+      Value<String?> fromAddress,
       Value<String?> toCountry,
+      Value<String?> toAddress,
       Value<int?> cargoWeightKg,
       Value<DateTime?> loadingDate,
       Value<String?> cargoDescription,
       Value<bool?> temperatureSensitive,
       Value<String?> notes,
+      Value<String?> routePointsJson,
+      Value<int?> gpsOdometerMeters,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -3953,8 +4176,18 @@ class $$DriverOrderDetailsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get fromAddress => $composableBuilder(
+    column: $table.fromAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get toCountry => $composableBuilder(
     column: $table.toCountry,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toAddress => $composableBuilder(
+    column: $table.toAddress,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3980,6 +4213,16 @@ class $$DriverOrderDetailsTableTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get routePointsJson => $composableBuilder(
+    column: $table.routePointsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gpsOdometerMeters => $composableBuilder(
+    column: $table.gpsOdometerMeters,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4033,8 +4276,18 @@ class $$DriverOrderDetailsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get fromAddress => $composableBuilder(
+    column: $table.fromAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get toCountry => $composableBuilder(
     column: $table.toCountry,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toAddress => $composableBuilder(
+    column: $table.toAddress,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4060,6 +4313,16 @@ class $$DriverOrderDetailsTableTableOrderingComposer
 
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get routePointsJson => $composableBuilder(
+    column: $table.routePointsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get gpsOdometerMeters => $composableBuilder(
+    column: $table.gpsOdometerMeters,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4107,8 +4370,16 @@ class $$DriverOrderDetailsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get fromAddress => $composableBuilder(
+    column: $table.fromAddress,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get toCountry =>
       $composableBuilder(column: $table.toCountry, builder: (column) => column);
+
+  GeneratedColumn<String> get toAddress =>
+      $composableBuilder(column: $table.toAddress, builder: (column) => column);
 
   GeneratedColumn<int> get cargoWeightKg => $composableBuilder(
     column: $table.cargoWeightKg,
@@ -4132,6 +4403,16 @@ class $$DriverOrderDetailsTableTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get routePointsJson => $composableBuilder(
+    column: $table.routePointsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get gpsOdometerMeters => $composableBuilder(
+    column: $table.gpsOdometerMeters,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -4190,12 +4471,16 @@ class $$DriverOrderDetailsTableTableTableManager
                 Value<String?> trailerPlate = const Value.absent(),
                 Value<String?> clientName = const Value.absent(),
                 Value<String?> fromCountry = const Value.absent(),
+                Value<String?> fromAddress = const Value.absent(),
                 Value<String?> toCountry = const Value.absent(),
+                Value<String?> toAddress = const Value.absent(),
                 Value<int?> cargoWeightKg = const Value.absent(),
                 Value<DateTime?> loadingDate = const Value.absent(),
                 Value<String?> cargoDescription = const Value.absent(),
                 Value<bool?> temperatureSensitive = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> routePointsJson = const Value.absent(),
+                Value<int?> gpsOdometerMeters = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DriverOrderDetailsTableCompanion(
@@ -4206,12 +4491,16 @@ class $$DriverOrderDetailsTableTableTableManager
                 trailerPlate: trailerPlate,
                 clientName: clientName,
                 fromCountry: fromCountry,
+                fromAddress: fromAddress,
                 toCountry: toCountry,
+                toAddress: toAddress,
                 cargoWeightKg: cargoWeightKg,
                 loadingDate: loadingDate,
                 cargoDescription: cargoDescription,
                 temperatureSensitive: temperatureSensitive,
                 notes: notes,
+                routePointsJson: routePointsJson,
+                gpsOdometerMeters: gpsOdometerMeters,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -4224,12 +4513,16 @@ class $$DriverOrderDetailsTableTableTableManager
                 Value<String?> trailerPlate = const Value.absent(),
                 Value<String?> clientName = const Value.absent(),
                 Value<String?> fromCountry = const Value.absent(),
+                Value<String?> fromAddress = const Value.absent(),
                 Value<String?> toCountry = const Value.absent(),
+                Value<String?> toAddress = const Value.absent(),
                 Value<int?> cargoWeightKg = const Value.absent(),
                 Value<DateTime?> loadingDate = const Value.absent(),
                 Value<String?> cargoDescription = const Value.absent(),
                 Value<bool?> temperatureSensitive = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> routePointsJson = const Value.absent(),
+                Value<int?> gpsOdometerMeters = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DriverOrderDetailsTableCompanion.insert(
@@ -4240,12 +4533,16 @@ class $$DriverOrderDetailsTableTableTableManager
                 trailerPlate: trailerPlate,
                 clientName: clientName,
                 fromCountry: fromCountry,
+                fromAddress: fromAddress,
                 toCountry: toCountry,
+                toAddress: toAddress,
                 cargoWeightKg: cargoWeightKg,
                 loadingDate: loadingDate,
                 cargoDescription: cargoDescription,
                 temperatureSensitive: temperatureSensitive,
                 notes: notes,
+                routePointsJson: routePointsJson,
+                gpsOdometerMeters: gpsOdometerMeters,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

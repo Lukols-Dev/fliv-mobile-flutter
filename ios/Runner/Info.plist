@@ -47,11 +47,13 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
-	<key>NSCameraUsageDescription</key>
-	<string>Ta aplikacja potrzebuje dostępu do aparatu, aby robić zdjęcia dokumentów.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Ta aplikacja potrzebuje dostępu do galerii, aby wybierać zdjęcia dokumentów.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-<string>Potrzebujemy dostępu do zapisu, aby zapisać zdjęcia dokumentów.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Ta aplikacja potrzebuje dostępu do aparatu, aby robić zdjęcia dokumentów.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Ta aplikacja potrzebuje dostępu do galerii, aby wybierać zdjęcia dokumentów.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Potrzebujemy dostępu do zapisu, aby zapisać zdjęcia dokumentów.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>The app needs access to your location to guide you along the route and share your position with the dispatcher after you start the transport order.</string>
 	</dict>
 </plist>

@@ -9,6 +9,7 @@ import 'package:mobile/src/core/network/connectivity_provider.dart';
 import 'package:mobile/src/core/routing/app_router.dart';
 import 'package:mobile/src/features/auth/application/auth_controller.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
+import 'package:mobile/src/core/here/sdk_engine_provider.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -21,6 +22,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   late final ProviderSubscription _offlineSub;
+  late final ProviderSubscription _hereLifecycleSub;
 
   DateTime? _lastResumeRefresh;
 
@@ -56,6 +58,11 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
           ..showSnackBar(const SnackBar(content: Text('Znowu online')));
       }
     });
+
+    _hereLifecycleSub = ref.listenManual(
+      hereSdkLifecycleProvider,
+      (prev, next) {},
+    );
 
     _init();
   }
@@ -93,6 +100,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
 
   Future<void> _init() async {
     await ref.read(authControllerProvider.future);
+    await ref.read(hereSdkInitProvider.future);
 
     FlutterNativeSplash.remove();
   }

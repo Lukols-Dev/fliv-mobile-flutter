@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
+import 'package:mobile/src/features/orders/presentation/widgets/route_stops_progress_list.dart';
 
 class OrderDetailsScreen extends ConsumerWidget {
   const OrderDetailsScreen({super.key, this.orderId});
@@ -21,47 +22,56 @@ class OrderDetailsScreen extends ConsumerWidget {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
   }
 
-  String _formatWeightKg(int? kg) {
-    if (kg == null) return '-';
-    return '$kg kg';
-  }
-
-  String _formatBoolPl(bool? v) {
+  String _formatBool(AppLocalizations t, bool? v) {
     if (v == null) return '-';
-    return v ? 'Tak' : 'Nie';
+    return v ? t.common_yes : t.common_no;
   }
 
   Color _statusColor(String? status) {
     switch (status) {
+      // WEB: bg-green-500 / text-green-600
       case 'COMPLETED':
-        return const Color(0xFF10B981);
+        return const Color(0xFF22C55E); // green-500
+
+      // WEB: text-destructive / bg-destructive/20 (u Ciebie już było)
       case 'PROBLEM':
-        return const Color(0xFFEF4444);
+        return const Color(0xFFEF4444); // red-500
+
+      // WEB: neutral/beige flow
+      case 'PENDING':
+      case 'ACCEPTED':
       case 'PAUSED':
-        return const Color(0xFFFF6B35);
+        return const Color(0xFFEBE5D4); // beige
+
+      // WEB: active/in-progress flow -> green #709470
       case 'IN_PROGRESS':
       case 'LOADING':
       case 'UNLOADING':
-        return const Color(0xFFFF6B35);
+        return const Color(0xFF709470); // primary green
+
       default:
-        return const Color(0xFF9CA3AF);
+        return const Color(0xFF9CA3AF); // gray-400
     }
   }
 
   String _statusLabel(AppLocalizations t, String? status) {
     switch (status) {
+      case 'PENDING':
+        return t.order_status_pending;
+      case 'ACCEPTED':
+        return t.order_status_accepted;
       case 'IN_PROGRESS':
-        return t.order_status_in_transit;
+        return t.order_status_in_progress;
       case 'LOADING':
-        return 'Załadunek';
+        return t.order_status_loading;
       case 'UNLOADING':
-        return 'Rozładunek';
+        return t.order_status_unloading;
       case 'PAUSED':
-        return 'Pauza';
+        return t.order_status_paused;
       case 'COMPLETED':
-        return 'Zakończone';
+        return t.order_status_completed;
       case 'PROBLEM':
-        return 'Problem';
+        return t.order_status_problem;
       default:
         return '-';
     }
@@ -90,10 +100,10 @@ class OrderDetailsScreen extends ConsumerWidget {
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(
+        body: Center(
           child: Text(
-            'Brak ID zlecenia',
-            style: TextStyle(fontFamily: 'Figtree'),
+            t.order_missing_id,
+            style: const TextStyle(fontFamily: 'Figtree'),
           ),
         ),
       );
@@ -123,7 +133,7 @@ class OrderDetailsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text(
-            'Błąd pobierania zlecenia: $e',
+            '${t.order_fetch_failed}: $e',
             style: const TextStyle(fontFamily: 'Figtree'),
           ),
         ),
@@ -154,7 +164,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                     t.order_details_title,
                                     style: const TextStyle(
                                       fontSize: 28,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
                                       color: Color(0xFF111827),
                                       fontFamily: 'Figtree',
                                     ),
@@ -186,7 +196,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w400,
                                   fontFamily: 'Figtree',
                                 ),
                               ),
@@ -202,22 +212,20 @@ class OrderDetailsScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _dashIfEmpty(details.clientName),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF111827),
-                                  fontFamily: 'Figtree',
-                                ),
+                              _InfoField(
+                                label: t.order_company_name_label,
+                                value: _dashIfEmpty(details.clientName),
                               ),
                               const SizedBox(height: 12),
-                              _InfoRow(
+                              _InfoField(
                                 label: t.order_contact_person,
-                                value: '-',
+                                value: _dashIfEmpty(details.payerName),
                               ),
                               const SizedBox(height: 8),
-                              _InfoRow(label: t.order_phone, value: '-'),
+                              _InfoField(
+                                label: t.common_email,
+                                value: _dashIfEmpty(details.payerEmail),
+                              ),
                             ],
                           ),
                         ),
@@ -230,29 +238,108 @@ class OrderDetailsScreen extends ConsumerWidget {
                           child: Column(
                             children: [
                               _RoutePoint(
-                                color: const Color(0xFF10B981),
+                                color: const Color(0xFF004F45),
                                 title: t.order_loading_point,
                                 location: _dashIfEmpty(details.fromCountry),
-                                address: '-',
+                                address: _dashIfEmpty(details.fromAddress),
                                 date: _formatDate(details.loadingDate),
-                                status: '-',
-                                statusColor: const Color(0xFF10B981),
+                                statusColor: const Color(0xFF004F45),
                                 showLine: true,
+                                orderStatus: details.status,
+                                localizations: t,
+                                isUnloadingPoint: false,
                               ),
                               const SizedBox(height: 10),
                               _RoutePoint(
                                 color: const Color(0xFFEF4444),
                                 title: t.order_unloading_point,
                                 location: _dashIfEmpty(details.toCountry),
-                                address: '-',
+                                address: _dashIfEmpty(details.toAddress),
                                 date: '-',
-                                status: '-',
-                                statusColor: const Color(0xFFEF4444),
+                                statusColor: const Color(0xFFF2542F),
                                 showLine: false,
+                                orderStatus: details.status,
+                                localizations: t,
+                                isUnloadingPoint: true,
+                                etaTime: null,
                               ),
                             ],
                           ),
                         ),
+
+                        if (details.routePoints.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Builder(builder: (context) {
+                                  final t = AppLocalizations.of(context)!;
+                                  final sorted = [...details.routePoints]
+                                    ..sort((a, b) => a.sequence.compareTo(b.sequence));
+                                  final arrivedCount = sorted.where((p) => p.arrivedAt != null).length;
+                                  return Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          t.order_route_progress_title,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400,
+                                            color: Color(0xFF709470),
+                                            fontFamily: 'Figtree',
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        '$arrivedCount / ${sorted.length}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF111827),
+                                          fontFamily: 'Figtree',
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                                const SizedBox(height: 6),
+                                Builder(builder: (context) {
+                                  final sorted = [...details.routePoints]
+                                    ..sort((a, b) => a.sequence.compareTo(b.sequence));
+                                  final arrivedCount = sorted.where((p) => p.arrivedAt != null).length;
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: sorted.isNotEmpty ? arrivedCount / sorted.length : 0,
+                                      minHeight: 5,
+                                      backgroundColor: const Color(0xFFE5E7EB),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF22C55E)),
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 14),
+                                Builder(builder: (context) {
+                                  final sorted = [...details.routePoints]
+                                    ..sort((a, b) => a.sequence.compareTo(b.sequence));
+                                  final confirmedStops = sorted
+                                      .where((p) => p.arrivedAt != null)
+                                      .length;
+                                  return RouteStopsProgressList(
+                                    routePoints: sorted,
+                                    confirmedStops: confirmedStops,
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 16),
 
@@ -268,17 +355,18 @@ class OrderDetailsScreen extends ConsumerWidget {
                               const SizedBox(height: 12),
                               _InfoRow(
                                 label: t.order_weight,
-                                value: _formatWeightKg(details.cargoWeightKg),
+                                value: details.cargoWeightKg != null
+                                    ? '${details.cargoWeightKg} ${t.common_kg_short}'
+                                    : '-',
                               ),
                               const SizedBox(height: 12),
                               _InfoRow(
-                                label: 'Wymaga temperatury',
-                                value: _formatBoolPl(
+                                label: t.order_temperature_sensitive_label,
+                                value: _formatBool(
+                                  t,
                                   details.temperatureSensitive,
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              _InfoRow(label: t.order_pallets, value: '-'),
                             ],
                           ),
                         ),
@@ -291,9 +379,9 @@ class OrderDetailsScreen extends ConsumerWidget {
                           child: Text(
                             _dashIfEmpty(details.notes),
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFF111827),
+                              color: Color(0xFF4A5565),
                               height: 1.5,
                               fontFamily: 'Figtree',
                             ),
@@ -330,7 +418,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
-                            // TODO: Implement start navigation
+                            context.go('/route');
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF0F4D46),
@@ -427,9 +515,9 @@ class _InfoCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF10B981),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF709470),
               fontFamily: 'Figtree',
             ),
           ),
@@ -457,8 +545,8 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 10,
+              fontWeight: FontWeight.w400,
               color: Color(0xFF6B7280),
               fontFamily: 'Figtree',
             ),
@@ -469,12 +557,49 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
               color: Color(0xFF111827),
               fontFamily: 'Figtree',
             ),
             textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoField extends StatelessWidget {
+  const _InfoField({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF6B7280),
+            fontFamily: 'Figtree',
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF111827),
+            fontFamily: 'Figtree',
+            height: 1.25,
           ),
         ),
       ],
@@ -489,9 +614,12 @@ class _RoutePoint extends StatelessWidget {
     required this.location,
     required this.address,
     required this.date,
-    required this.status,
     required this.statusColor,
     required this.showLine,
+    this.orderStatus,
+    this.localizations,
+    this.isUnloadingPoint = false,
+    this.etaTime,
   });
 
   final Color color;
@@ -499,9 +627,12 @@ class _RoutePoint extends StatelessWidget {
   final String location;
   final String address;
   final String date;
-  final String status;
   final Color statusColor;
   final bool showLine;
+  final String? orderStatus;
+  final AppLocalizations? localizations;
+  final bool isUnloadingPoint;
+  final String? etaTime;
 
   @override
   Widget build(BuildContext context) {
@@ -516,7 +647,17 @@ class _RoutePoint extends StatelessWidget {
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             if (showLine)
-              Container(width: 2, height: 60, color: const Color(0xFFE5E7EB)),
+              Container(
+                width: 2,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [statusColor, Colors.white],
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(width: 12),
@@ -530,9 +671,9 @@ class _RoutePoint extends StatelessWidget {
                     child: Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF709470),
                         fontFamily: 'Figtree',
                       ),
                     ),
@@ -540,9 +681,9 @@ class _RoutePoint extends StatelessWidget {
                   Text(
                     date,
                     style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF9CA3AF),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF99A1AF),
                       fontFamily: 'Figtree',
                     ),
                   ),
@@ -553,8 +694,8 @@ class _RoutePoint extends StatelessWidget {
                 location,
                 style: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF0A0A0A),
                   fontFamily: 'Figtree',
                 ),
               ),
@@ -562,34 +703,56 @@ class _RoutePoint extends StatelessWidget {
               Text(
                 address,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF6B7280),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF6A7282),
                   fontFamily: 'Figtree',
                 ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(
-                    statusColor == const Color(0xFF10B981)
-                        ? Icons.check_circle_outline
-                        : Icons.radio_button_checked,
-                    size: 16,
-                    color: statusColor,
+              if (orderStatus == 'IN_PROGRESS') ...[
+                const SizedBox(height: 6),
+                if (isUnloadingPoint)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle_rounded,
+                            size: 10,
+                            color: statusColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${localizations!.order_eta}: ${etaTime ?? '-'}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: statusColor,
+                              fontFamily: 'Figtree',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Icon(Icons.check_outlined, size: 10, color: statusColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        localizations!.order_loaded,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: statusColor,
+                          fontFamily: 'Figtree',
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                      fontFamily: 'Figtree',
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ],
           ),
         ),
