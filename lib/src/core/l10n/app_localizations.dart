@@ -986,17 +986,65 @@ abstract class AppLocalizations {
   /// **'Czas'**
   String get route_time_label;
 
+  /// No description provided for @route_eta_arrival.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przyjazd'**
+  String get route_eta_arrival;
+
   /// No description provided for @route_route_not_calculated.
   ///
   /// In pl, this message translates to:
   /// **'Trasa: jeszcze nie wyznaczona.'**
   String get route_route_not_calculated;
 
+  /// No description provided for @route_no_configured_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak skonfigurowanej trasy.'**
+  String get route_no_configured_route;
+
+  /// No description provided for @route_loading_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Ładowanie trasy...'**
+  String get route_loading_route;
+
+  /// No description provided for @route_route_error.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać lub wyznaczyć trasy'**
+  String get route_route_error;
+
+  /// No description provided for @route_next_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny punkt'**
+  String get route_next_point;
+
+  /// No description provided for @route_next_instruction_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny manewr'**
+  String get route_next_instruction_label;
+
   /// No description provided for @route_calculate_route.
   ///
   /// In pl, this message translates to:
   /// **'Wyznacz trasę'**
   String get route_calculate_route;
+
+  /// No description provided for @route_calculate_approach.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wylicz dojazd'**
+  String get route_calculate_approach;
+
+  /// No description provided for @route_approach_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dojazd do startu'**
+  String get route_approach_label;
 
   /// No description provided for @route_stop.
   ///
@@ -1039,6 +1087,12 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Wycentruj na mojej lokalizacji'**
   String get route_center_on_my_location;
+
+  /// No description provided for @route_rerouting.
+  ///
+  /// In pl, this message translates to:
+  /// **'Przeliczam trasę...'**
+  String get route_rerouting;
 
   /// No description provided for @route_report_problem.
   ///
@@ -1135,6 +1189,84 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Zlecenie #'**
   String get route_order_number_prefix;
+
+  /// No description provided for @route_fetch_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Oblicz trasę'**
+  String get route_fetch_route;
+
+  /// No description provided for @route_fetching_route.
+  ///
+  /// In pl, this message translates to:
+  /// **'Obliczanie trasy...'**
+  String get route_fetching_route;
+
+  /// No description provided for @route_total_distance_label.
+  ///
+  /// In pl, this message translates to:
+  /// **'Łącznie'**
+  String get route_total_distance_label;
+
+  /// No description provided for @route_my_location.
+  ///
+  /// In pl, this message translates to:
+  /// **'Moja lokalizacja'**
+  String get route_my_location;
+
+  /// No description provided for @route_no_order_map_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak aktywnego zlecenia'**
+  String get route_no_order_map_title;
+
+  /// No description provided for @route_no_order_map_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dyspozytor nie przypisał jeszcze zlecenia.'**
+  String get route_no_order_map_description;
+
+  /// No description provided for @route_arrival_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Punkt {index} z {total}'**
+  String route_arrival_title(int index, int total);
+
+  /// No description provided for @route_confirm_arrival.
+  ///
+  /// In pl, this message translates to:
+  /// **'Potwierdź dotarcie'**
+  String get route_confirm_arrival;
+
+  /// No description provided for @route_drive_to_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Jedź do punktu {index} z {total}'**
+  String route_drive_to_point(int index, int total);
+
+  /// No description provided for @route_arrival_confirmation_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się wysłać potwierdzenia'**
+  String get route_arrival_confirmation_failed;
+
+  /// No description provided for @order_route_progress_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Postęp trasy'**
+  String get order_route_progress_title;
+
+  /// No description provided for @order_route_point_arrived_at.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dotarcie: {time}'**
+  String order_route_point_arrived_at(String time);
+
+  /// No description provided for @order_route_point_next.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny cel'**
+  String get order_route_point_next;
 }
 
 class _AppLocalizationsDelegate

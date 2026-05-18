@@ -7,16 +7,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:here_sdk/animation.dart' as here;
 import 'package:here_sdk/core.dart';
 import 'package:here_sdk/core.errors.dart';
+import 'package:here_sdk/gestures.dart';
 import 'package:here_sdk/mapview.dart';
+import 'package:here_sdk/navigation.dart';
 import 'package:here_sdk/routing.dart';
-import 'package:mobile/src/core/location/location_controller.dart';
+import 'package:here_sdk/transport.dart';
+import 'package:mobile/src/core/config/env.dart';
+import 'package:mobile/src/core/here/driver_here_location_service.dart';
+import 'package:mobile/src/features/orders/domain/driver_transport_order_details.dart';
+import 'package:mobile/src/features/route/data/driver_location_reporting_service.dart';
+import 'package:mobile/src/features/route/domain/dispatcher_route_polyline_decoder.dart';
 
 class RouteMapController extends ChangeNotifier {
   RouteMapController(this._ref);
   final Ref _ref;
 
+  static final GeoCoordinates _initialMapCenter = GeoCoordinates(
+    52.201271,
+    20.631585,
+  );
+  static const Duration _navigationCameraAutoResumeDelay = Duration(
+    seconds: 10,
+  );
+
   HereMapController? _map;
   RoutingEngine? _routingEngine;
+  VisualNavigator? _visualNavigator;
+  bool _mapSceneLoaded = false;
 
   final List<MapPolygon> _stopCircles = [];
   final List<MapPolyline> _routePolylines = [];
@@ -29,14 +46,123 @@ class RouteMapController extends ChangeNotifier {
   Route? _currentRoute;
   Route? get currentRoute => _currentRoute;
 
+  final DispatcherRoutePolylineDecoder _dispatcherRoutePolylineDecoder =
+      const DispatcherRoutePolylineDecoder();
+  DriverTransportOrderRoutePlan? _lastDispatcherRoutePlan;
+  List<DriverTransportOrderRoutePoint> _lastDispatcherRoutePoints = const [];
+  GeoBox? _lastDispatcherRouteBoundingBox;
+  int _dispatcherPreviewFitToken = 0;
+  bool _showCurrentLocationWhenMapReady = false;
+  bool _centerCurrentLocationWhenMapReady = false;
+  Future<void>? _pendingCurrentLocationUpdate;
+
+  String? _navigationInstruction;
+  String? get navigationInstruction => _navigationInstruction;
+
+  ManeuverAction? _nextManeuverAction;
+  ManeuverAction? get nextManeuverAction => _nextManeuverAction;
+
+  int? _distanceToNextManeuverMeters;
+  int? get distanceToNextManeuverMeters => _distanceToNextManeuverMeters;
+
+  String? _nextRoadName;
+  String? get nextRoadName => _nextRoadName;
+
+  List<Lane>? _lanesForNextManeuver;
+  List<Lane>? get lanesForNextManeuver => _lanesForNextManeuver;
+
+  SafetyCameraWarning? _safetyCameraWarning;
+  SafetyCameraWarning? get safetyCameraWarning => _safetyCameraWarning;
+
+  final List<TruckRestrictionWarning> _activeTruckRestrictions = [];
+  List<TruckRestrictionWarning> get activeTruckRestrictions =>
+      List.unmodifiable(_activeTruckRestrictions);
+
+  String? _navigationError;
+  String? get navigationError => _navigationError;
+
+  double? _currentSpeedLimitKmh;
+  double? get currentSpeedLimitKmh => _currentSpeedLimitKmh;
+
+  double? _currentSpeedKmh;
+  double? get currentSpeedKmh => _currentSpeedKmh;
+
+  bool _isSpeedExceeded = false;
+  bool get isSpeedExceeded => _isSpeedExceeded;
+
+  int? _remainingDistanceInMeters;
+  int? get remainingDistanceInMeters => _remainingDistanceInMeters;
+
+  Duration? _remainingDuration;
+  Duration? get remainingDuration => _remainingDuration;
+
+  GeoCoordinates? _lastOdometerCoordinates;
+
   List<GeoCoordinates> _lastDispatcherStops = const [];
   GeoCoordinates? _lastStartUsed;
 
-  Timer? _followTimer;
-  bool get isFollowing => _followTimer != null;
+  StreamSubscription<Location>? _positionSub;
+  LocationSimulator? _locationSimulator;
+  StreamSubscription<Location>? _mapLocationSub;
+  Timer? _navigationCameraResumeTimer;
+  RouteProgressListener? _routeProgressListener;
+  EventTextListener? _eventTextListener;
+  DestinationReachedListener? _destinationReachedListener;
+  RouteDeviationListener? _routeDeviationListener;
+  MilestoneStatusListener? _milestoneStatusListener;
+  SpeedLimitListener? _speedLimitListener;
+  SpeedWarningListener? _speedWarningListener;
+  ManeuverViewLaneAssistanceListener? _maneuverViewLaneAssistanceListener;
+  SafetyCameraWarningListener? _safetyCameraWarningListener;
+  TruckRestrictionsWarningListener? _truckRestrictionsWarningListener;
+
+  bool _isRerouting = false;
+  bool get isRerouting => _isRerouting;
+
+  static const Duration _rerouteCooldown = Duration(seconds: 8);
+  Timer? _rerouteCooldownTimer;
+
+  int _confirmedStops = 0;
+  int get confirmedStops => _confirmedStops;
+
+  int get totalStops => _lastDispatcherRoutePoints.length;
+
+  bool get isLastPoint =>
+      _lastDispatcherRoutePoints.isEmpty ||
+      _confirmedStops >= _lastDispatcherRoutePoints.length - 1;
+
+  DriverTransportOrderRoutePoint? _pendingArrivalPoint;
+  DriverTransportOrderRoutePoint? get pendingArrivalPoint => _pendingArrivalPoint;
+  void consumeArrivalPoint() {
+    _pendingArrivalPoint = null;
+    notifyListeners();
+  }
+
+  String? get nextPointAddress {
+    if (_lastDispatcherRoutePoints.isEmpty) return null;
+    final sorted = [..._lastDispatcherRoutePoints]
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    if (_confirmedStops >= sorted.length) return null;
+    return sorted[_confirmedStops].address;
+  }
+
+  bool _isCalculating = false;
+  bool get isCalculating => _isCalculating;
+
+  bool _isCameraTracking = false;
+  bool get isCameraTracking => _isCameraTracking;
+
+  bool get isSimulating => _locationSimulator != null;
+  bool get isFollowing => _positionSub != null || isSimulating;
   bool get canStartNavigation => _currentRoute != null;
 
-  static const _followTick = Duration(seconds: 2);
+  static const double _autoStartSpeedThresholdKmh = 5.0;
+  bool _pendingAutoStart = false;
+  bool get pendingAutoStart => _pendingAutoStart;
+
+  void consumeAutoStart() {
+    _pendingAutoStart = false;
+  }
 
   // ----------------------------
   // LIFECYCLE MAPY
@@ -44,6 +170,8 @@ class RouteMapController extends ChangeNotifier {
 
   void onMapCreated(HereMapController hereMapController) {
     _map = hereMapController;
+    _mapSceneLoaded = false;
+    _enableMapGestures(hereMapController);
 
     try {
       _routingEngine ??= RoutingEngine();
@@ -55,7 +183,7 @@ class RouteMapController extends ChangeNotifier {
     // fallback kamera
     final mapMeasureZoom = MapMeasure(MapMeasureKind.distanceInMeters, 8000);
     hereMapController.camera.lookAtPointWithMeasure(
-      GeoCoordinates(52.2297, 21.0122),
+      _initialMapCenter,
       mapMeasureZoom,
     );
 
@@ -67,34 +195,168 @@ class RouteMapController extends ChangeNotifier {
         print('Map scene not loaded. MapError: ${error.toString()}');
         return;
       }
+      _mapSceneLoaded = true;
+
+      if (isFollowing) {
+        _visualNavigator?.startRendering(hereMapController);
+        _flushPendingCurrentLocationIfNeeded();
+        return;
+      }
+
+      if (_lastDispatcherRoutePlan != null) {
+        _restoreVisualsIfNeeded();
+        _flushPendingCurrentLocationIfNeeded();
+        return;
+      }
 
       // włącz LocationIndicator na tej mapie
       _ensureLocationIndicatorEnabled();
 
-      // pokaż usera
-      unawaited(refreshAndCenter());
-
       // jeśli była trasa wyznaczona wcześniej, odtwórz ją wizualnie na nowej mapie
       _restoreVisualsIfNeeded();
+      _flushPendingCurrentLocationIfNeeded();
     });
+  }
+
+  void showCurrentLocationWhenReady({bool centerCamera = false}) {
+    _showCurrentLocationWhenMapReady = true;
+    _centerCurrentLocationWhenMapReady =
+        _centerCurrentLocationWhenMapReady || centerCamera;
+    _ensureMapLocationUpdates();
+    _flushPendingCurrentLocationIfNeeded();
+  }
+
+  void _flushPendingCurrentLocationIfNeeded() {
+    if (!_showCurrentLocationWhenMapReady) return;
+    if (!_mapSceneLoaded || _map == null) return;
+    if (_pendingCurrentLocationUpdate != null) return;
+
+    final shouldCenter =
+        _centerCurrentLocationWhenMapReady &&
+        _lastDispatcherRoutePlan == null &&
+        _currentRoute == null &&
+        !isFollowing;
+
+    _showCurrentLocationWhenMapReady = false;
+    _centerCurrentLocationWhenMapReady = false;
+
+    _pendingCurrentLocationUpdate = _showCurrentLocationOnMap(
+      centerCamera: shouldCenter,
+    ).whenComplete(() => _pendingCurrentLocationUpdate = null);
+  }
+
+  void _ensureMapLocationUpdates() {
+    if (_mapLocationSub != null) return;
+
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    _mapLocationSub = locationService.locationStream.listen(
+      _handleMapLocationUpdate,
+      onError: (Object e) {
+        // ignore: avoid_print
+        print('Map location stream error: $e');
+      },
+    );
+
+    unawaited(_showCurrentLocationFromLastKnown());
+  }
+
+  void _handleMapLocationUpdate(Location location) {
+    if (_map == null || isFollowing) return;
+
+    final coords = location.coordinates;
+    _lastUserCoordinates = coords;
+    _ensureLocationIndicatorEnabled();
+    _updateHereLocationIndicator(coords, bearing: location.bearingInDegrees);
+
+    if (canStartNavigation && !_pendingAutoStart) {
+      final speedKmh = (location.speedInMetersPerSecond ?? 0.0) * 3.6;
+      if (speedKmh >= _autoStartSpeedThresholdKmh) {
+        _pendingAutoStart = true;
+      }
+    }
+
+    notifyListeners();
   }
 
   /// Wywołuj w dispose() ekranu: ekran znika => mapa znika.
   /// Nie zabijamy nawigacji, tylko odpinamy mapę.
   void detachMap() {
+    _cancelNavigationCameraAutoResume();
+    _visualNavigator?.stopRendering();
+
+    _mapLocationSub?.cancel();
+    _mapLocationSub = null;
+    if (_positionSub == null) {
+      _ref.read(driverHereLocationServiceProvider).stop();
+    }
+
     _locationIndicator?.disable();
     _locationIndicator = null;
 
     _map = null;
+    _mapSceneLoaded = false;
+    _showCurrentLocationWhenMapReady = false;
+    _centerCurrentLocationWhenMapReady = false;
+    _pendingCurrentLocationUpdate = null;
+    _dispatcherPreviewFitToken++;
 
     // te obiekty należały do poprzedniej mapy — nie da się ich przenieść
     _routePolylines.clear();
     _stopCircles.clear();
   }
 
+  void _enableMapGestures(HereMapController hereMapController) {
+    for (final gestureType in GestureType.values) {
+      hereMapController.gestures.enableDefaultAction(gestureType);
+    }
+
+    hereMapController.gestures.panListener = PanListener((state, _, __, ___) {
+      if (!isFollowing) return;
+
+      if (state == GestureState.begin) {
+        _pauseNavigationCameraTracking();
+        return;
+      }
+
+      if (state == GestureState.update) {
+        _cancelNavigationCameraAutoResume();
+        return;
+      }
+
+      if (state == GestureState.end || state == GestureState.cancel) {
+        _scheduleNavigationCameraAutoResume();
+      }
+    });
+  }
+
   void _restoreVisualsIfNeeded() {
     final map = _map;
     if (map == null) return;
+
+    final dispatcherPlan = _lastDispatcherRoutePlan;
+    if (dispatcherPlan != null) {
+      final route = _currentRoute;
+      final dispatcherBox = _drawDispatcherRoutePreview(
+        dispatcherPlan,
+        fitCamera: route == null,
+      );
+
+      if (route != null) {
+        _showApproachRouteOnMap(route);
+        final start = _lastStartUsed;
+        if (start != null) {
+          _ensureLocationIndicatorEnabled();
+          _updateHereLocationIndicator(start);
+        }
+        _fitApproachAndDispatcherRoute(
+          approachRoute: route,
+          dispatcherBox: dispatcherBox,
+        );
+      } else {
+        unawaited(_showUserLocationIndicatorWithoutCentering());
+      }
+      return;
+    }
 
     // odtwórz wskaźnik usera jeśli mamy coords
     final coords = _lastUserCoordinates;
@@ -108,13 +370,66 @@ class RouteMapController extends ChangeNotifier {
       _showRouteOnMap(route);
 
       // odtwórz stop points
-      final start = _lastStartUsed;
-      if (start != null) {
-        _drawStops(start, _lastDispatcherStops);
-      }
+      _drawStops(_lastDispatcherStops);
 
       _animateToRoute(route);
     }
+  }
+
+  void showDispatcherRoutePreview({
+    required DriverTransportOrderRoutePlan routePlan,
+    required List<DriverTransportOrderRoutePoint> routePoints,
+  }) {
+    if (isFollowing) {
+      stopFollowing();
+    }
+
+    _visualNavigator?.route = null;
+    _visualNavigator?.stopRendering();
+
+    _locationIndicator?.disable();
+    _locationIndicator = null;
+
+    _currentRoute = null;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+    _confirmedStops = 0;
+    _lastOdometerCoordinates = null;
+    _pendingArrivalPoint = null;
+    _lastStartUsed = null;
+    _lastDispatcherStops = const [];
+    _lastDispatcherRoutePlan = routePlan;
+    _lastDispatcherRouteBoundingBox = null;
+    _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(
+      routePoints,
+    );
+
+    _clearRouteAndStops();
+    if (_mapSceneLoaded) {
+      _drawDispatcherRoutePreview(routePlan);
+      unawaited(_showUserLocationIndicatorWithoutCentering());
+    }
+    notifyListeners();
+  }
+
+  void clearDispatcherRoutePreview() {
+    _lastDispatcherRoutePlan = null;
+    _lastDispatcherRoutePoints = const [];
+    _lastDispatcherRouteBoundingBox = null;
+    _currentRoute = null;
+    _dispatcherPreviewFitToken++;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+
+    _lastOdometerCoordinates = null;
+    _clearRouteAndStops();
+    _locationIndicator?.disable();
+    _locationIndicator = null;
+    notifyListeners();
   }
 
   // ----------------------------
@@ -124,10 +439,17 @@ class RouteMapController extends ChangeNotifier {
   Future<void> calculateRouteOnDemand({
     required List<GeoCoordinates> dispatcherStops,
   }) async {
-    final map = _map;
+    if (isFollowing) {
+      stopFollowing();
+    }
+
     final routingEngine = _routingEngine;
+    if (_map == null) return;
     if (routingEngine == null) return;
     if (dispatcherStops.isEmpty) return;
+
+    _isCalculating = true;
+    notifyListeners();
 
     // START: zawsze GPS kierowcy
     final start = await _getUserCoordinates();
@@ -135,22 +457,26 @@ class RouteMapController extends ChangeNotifier {
     _lastStartUsed = start;
 
     _lastDispatcherStops = List<GeoCoordinates>.from(dispatcherStops);
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
 
-    // wyczyść tylko rysunki/trasę na mapie (ale zostaw follow timer)
+    // wyczyść tylko rysunki/trasę na mapie
     _clearRouteAndStops();
 
     _ensureLocationIndicatorEnabled();
     _updateHereLocationIndicator(start);
 
-    // narysuj stop points (start + stops)
-    _drawStops(start, dispatcherStops);
+    // narysuj punkty dyspozytora; start kierowcy pokazuje LocationIndicator.
+    _drawStops(dispatcherStops);
 
     final waypoints = <Waypoint>[
       Waypoint.withDefaults(start),
       ...dispatcherStops.map(Waypoint.withDefaults),
     ];
 
-    final carOptions = CarOptions()
+    final truckOptions = TruckOptions()
       ..routeOptions.enableTolls = true
       ..routeOptions.enableRouteHandle = true
       ..routeOptions.trafficOptimizationMode =
@@ -158,13 +484,16 @@ class RouteMapController extends ChangeNotifier {
 
     final completer = Completer<void>();
 
-    routingEngine.calculateCarRoute(waypoints, carOptions, (
+    routingEngine.calculateTruckRoute(waypoints, truckOptions, (
       RoutingError? error,
       List<Route>? routes,
     ) {
+      _isCalculating = false;
+
       if (error != null || routes == null || routes.isEmpty) {
         // ignore: avoid_print
         print('Route error: ${error?.name}');
+        _navigationError = error?.name ?? 'Route calculation failed';
         _setCurrentRoute(null);
         completer.complete();
         return;
@@ -185,12 +514,224 @@ class RouteMapController extends ChangeNotifier {
     await completer.future;
   }
 
-  void _drawStops(GeoCoordinates start, List<GeoCoordinates> stops) {
+  Future<void> calculateApproachRouteToFirstStop({
+    required GeoCoordinates firstStop,
+    required DriverTransportOrderRoutePlan routePlan,
+    List<DriverTransportOrderRoutePoint> routePoints = const [],
+  }) async {
+    if (isFollowing) {
+      stopFollowing();
+    }
+
+    final routingEngine = _routingEngine;
+    if (_map == null) return;
+    if (routingEngine == null) return;
+
+    _isCalculating = true;
+    notifyListeners();
+
+    final start = await _getUserCoordinates();
+    _lastUserCoordinates = start;
+    _lastStartUsed = start;
+    _lastDispatcherStops = [firstStop];
+    _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(routePoints);
+    _confirmedStops = 0;
+    _lastOdometerCoordinates = null;
+    _pendingArrivalPoint = null;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+
+    _clearRouteAndStops();
+
+    final dispatcherBox = _drawDispatcherRoutePreview(
+      routePlan,
+      fitCamera: false,
+    );
+    _ensureLocationIndicatorEnabled();
+    _updateHereLocationIndicator(start);
+
+    final waypoints = <Waypoint>[
+      Waypoint.withDefaults(start),
+      Waypoint.withDefaults(firstStop),
+    ];
+
+    final completer = Completer<void>();
+    final CalculateRouteCallback callback =
+        (RoutingError? error, List<Route>? routes) {
+          _isCalculating = false;
+
+          if (error != null || routes == null || routes.isEmpty) {
+            // ignore: avoid_print
+            print('Approach route error: ${error?.name}');
+            _navigationError =
+                error?.name ?? 'Approach route calculation failed';
+            _setCurrentRoute(null);
+            completer.complete();
+            return;
+          }
+
+          final route = routes.first;
+          _setCurrentRoute(route);
+
+          if (_map != null) {
+            _showApproachRouteOnMap(route);
+            _fitApproachAndDispatcherRoute(
+              approachRoute: route,
+              dispatcherBox: dispatcherBox,
+            );
+          }
+
+          completer.complete();
+        };
+
+    final profile = routePlan.routingProfile;
+    if (profile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(
+        waypoints,
+        _buildCarOptions(profile),
+        callback,
+      );
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(profile, routePlan.vehicleSpec),
+        callback,
+      );
+    }
+
+    await completer.future;
+  }
+
+  void cancelApproachRoute() {
+    if (isFollowing) {
+      stopFollowing();
+    }
+
+    _visualNavigator?.route = null;
+    _visualNavigator?.stopRendering();
+
+    _currentRoute = null;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+    _lastStartUsed = null;
+    _lastDispatcherStops = const [];
+
+    _clearRouteAndStops();
+
+    final dispatcherPlan = _lastDispatcherRoutePlan;
+    if (_mapSceneLoaded && dispatcherPlan != null) {
+      _drawDispatcherRoutePreview(dispatcherPlan);
+      unawaited(_showUserLocationIndicatorWithoutCentering());
+    }
+
+    notifyListeners();
+  }
+
+  CarOptions _buildCarOptions(DriverRouteRoutingProfile profile) {
+    return CarOptions()
+      ..routeOptions = _buildRouteOptions(profile)
+      ..avoidanceOptions = _buildAvoidanceOptions(profile);
+  }
+
+  TruckOptions _buildTruckOptions(
+    DriverRouteRoutingProfile profile,
+    DriverRouteVehicleSpec? vehicleSpec,
+  ) {
+    return TruckOptions()
+      ..routeOptions = _buildRouteOptions(profile)
+      ..avoidanceOptions = _buildAvoidanceOptions(profile)
+      ..truckSpecifications = _buildTruckSpecifications(vehicleSpec)
+      ..hazardousMaterials = _hazardousMaterials(vehicleSpec);
+  }
+
+  RouteOptions _buildRouteOptions(DriverRouteRoutingProfile profile) {
+    return RouteOptions.withDefaults()
+      ..enableRouteHandle = true
+      ..enableTolls = true
+      ..optimizationMode = profile.routingMode.toLowerCase() == 'short'
+          ? OptimizationMode.shortest
+          : OptimizationMode.fastest
+      ..trafficOptimizationMode =
+          profile.trafficMode.toLowerCase() == 'disabled'
+          ? TrafficOptimizationMode.disabled
+          : TrafficOptimizationMode.timeDependent;
+  }
+
+  RoutingOptions _buildImportRoutingOptions(DriverRouteRoutingProfile profile) {
+    final opts = RoutingOptions()
+      ..routeOptions = _buildRouteOptions(profile)
+      ..avoidanceOptions = _buildAvoidanceOptions(profile);
+    if (profile.transportMode.toLowerCase() != 'car') {
+      opts.transportSpecification.transportMode = TransportMode.truck;
+    }
+    return opts;
+  }
+
+  AvoidanceOptions _buildAvoidanceOptions(DriverRouteRoutingProfile profile) {
+    final roadFeatures = <RoadFeatures>[];
+    if (profile.avoidTolls) roadFeatures.add(RoadFeatures.tollRoad);
+    if (profile.avoidFerries) roadFeatures.add(RoadFeatures.ferry);
+    if (profile.avoidMotorways) {
+      roadFeatures.add(RoadFeatures.controlledAccessHighway);
+    }
+
+    return AvoidanceOptions()..roadFeatures = roadFeatures;
+  }
+
+  TruckSpecifications _buildTruckSpecifications(
+    DriverRouteVehicleSpec? vehicleSpec,
+  ) {
+    if (vehicleSpec == null) return TruckSpecifications();
+
+    int? positive(int? value) {
+      if (value == null || value <= 0) return null;
+      return value;
+    }
+
+    return TruckSpecifications()
+      ..heightInCentimeters = positive(vehicleSpec.heightCm)
+      ..widthInCentimeters = positive(vehicleSpec.widthCm)
+      ..lengthInCentimeters = positive(vehicleSpec.lengthCm)
+      ..currentWeightInKilograms = positive(vehicleSpec.currentWeightKg)
+      ..grossWeightInKilograms = positive(vehicleSpec.grossWeightKg)
+      ..weightPerAxleInKilograms = positive(vehicleSpec.weightPerAxleKg)
+      ..axleCount = positive(vehicleSpec.axleCount)
+      ..trailerCount = positive(vehicleSpec.trailerCount);
+  }
+
+  List<HazardousMaterial> _hazardousMaterials(
+    DriverRouteVehicleSpec? vehicleSpec,
+  ) {
+    if (vehicleSpec == null) return const [];
+
+    return vehicleSpec.hazardousGoods
+        .map(
+          (value) => switch (value) {
+            'explosive' => HazardousMaterial.explosive,
+            'gas' => HazardousMaterial.gas,
+            'flammable' => HazardousMaterial.flammable,
+            'combustible' => HazardousMaterial.combustible,
+            'organic' => HazardousMaterial.organic,
+            'poison' => HazardousMaterial.poison,
+            'radioactive' => HazardousMaterial.radioactive,
+            'corrosive' => HazardousMaterial.corrosive,
+            'poisonousInhalation' => HazardousMaterial.poisonousInhalation,
+            'harmfulToWater' => HazardousMaterial.harmfulToWater,
+            'other' => HazardousMaterial.other,
+            _ => null,
+          },
+        )
+        .whereType<HazardousMaterial>()
+        .toList(growable: false);
+  }
+
+  void _drawStops(List<GeoCoordinates> stops) {
     final map = _map;
     if (map == null) return;
-
-    // start kierowcy (niebieski)
-    _addStopCircle(start, const Color.fromARGB(255, 59, 130, 246));
 
     // punkty dyspozytora (pomarańczowe), ostatni czerwony
     for (int i = 0; i < stops.length; i++) {
@@ -205,48 +746,443 @@ class RouteMapController extends ChangeNotifier {
   }
 
   // ----------------------------
-  // FOLLOW / START-STOP
+  // NAVIGATION / START-STOP
   // ----------------------------
 
-  void startFollowing() {
-    if (_followTimer != null) return;
+  SpeedBasedCameraBehavior _buildNavigationCameraBehavior() {
+    final behavior = SpeedBasedCameraBehavior()
+      ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
 
-    _followTimer = Timer.periodic(_followTick, (_) async {
+    // Reduced tilt and closer zoom vs default 3D profile to push the sky/horizon
+    // line above the top edge of the viewport (same effect as Yanosik/Waze).
+    behavior.setProfile([
+      SpeedBasedCameraBehaviorProfileValue(
+        0, 15,   // 0–54 km/h  (city)
+        MapMeasure(MapMeasureKind.distanceInMeters, 180),
+        45,
+      ),
+      SpeedBasedCameraBehaviorProfileValue(
+        13, 30,  // 47–108 km/h  (extra-urban, overlapping range avoids oscillation)
+        MapMeasure(MapMeasureKind.distanceInMeters, 320),
+        50,
+      ),
+      SpeedBasedCameraBehaviorProfileValue(
+        28, 80,  // 101–288 km/h  (motorway)
+        MapMeasure(MapMeasureKind.distanceInMeters, 520),
+        53,
+      ),
+    ]);
+
+    return behavior;
+  }
+
+  Future<void> startFollowing() async {
+    if (_positionSub != null) return;
+
+    final route = _currentRoute;
+    if (route == null) {
+      throw StateError('Route is not calculated.');
+    }
+
+    final visualNavigator = _ensureVisualNavigator();
+    _cancelNavigationCameraAutoResume();
+    visualNavigator.cameraBehavior = _buildNavigationCameraBehavior();
+    visualNavigator.route = route;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _nextManeuverAction = null;
+    _distanceToNextManeuverMeters = null;
+    _nextRoadName = null;
+    _lanesForNextManeuver = null;
+    _safetyCameraWarning = null;
+    _activeTruckRestrictions.clear();
+    _currentSpeedKmh = 0.0;
+    _currentSpeedLimitKmh = null;
+    _isSpeedExceeded = false;
+    _remainingDistanceInMeters = route.lengthInMeters;
+    _remainingDuration = route.duration;
+
+    _locationIndicator?.disable();
+    _locationIndicator = null;
+    _isRerouting = false;
+    _isCameraTracking = true;
+
+    final map = _map;
+    if (map != null) {
+      visualNavigator.startRendering(map);
+    }
+
+    if (Env.simulateNavigation) {
       try {
-        final coords = await _getUserCoordinates();
-        _lastUserCoordinates = coords;
-
-        // jeśli mapa jest — aktualizuj wskaźnik + kamerę
-        if (_map != null) {
-          _ensureLocationIndicatorEnabled();
-          _updateHereLocationIndicator(coords);
-
-          final measure = MapMeasure(MapMeasureKind.distanceInMeters, 900);
-          _map!.camera.lookAtPointWithMeasure(coords, measure);
-        }
+        final options = LocationSimulatorOptions()
+          ..speedFactor = Env.simulationSpeedFactor.toDouble()
+          ..notificationInterval = const Duration(milliseconds: 500);
+        _locationSimulator = LocationSimulator.withRoute(route, options);
+        _locationSimulator!.listener = LocationListener((location) {
+          _handleHereLocationUpdate(location);
+          _ref
+              .read(driverLocationReportingServiceProvider)
+              .setSimulatedLocation(location);
+        });
+        _locationSimulator!.start();
       } catch (_) {
-        // ignorujemy chwilowe błędy GPS
+        visualNavigator.route = null;
+        visualNavigator.stopRendering();
+        _locationSimulator = null;
+        rethrow;
       }
-    });
+
+      notifyListeners();
+      return;
+    }
+
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    Location? initialLocation;
+    try {
+      await locationService.prepare();
+      initialLocation = locationService.lastKnownHereLocation;
+      if (initialLocation != null) {
+        _handleHereLocationUpdate(initialLocation);
+      }
+
+      _positionSub = locationService.locationStream.listen(
+        _handleHereLocationUpdate,
+        onError: (Object e) {
+          _navigationError = e.toString();
+          notifyListeners();
+        },
+      );
+    } catch (_) {
+      visualNavigator.route = null;
+      visualNavigator.stopRendering();
+      rethrow;
+    }
 
     notifyListeners();
+
+    // HERE SDK's SpeedLimitListener may not fire on the first onLocationUpdated
+    // call after startRendering. A second update after the widget tree rebuilds
+    // ensures the speed limit is shown immediately without waiting for the next
+    // GPS stream event.
+    final loc = initialLocation ?? locationService.lastKnownHereLocation;
+    if (loc != null) {
+      Future.microtask(() {
+        if (isFollowing) _handleHereLocationUpdate(loc);
+      });
+    }
   }
 
   void stopFollowing() {
-    _followTimer?.cancel();
-    _followTimer = null;
+    _cancelNavigationCameraAutoResume();
+    _positionSub?.cancel();
+    _positionSub = null;
+    _locationSimulator?.stop();
+    _locationSimulator?.listener = null;
+    _locationSimulator = null;
+    _rerouteCooldownTimer?.cancel();
+    _rerouteCooldownTimer = null;
+    _isRerouting = false;
+    _isCameraTracking = false;
+    _lastOdometerCoordinates = null;
+    final reportingService = _ref.read(driverLocationReportingServiceProvider);
+    reportingService.setSimulatedLocation(null);
+    reportingService.updateNavigationProgress(
+      remainingDistanceMeters: null,
+      remainingDurationSeconds: null,
+    );
+    reportingService.stopPeriodicReporting();
+    if (_mapLocationSub == null) {
+      _ref.read(driverHereLocationServiceProvider).stop();
+    }
+    _visualNavigator?.route = null;
+    _visualNavigator?.stopRendering();
+    _nextManeuverAction = null;
+    _distanceToNextManeuverMeters = null;
+    _nextRoadName = null;
+    _lanesForNextManeuver = null;
+    _safetyCameraWarning = null;
+    _activeTruckRestrictions.clear();
+    _currentSpeedKmh = null;
+    _currentSpeedLimitKmh = null;
+    _isSpeedExceeded = false;
     notifyListeners();
+  }
+
+  void _onRouteDeviation(RouteDeviation deviation) {
+    if (_isRerouting) return;
+    if (_rerouteCooldownTimer != null) return;            // Fix #4: cooldown guard
+    if (_lastDispatcherStops.isEmpty) return;
+    final routingEngine = _routingEngine;
+    if (routingEngine == null) return;
+
+    // Fix #3: ignore GPS-noise deviations smaller than 25 m
+    final mapMatched = deviation.currentLocation.mapMatchedLocation;
+    if (mapMatched != null) {
+      final distMeters = _approxDistanceMeters(
+        deviation.currentLocation.originalLocation.coordinates,
+        mapMatched.coordinates,
+      );
+      if (distMeters < 25) return;
+    }
+
+    _isRerouting = true;
+    notifyListeners();
+
+    final startCoords =
+        deviation.currentLocation.mapMatchedLocation?.coordinates ??
+        deviation.currentLocation.originalLocation.coordinates;
+
+    // Route only to the current leg's target — the next unconfirmed point.
+    if (_lastDispatcherRoutePoints.isEmpty) {
+      _isRerouting = false;
+      return;
+    }
+    final sortedForDeviation = [..._lastDispatcherRoutePoints]
+        ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    if (_confirmedStops >= sortedForDeviation.length) {
+      _isRerouting = false;
+      return;
+    }
+    final deviationTarget = sortedForDeviation[_confirmedStops];
+    final deviationTargetCoords = GeoCoordinates(
+      deviationTarget.latitude,
+      deviationTarget.longitude,
+    );
+
+    final waypoints = <Waypoint>[
+      Waypoint.withDefaults(startCoords),
+      Waypoint.withDefaults(deviationTargetCoords),
+    ];
+
+    void onResult(RoutingError? error, List<Route>? routes) {
+      if (error != null || routes == null || routes.isEmpty) {
+        _isRerouting = false;                             // Fix #1: reset before notify
+        notifyListeners();
+        return;
+      }
+      final route = routes.first;
+      _currentRoute = route;
+      _visualNavigator?.route = route;
+      _isRerouting = false;                               // Fix #1: after route assignment
+      _rerouteCooldownTimer?.cancel();                    // Fix #4: start cooldown
+      _rerouteCooldownTimer = Timer(_rerouteCooldown, () {
+        _rerouteCooldownTimer = null;
+      });
+      notifyListeners();
+    }
+
+    final routePlan = _lastDispatcherRoutePlan;
+    if (routePlan != null &&
+        routePlan.routingProfile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(
+        waypoints,
+        _buildCarOptions(routePlan.routingProfile),
+        onResult,
+      );
+    } else if (routePlan != null) {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(routePlan.routingProfile, routePlan.vehicleSpec),
+        onResult,
+      );
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        TruckOptions()
+          ..routeOptions.enableTolls = true
+          ..routeOptions.enableRouteHandle = true
+          ..routeOptions.trafficOptimizationMode =
+              TrafficOptimizationMode.timeDependent,
+        onResult,
+      );
+    }
+  }
+
+  VisualNavigator _ensureVisualNavigator() {
+    if (_visualNavigator != null) return _visualNavigator!;
+
+    try {
+      final visualNavigator = VisualNavigator();
+
+      _routeProgressListener = RouteProgressListener((progress) {
+        if (progress.sectionProgress.isNotEmpty) {
+          final remaining = progress.sectionProgress.last;
+          _remainingDistanceInMeters = remaining.remainingDistanceInMeters;
+          _remainingDuration = remaining.remainingDuration;
+
+          _ref.read(driverLocationReportingServiceProvider).updateNavigationProgress(
+            remainingDistanceMeters: _remainingDistanceInMeters,
+            remainingDurationSeconds: _remainingDuration?.inSeconds,
+          );
+        }
+
+        final maneuverProgress = progress.maneuverProgress.isNotEmpty
+            ? progress.maneuverProgress.first
+            : null;
+        if (maneuverProgress != null) {
+          final maneuver = visualNavigator.getManeuver(
+            maneuverProgress.maneuverIndex,
+          );
+          _nextManeuverAction = maneuver?.action;
+          _distanceToNextManeuverMeters = maneuverProgress.remainingDistanceInMeters;
+          _nextRoadName = maneuver?.nextRoadTexts.names.getDefaultValue();
+          final text = maneuver?.text;
+          if (text != null && text.trim().isNotEmpty) {
+            _navigationInstruction = text.trim();
+          }
+        }
+
+        notifyListeners();
+      });
+
+      _eventTextListener = EventTextListener((eventText) {
+        if (eventText.text.trim().isNotEmpty) {
+          _navigationInstruction = eventText.text.trim();
+          notifyListeners();
+        }
+      });
+
+      _destinationReachedListener = DestinationReachedListener(() {
+        _onLegDestinationReached();
+      });
+
+      _routeDeviationListener = RouteDeviationListener((deviation) {
+        _onRouteDeviation(deviation);
+      });
+
+      _milestoneStatusListener = MilestoneStatusListener((milestone, status) {
+        // Intermediate milestones don't fire for 2-waypoint legs; confirmed
+        // manually via arrival bottom sheet. Listener kept for HERE SDK wiring.
+      });
+
+      _speedLimitListener = SpeedLimitListener((speedLimit) {
+        final limitMs = speedLimit.effectiveSpeedLimitInMetersPerSecond();
+        _currentSpeedLimitKmh = limitMs != null ? limitMs * 3.6 : null;
+        notifyListeners();
+      });
+
+      _speedWarningListener = SpeedWarningListener((status) {
+        _isSpeedExceeded = status == SpeedWarningStatus.speedLimitExceeded;
+        notifyListeners();
+      });
+
+      _maneuverViewLaneAssistanceListener =
+          ManeuverViewLaneAssistanceListener((assistance) {
+        _lanesForNextManeuver = assistance.lanesForNextManeuver.isEmpty
+            ? null
+            : List.unmodifiable(assistance.lanesForNextManeuver);
+        notifyListeners();
+      });
+
+      visualNavigator.routeProgressListener = _routeProgressListener;
+      visualNavigator.eventTextListener = _eventTextListener;
+      visualNavigator.destinationReachedListener = _destinationReachedListener;
+      visualNavigator.routeDeviationListener = _routeDeviationListener;
+      visualNavigator.milestoneStatusListener = _milestoneStatusListener;
+      visualNavigator.speedLimitListener = _speedLimitListener;
+      visualNavigator.speedWarningListener = _speedWarningListener;
+      visualNavigator.maneuverViewLaneAssistanceListener =
+          _maneuverViewLaneAssistanceListener;
+
+      _safetyCameraWarningListener = SafetyCameraWarningListener((warning) {
+        if (warning.distanceType == DistanceType.passed ||
+            warning.distanceType == DistanceType.reached) {
+          _safetyCameraWarning = null;
+        } else {
+          _safetyCameraWarning = warning;
+        }
+        notifyListeners();
+      });
+
+      visualNavigator.safetyCameraWarningListener =
+          _safetyCameraWarningListener;
+
+      _truckRestrictionsWarningListener =
+          TruckRestrictionsWarningListener((warnings) {
+        for (final w in warnings) {
+          _activeTruckRestrictions.removeWhere(
+            (e) =>
+                e.weightRestriction == w.weightRestriction &&
+                e.dimensionRestriction == w.dimensionRestriction &&
+                e.truckRoadType == w.truckRoadType &&
+                e.hazardousMaterials.length == w.hazardousMaterials.length &&
+                e.hazardousMaterials
+                    .toSet()
+                    .containsAll(w.hazardousMaterials),
+          );
+          if (w.distanceType == DistanceType.ahead) {
+            _activeTruckRestrictions.add(w);
+          }
+        }
+        notifyListeners();
+      });
+      visualNavigator.truckRestrictionsWarningListener =
+          _truckRestrictionsWarningListener;
+      visualNavigator.truckRestrictionsWarningOptions =
+          TruckRestrictionsWarningOptions()
+            ..filterOutInactiveTimeDependentRestrictions = true;
+
+      _visualNavigator = visualNavigator;
+      return visualNavigator;
+    } on InstantiationException {
+      throw StateError('VisualNavigator init failed.');
+    }
+  }
+
+  void _handleHereLocationUpdate(
+    Location location, {
+    bool centerCamera = false,
+  }) {
+    final coords = location.coordinates;
+
+    if (isFollowing) {
+      final speed = location.speedInMetersPerSecond ?? 0.0;
+      final prev = _lastOdometerCoordinates;
+      if (prev != null && speed > 1.0) {
+        final delta = _approxDistanceMeters(prev, coords);
+        _ref.read(driverLocationReportingServiceProvider).addToOdometer(delta.round());
+      }
+      _lastOdometerCoordinates = coords;
+    }
+
+    _lastUserCoordinates = coords;
+
+    if (isFollowing) {
+      _currentSpeedKmh = (location.speedInMetersPerSecond ?? 0.0) * 3.6;
+    }
+
+    _visualNavigator?.onLocationUpdated(location);
+
+    final map = _map;
+    if (centerCamera && map != null && !isFollowing) {
+      final measure = MapMeasure(MapMeasureKind.distanceInMeters, 900);
+      map.camera.lookAtPointWithMeasure(coords, measure);
+    }
   }
 
   // ----------------------------
   // MAP HELPERS
   // ----------------------------
 
-  Future<void> refreshAndCenter() async {
+  Future<void> refreshAndCenter({
+    bool allowDuringDispatcherPreview = true,
+  }) async {
+    if (isFollowing) {
+      _resumeNavigationCameraTracking();
+      return;
+    }
+    if (!allowDuringDispatcherPreview && _lastDispatcherRoutePlan != null) {
+      return;
+    }
+
     final map = _map;
     if (map == null) return;
 
     final coords = await _getUserCoordinates();
+    if (!allowDuringDispatcherPreview && _lastDispatcherRoutePlan != null) {
+      return;
+    }
+
     _lastUserCoordinates = coords;
 
     _ensureLocationIndicatorEnabled();
@@ -256,11 +1192,133 @@ class RouteMapController extends ChangeNotifier {
     map.camera.lookAtPointWithMeasure(coords, measure);
   }
 
+  void _resumeNavigationCameraTracking() {
+    _cancelNavigationCameraAutoResume();
+
+    final visualNavigator = _visualNavigator;
+    if (visualNavigator == null) return;
+
+    visualNavigator.cameraBehavior = _buildNavigationCameraBehavior();
+    _isCameraTracking = true;
+
+    final currentLocation = _ref
+        .read(driverHereLocationServiceProvider)
+        .lastKnownHereLocation;
+    if (currentLocation != null) {
+      _handleHereLocationUpdate(currentLocation);
+    }
+
+    notifyListeners();
+  }
+
+  void _pauseNavigationCameraTracking() {
+    _cancelNavigationCameraAutoResume();
+    _visualNavigator?.cameraBehavior = null;
+    _isCameraTracking = false;
+    notifyListeners();
+  }
+
+  void _scheduleNavigationCameraAutoResume() {
+    _cancelNavigationCameraAutoResume();
+    if (!isFollowing) return;
+
+    _navigationCameraResumeTimer = Timer(
+      _navigationCameraAutoResumeDelay,
+      () {
+        _navigationCameraResumeTimer = null;
+        if (!isFollowing) return;
+        _resumeNavigationCameraTracking();
+      },
+    );
+  }
+
+  void _cancelNavigationCameraAutoResume() {
+    _navigationCameraResumeTimer?.cancel();
+    _navigationCameraResumeTimer = null;
+  }
+
+  Future<void> _showCurrentLocationOnMap({required bool centerCamera}) async {
+    if (_map == null) return;
+
+    try {
+      final coords = await _getMapIndicatorCoordinates();
+      final map = _map;
+      if (map == null) return;
+
+      _lastUserCoordinates = coords;
+      _ensureLocationIndicatorEnabled();
+      _updateHereLocationIndicator(coords);
+
+      if (centerCamera && !isFollowing) {
+        final measure = MapMeasure(MapMeasureKind.distanceInMeters, 1200);
+        map.camera.lookAtPointWithMeasure(coords, measure);
+      }
+
+      notifyListeners();
+    } catch (_) {
+      // The stream listener will update the marker when HERE emits a fix.
+    }
+  }
+
+  Future<void> _showCurrentLocationFromLastKnown() async {
+    final map = _map;
+    if (map == null || isFollowing) return;
+
+    try {
+      final coords = await _getMapIndicatorCoordinates();
+      if (_map != map || isFollowing) return;
+
+      _lastUserCoordinates = coords;
+      _ensureLocationIndicatorEnabled();
+      _updateHereLocationIndicator(coords);
+      notifyListeners();
+    } catch (_) {
+      // The stream listener will update the marker when HERE emits a fix.
+    }
+  }
+
   Future<GeoCoordinates> _getUserCoordinates() async {
-    final loc = await _ref
-        .read(locationControllerProvider.notifier)
-        .getCurrent();
-    return GeoCoordinates(loc.lat, loc.lon);
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    final lastKnown = locationService.lastKnownHereLocation;
+    if (lastKnown != null) return lastKnown.coordinates;
+
+    final location = await locationService.getCurrentHereLocation(
+      maxAge: const Duration(minutes: 5),
+      timeout: const Duration(seconds: 30),
+    );
+    return location.coordinates;
+  }
+
+  Future<void> _showUserLocationIndicatorWithoutCentering() async {
+    final previewToken = _dispatcherPreviewFitToken;
+    if (_map == null) return;
+
+    _ensureMapLocationUpdates();
+
+    try {
+      final coords = await _getMapIndicatorCoordinates();
+      if (_map == null) return;
+      if (_lastDispatcherRoutePlan == null) return;
+      if (previewToken != _dispatcherPreviewFitToken) return;
+
+      _lastUserCoordinates = coords;
+      _ensureLocationIndicatorEnabled();
+      _updateHereLocationIndicator(coords);
+    } catch (_) {
+      // The stream listener will update the marker when HERE emits a fix.
+    }
+  }
+
+  Future<GeoCoordinates> _getMapIndicatorCoordinates() async {
+    final locationService = _ref.read(driverHereLocationServiceProvider);
+    final lastKnown = locationService.lastKnownHereLocation;
+    if (lastKnown != null) return lastKnown.coordinates;
+
+    final location = await locationService.getCurrentHereLocation(
+      maxAge: const Duration(days: 365),
+      timeout: const Duration(seconds: 1),
+    );
+    return location.coordinates;
   }
 
   void _setCurrentRoute(Route? route) {
@@ -269,20 +1327,44 @@ class RouteMapController extends ChangeNotifier {
   }
 
   void _showRouteOnMap(Route route) {
+    _showGeoPolylineOnMap(route.geometry);
+  }
+
+  void _showApproachRouteOnMap(Route route) {
+    _showGeoPolylineOnMap(
+      route.geometry,
+      color: const Color.fromARGB(190, 37, 99, 235),
+      widthInPixels: 12,
+    );
+  }
+
+  void _showPreviewRouteSectionOnMap(List<GeoCoordinates> vertices) {
+    if (vertices.length < 2) return;
+
+    try {
+      _showGeoPolylineOnMap(GeoPolyline(vertices));
+    } on InstantiationException {
+      // Invalid preview sections are ignored so other valid sections can render.
+    }
+  }
+
+  void _showGeoPolylineOnMap(
+    GeoPolyline geometry, {
+    Color color = const Color.fromARGB(170, 0, 79, 69),
+    double widthInPixels = 16,
+  }) {
     final map = _map;
     if (map == null) return;
 
-    const double widthInPixels = 16;
-
     try {
       final polyline = MapPolyline.withRepresentation(
-        route.geometry,
+        geometry,
         MapPolylineSolidRepresentation(
           MapMeasureDependentRenderSize.withSingleSize(
             RenderSizeUnit.pixels,
             widthInPixels,
           ),
-          const Color.fromARGB(170, 0, 79, 69),
+          color,
           LineCap.round,
         ),
       );
@@ -299,21 +1381,35 @@ class RouteMapController extends ChangeNotifier {
   }
 
   void _animateToRoute(Route route) {
+    _animateToGeoBox(route.boundingBox);
+  }
+
+  void _fitApproachAndDispatcherRoute({
+    required Route approachRoute,
+    GeoBox? dispatcherBox,
+  }) {
+    final boxes = <GeoBox>[
+      approachRoute.boundingBox,
+      if (dispatcherBox != null) dispatcherBox,
+      if (dispatcherBox == null && _lastDispatcherRouteBoundingBox != null)
+        _lastDispatcherRouteBoundingBox!,
+    ];
+
+    final boundingBox = GeoBox.envelopeGeoBoxes(boxes);
+    if (boundingBox != null) {
+      _animateToGeoBox(boundingBox);
+    }
+  }
+
+  void _animateToGeoBox(GeoBox boundingBox) {
     final map = _map;
     if (map == null) return;
 
-    final origin = Point2D(40, 40);
-    final sizeInPixels = Size2D(
-      map.viewportSize.width - 80,
-      map.viewportSize.height - 220,
-    );
-    final viewRect = Rectangle2D(origin, sizeInPixels);
-
     final update =
         MapCameraUpdateFactory.lookAtAreaWithGeoOrientationAndViewRectangle(
-          route.boundingBox,
+          boundingBox,
           GeoOrientationUpdate(0.0, 0.0),
-          viewRect,
+          _routePreviewViewRectangle(map),
         );
 
     final animation =
@@ -324,6 +1420,111 @@ class RouteMapController extends ChangeNotifier {
         );
 
     map.camera.startAnimation(animation);
+  }
+
+  void _lookAtGeoBox(GeoBox boundingBox) {
+    final map = _map;
+    if (map == null) return;
+
+    map.camera.lookAtAreaWithGeoOrientationAndViewRectangle(
+      boundingBox,
+      GeoOrientationUpdate(0.0, 0.0),
+      _routePreviewViewRectangle(map),
+    );
+  }
+
+  Rectangle2D _routePreviewViewRectangle(HereMapController map) {
+    final origin = Point2D(40, 40);
+    final sizeInPixels = Size2D(
+      math.max(1.0, map.viewportSize.width - 80),
+      math.max(1.0, map.viewportSize.height - 220),
+    );
+    return Rectangle2D(origin, sizeInPixels);
+  }
+
+  GeoBox? _drawDispatcherRoutePreview(
+    DriverTransportOrderRoutePlan routePlan, {
+    bool fitCamera = true,
+  }) {
+    final map = _map;
+    if (map == null) return null;
+
+    final List<List<RoutePreviewCoordinate>> sections;
+    try {
+      sections = _dispatcherRoutePolylineDecoder.decodeSections(
+        routePlan.polyline,
+      );
+    } catch (_) {
+      _navigationError = 'Route preview is unavailable.';
+      notifyListeners();
+      return null;
+    }
+    if (sections.isEmpty) {
+      _navigationError = 'Route preview is unavailable.';
+      notifyListeners();
+      return null;
+    }
+
+    final allVertices = <GeoCoordinates>[];
+    for (final section in sections) {
+      final vertices = section
+          .map((point) => GeoCoordinates(point.latitude, point.longitude))
+          .toList(growable: false);
+
+      allVertices.addAll(vertices);
+      _showPreviewRouteSectionOnMap(vertices);
+    }
+
+    _drawDispatcherRouteStops(_lastDispatcherRoutePoints);
+
+    final boundingBox = GeoBox.containingGeoCoordinates(allVertices);
+    _lastDispatcherRouteBoundingBox = boundingBox;
+    if (boundingBox != null) {
+      if (fitCamera) {
+        _scheduleDispatcherRouteFit(boundingBox);
+      }
+    }
+
+    return boundingBox;
+  }
+
+  void _scheduleDispatcherRouteFit(GeoBox boundingBox) {
+    final token = ++_dispatcherPreviewFitToken;
+
+    void fitIfStillActive() {
+      if (_map == null) return;
+      if (_lastDispatcherRoutePlan == null) return;
+      if (token != _dispatcherPreviewFitToken) return;
+      _lookAtGeoBox(boundingBox);
+    }
+
+    fitIfStillActive();
+
+    for (final delay in const [
+      Duration(milliseconds: 80),
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 700),
+    ]) {
+      unawaited(Future<void>.delayed(delay, fitIfStillActive));
+    }
+  }
+
+  void _drawDispatcherRouteStops(
+    List<DriverTransportOrderRoutePoint> routePoints,
+  ) {
+    final validPoints = routePoints
+        .where(_isValidRoutePoint)
+        .toList(growable: false);
+
+    for (int i = 0; i < validPoints.length; i++) {
+      final isLast = i == validPoints.length - 1;
+      _addStopCircle(
+        GeoCoordinates(validPoints[i].latitude, validPoints[i].longitude),
+        isLast
+            ? const Color(0xFFEF4444)
+            : const Color.fromARGB(255, 246, 93, 59),
+      );
+    }
   }
 
   void _addStopCircle(GeoCoordinates coords, Color color) {
@@ -362,6 +1563,13 @@ class RouteMapController extends ChangeNotifier {
     ); // nie ruszamy route obiektu, tylko odświeżamy UI
   }
 
+  bool _isValidRoutePoint(DriverTransportOrderRoutePoint point) {
+    return point.latitude >= -90 &&
+        point.latitude <= 90 &&
+        point.longitude >= -180 &&
+        point.longitude <= 180;
+  }
+
   void _ensureLocationIndicatorEnabled() {
     final map = _map;
     if (map == null) return;
@@ -372,20 +1580,22 @@ class RouteMapController extends ChangeNotifier {
     _locationIndicator!.enable(map);
   }
 
-  void _updateHereLocationIndicator(GeoCoordinates coords) {
+  void _updateHereLocationIndicator(GeoCoordinates coords, {double? bearing}) {
     final map = _map;
     if (map == null) return;
 
-    double bearing = 0.0;
-    final prev = _prevCoordsForBearing;
-    if (prev != null) {
-      bearing = _bearingDegrees(from: prev, to: coords);
+    final double finalBearing;
+    if (bearing != null) {
+      finalBearing = bearing;
+    } else {
+      final prev = _prevCoordsForBearing;
+      finalBearing = prev != null ? _bearingDegrees(from: prev, to: coords) : 0.0;
     }
     _prevCoordsForBearing = coords;
 
     final location = Location.withCoordinates(coords)
       ..time = DateTime.now()
-      ..bearingInDegrees = bearing;
+      ..bearingInDegrees = finalBearing;
 
     _locationIndicator?.updateLocation(location);
   }
@@ -410,10 +1620,348 @@ class RouteMapController extends ChangeNotifier {
     return brng;
   }
 
+  double _approxDistanceMeters(GeoCoordinates a, GeoCoordinates b) {
+    const r = 6371000.0;
+    final dLat = (b.latitude - a.latitude) * math.pi / 180;
+    final dLon = (b.longitude - a.longitude) * math.pi / 180;
+    final sinLat = math.sin(dLat / 2);
+    final sinLon = math.sin(dLon / 2);
+    final chord = sinLat * sinLat +
+        math.cos(a.latitude * math.pi / 180) *
+            math.cos(b.latitude * math.pi / 180) *
+            sinLon * sinLon;
+    return r * 2 * math.asin(math.sqrt(chord));
+  }
+
+  // ----------------------------
+  // LEG NAVIGATION
+  // ----------------------------
+
+  void _onLegDestinationReached() {
+    stopFollowing();
+    _remainingDistanceInMeters = 0;
+    _remainingDuration = Duration.zero;
+    final sorted = [..._lastDispatcherRoutePoints]
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    if (_confirmedStops < sorted.length) {
+      _pendingArrivalPoint = sorted[_confirmedStops];
+    }
+    notifyListeners();
+  }
+
+  /// Called by "Oblicz trasę" when progress > 0.
+  /// Calculates a fresh route from the driver's current GPS position to
+  /// P[_confirmedStops] — the current target — without resetting progress.
+  Future<void> recalculateToCurrentTarget({
+    required DriverTransportOrderRoutePlan routePlan,
+    required List<DriverTransportOrderRoutePoint> routePoints,
+    int? confirmedStops,
+  }) async {
+    if (isFollowing) stopFollowing();
+
+    if (confirmedStops != null) _confirmedStops = confirmedStops;
+    _lastDispatcherRoutePlan = routePlan;
+    _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(routePoints);
+    _pendingArrivalPoint = null;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+
+    final routingEngine = _routingEngine;
+    if (_map == null || routingEngine == null) return;
+
+    _isCalculating = true;
+    notifyListeners();
+
+    final sorted = List<DriverTransportOrderRoutePoint>.from(routePoints)
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+
+    if (_confirmedStops >= sorted.length) {
+      _isCalculating = false;
+      notifyListeners();
+      return;
+    }
+
+    final target = sorted[_confirmedStops];
+
+    _clearRoutePolylines();
+    final dispatcherBox = _drawDispatcherRoutePreview(routePlan, fitCamera: false);
+    _ensureLocationIndicatorEnabled();
+
+    final start = await _getUserCoordinates();
+    _lastUserCoordinates = start;
+    _lastStartUsed = start;
+    _updateHereLocationIndicator(start);
+
+    final waypoints = <Waypoint>[
+      Waypoint.withDefaults(start),
+      Waypoint.withDefaults(GeoCoordinates(target.latitude, target.longitude)),
+    ];
+
+    final completer = Completer<void>();
+    final CalculateRouteCallback callback =
+        (RoutingError? error, List<Route>? routes) {
+      _isCalculating = false;
+      if (error != null || routes == null || routes.isEmpty) {
+        _navigationError = error?.name ?? 'Route calculation failed';
+        _setCurrentRoute(null);
+        completer.complete();
+        return;
+      }
+      final route = routes.first;
+      _setCurrentRoute(route);
+      if (_map != null) {
+        _showApproachRouteOnMap(route);
+        _fitApproachAndDispatcherRoute(
+          approachRoute: route,
+          dispatcherBox: dispatcherBox,
+        );
+      }
+      completer.complete();
+    };
+
+    final profile = routePlan.routingProfile;
+    if (profile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(waypoints, _buildCarOptions(profile), callback);
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(profile, routePlan.vehicleSpec),
+        callback,
+      );
+    }
+
+    await completer.future;
+    notifyListeners();
+  }
+
+  /// Called by the screen after the driver confirms arrival and the backend
+  /// report has been sent (or skipped on failure). Advances to the next leg.
+  Future<void> advanceToNextLeg() async {
+    _confirmedStops++;
+    _pendingArrivalPoint = null;
+    _confirmStopCircle(_confirmedStops - 1);
+
+    final sorted = [..._lastDispatcherRoutePoints]
+        ..sort((a, b) => a.sequence.compareTo(b.sequence));
+
+    if (_confirmedStops >= sorted.length) {
+      _currentRoute = null;
+      _navigationInstruction = null;
+      _remainingDistanceInMeters = null;
+      _remainingDuration = null;
+      _clearRoutePolylines();
+      notifyListeners();
+      return;
+    }
+
+    _isCalculating = true;
+    notifyListeners();
+
+    try {
+      await _buildDispatcherLegRoute(_confirmedStops, sorted);
+      final route = _currentRoute;
+      if (_map != null && route != null) {
+        _clearRoutePolylines();
+        _showRouteOnMap(route);
+        _animateToRoute(route);
+      }
+    } catch (e) {
+      _navigationError = e.toString();
+    } finally {
+      _isCalculating = false;
+      notifyListeners();
+    }
+  }
+
+  /// Builds the dispatcher leg route for [legIndex] using importRoute from
+  /// the pre-calculated dispatcher polyline. Falls back to fresh calculation
+  /// if the section is unavailable or importRoute fails.
+  Future<void> _buildDispatcherLegRoute(
+    int legIndex,
+    List<DriverTransportOrderRoutePoint> sortedPoints,
+  ) async {
+    final routePlan = _lastDispatcherRoutePlan;
+    final routingEngine = _routingEngine;
+    if (routingEngine == null) return;
+
+    // Try importRoute from dispatcher polyline section.
+    if (routePlan != null) {
+      List<List<RoutePreviewCoordinate>> sections;
+      try {
+        sections = _dispatcherRoutePolylineDecoder.decodeSections(
+          routePlan.polyline,
+        );
+      } catch (_) {
+        sections = const [];
+      }
+
+      final sectionIndex = legIndex - 1;
+      final expectedSections = sortedPoints.length - 1;
+      if (sections.length == expectedSections &&
+          sectionIndex >= 0 &&
+          sectionIndex < sections.length &&
+          sections[sectionIndex].length >= 2) {
+        final sectionCoords = sections[sectionIndex];
+        final locations = sectionCoords.map((c) {
+          return Location.withCoordinates(
+            GeoCoordinates(c.latitude, c.longitude),
+          )..time = DateTime.now();
+        }).toList(growable: false);
+
+        final completer = Completer<Route?>();
+        final CalculateRouteCallback onImport = (
+          RoutingError? error,
+          List<Route>? routes,
+        ) {
+          completer.complete(
+            (error == null && routes != null && routes.isNotEmpty)
+                ? routes.first
+                : null,
+          );
+        };
+
+        final profile = routePlan.routingProfile;
+        routingEngine.importRouteWithRoutingOptions(
+          locations,
+          _buildImportRoutingOptions(profile),
+          onImport,
+        );
+
+        final imported = await completer.future;
+        if (imported != null) {
+          _currentRoute = imported;
+          return;
+        }
+      }
+    }
+
+    // Fallback: fresh route calculation between the two leg endpoints.
+    await _buildFreshLegRoute(legIndex, sortedPoints, routePlan);
+  }
+
+  Future<void> _buildFreshLegRoute(
+    int legIndex,
+    List<DriverTransportOrderRoutePoint> sortedPoints,
+    DriverTransportOrderRoutePlan? routePlan,
+  ) async {
+    if (legIndex == 0 || legIndex >= sortedPoints.length) return;
+    final routingEngine = _routingEngine;
+    if (routingEngine == null) return;
+
+    final from = sortedPoints[legIndex - 1];
+    final to = sortedPoints[legIndex];
+    final waypoints = [
+      Waypoint.withDefaults(GeoCoordinates(from.latitude, from.longitude)),
+      Waypoint.withDefaults(GeoCoordinates(to.latitude, to.longitude)),
+    ];
+
+    final completer = Completer<Route?>();
+    final CalculateRouteCallback cb = (RoutingError? error, List<Route>? routes) {
+      completer.complete(
+        (error == null && routes != null && routes.isNotEmpty)
+            ? routes.first
+            : null,
+      );
+    };
+
+    if (routePlan != null &&
+        routePlan.routingProfile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(
+        waypoints,
+        _buildCarOptions(routePlan.routingProfile),
+        cb,
+      );
+    } else if (routePlan != null) {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(routePlan.routingProfile, routePlan.vehicleSpec),
+        cb,
+      );
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        TruckOptions()
+          ..routeOptions.enableTolls = true
+          ..routeOptions.enableRouteHandle = true
+          ..routeOptions.trafficOptimizationMode =
+              TrafficOptimizationMode.timeDependent,
+        cb,
+      );
+    }
+
+    final route = await completer.future;
+    if (route != null) {
+      _currentRoute = route;
+    }
+  }
+
+  /// Removes only the route polylines from the map, leaving stop circles intact.
+  void _clearRoutePolylines() {
+    final map = _map;
+    if (map == null) {
+      _routePolylines.clear();
+      return;
+    }
+    for (final p in _routePolylines) {
+      map.mapScene.removeMapPolyline(p);
+    }
+    _routePolylines.clear();
+  }
+
+  /// Replaces the stop circle at [stopIndex] with a green confirmed circle.
+  void _confirmStopCircle(int stopIndex) {
+    final map = _map;
+    if (map == null) return;
+    if (stopIndex < 0 ||
+        stopIndex >= _stopCircles.length ||
+        stopIndex >= _lastDispatcherRoutePoints.length) {
+      return;
+    }
+
+    map.mapScene.removeMapPolygon(_stopCircles[stopIndex]);
+
+    final point = _lastDispatcherRoutePoints[stopIndex];
+    const double radiusMeters = 28;
+    final geoCircle = GeoCircle(
+      GeoCoordinates(point.latitude, point.longitude),
+      radiusMeters,
+    );
+    const confirmedColor = Color(0xFF22C55E);
+    final newCircle = MapPolygon(
+      GeoPolygon.withGeoCircle(geoCircle),
+      confirmedColor,
+    );
+    map.mapScene.addMapPolygon(newCircle);
+    _stopCircles[stopIndex] = newCircle;
+  }
+
   @override
   void dispose() {
-    _followTimer?.cancel();
-    _followTimer = null;
+    _cancelNavigationCameraAutoResume();
+    _positionSub?.cancel();
+    _positionSub = null;
+    _locationSimulator?.stop();
+    _locationSimulator?.listener = null;
+    _locationSimulator = null;
+    _mapLocationSub?.cancel();
+    _mapLocationSub = null;
+    _rerouteCooldownTimer?.cancel();
+    _rerouteCooldownTimer = null;
+    _isRerouting = false;
+    _ref.read(driverLocationReportingServiceProvider).stopPeriodicReporting();
+    _ref.read(driverHereLocationServiceProvider).stop();
+    _visualNavigator?.stopRendering();
+    _visualNavigator?.route = null;
+    _visualNavigator = null;
+    _routeDeviationListener = null;
+    _milestoneStatusListener = null;
+    _speedLimitListener = null;
+    _speedWarningListener = null;
+    _maneuverViewLaneAssistanceListener = null;
+    _safetyCameraWarningListener = null;
+    _truckRestrictionsWarningListener = null;
 
     _locationIndicator?.disable();
     _locationIndicator = null;

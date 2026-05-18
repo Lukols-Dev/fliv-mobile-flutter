@@ -89,6 +89,8 @@ class DriverTransportOrderDetailsDto {
     this.cargoDescription,
     this.temperatureSensitive,
     this.notes,
+    this.routePoints = const [],
+    this.routePlan,
   });
 
   final String id;
@@ -111,6 +113,8 @@ class DriverTransportOrderDetailsDto {
   final String? cargoDescription;
   final bool? temperatureSensitive;
   final String? notes;
+  final List<DriverTransportOrderRoutePointDto> routePoints;
+  final DriverTransportOrderRoutePlanDto? routePlan;
 
   factory DriverTransportOrderDetailsDto.fromJson(Map<String, dynamic> json) {
     DateTime? parseDate(dynamic v) {
@@ -138,6 +142,9 @@ class DriverTransportOrderDetailsDto {
       return null;
     }
 
+    final routePointsJson = json['routePoints'] as List<dynamic>? ?? [];
+    final routePlanJson = json['routePlan'];
+
     return DriverTransportOrderDetailsDto(
       id: json['id'] as String,
       ztNumber: json['ztNumber'] as String?,
@@ -159,6 +166,14 @@ class DriverTransportOrderDetailsDto {
       cargoDescription: json['cargoDescription'] as String?,
       temperatureSensitive: parseBool(json['temperatureSensitive']),
       notes: json['notes'] as String?,
+      routePoints: routePointsJson
+          .whereType<Map>()
+          .map((m) => DriverTransportOrderRoutePointDto.fromJson(m.cast()))
+          .toList()
+        ..sort((a, b) => a.sequence.compareTo(b.sequence)),
+      routePlan: routePlanJson is Map
+          ? DriverTransportOrderRoutePlanDto.fromJson(routePlanJson.cast())
+          : null,
     );
   }
 
@@ -183,7 +198,275 @@ class DriverTransportOrderDetailsDto {
     cargoDescription: cargoDescription,
     temperatureSensitive: temperatureSensitive,
     notes: notes,
+    routePoints: routePoints.map((p) => p.toDomain()).toList(),
+    routePlan: routePlan?.toDomain(),
   );
+}
+
+class DriverTransportOrderRoutePlanDto {
+  const DriverTransportOrderRoutePlanDto({
+    this.routingProfile = const DriverRouteRoutingProfileDto(),
+    this.vehicleSpec,
+    required this.polyline,
+    required this.distanceMeters,
+    required this.durationSeconds,
+    this.calculationHash,
+    this.calculatedAt,
+  });
+
+  final DriverRouteRoutingProfileDto routingProfile;
+  final DriverRouteVehicleSpecDto? vehicleSpec;
+  final String polyline;
+  final int distanceMeters;
+  final int durationSeconds;
+  final String? calculationHash;
+  final DateTime? calculatedAt;
+
+  factory DriverTransportOrderRoutePlanDto.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    int parseInt(dynamic v) {
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      if (v is String) return DateTime.tryParse(v);
+      return null;
+    }
+
+    final routingProfileJson = json['routingProfile'];
+    final vehicleSpecJson = json['vehicleSpec'];
+
+    return DriverTransportOrderRoutePlanDto(
+      routingProfile: routingProfileJson is Map
+          ? DriverRouteRoutingProfileDto.fromJson(routingProfileJson.cast())
+          : const DriverRouteRoutingProfileDto(),
+      vehicleSpec: vehicleSpecJson is Map
+          ? DriverRouteVehicleSpecDto.fromJson(vehicleSpecJson.cast())
+          : null,
+      polyline: json['polyline'] as String? ?? '',
+      distanceMeters: parseInt(json['distanceMeters']),
+      durationSeconds: parseInt(json['durationSeconds']),
+      calculationHash: json['calculationHash'] as String?,
+      calculatedAt: parseDate(json['calculatedAt']),
+    );
+  }
+
+  DriverTransportOrderRoutePlan toDomain() => DriverTransportOrderRoutePlan(
+    routingProfile: routingProfile.toDomain(),
+    vehicleSpec: vehicleSpec?.toDomain(),
+    polyline: polyline,
+    distanceMeters: distanceMeters,
+    durationSeconds: durationSeconds,
+    calculationHash: calculationHash,
+    calculatedAt: calculatedAt,
+  );
+}
+
+class DriverRouteRoutingProfileDto {
+  const DriverRouteRoutingProfileDto({
+    this.transportMode = 'truck',
+    this.routingMode = 'fast',
+    this.trafficMode = 'default',
+    this.avoidTolls = false,
+    this.avoidFerries = false,
+    this.avoidMotorways = false,
+  });
+
+  final String transportMode;
+  final String routingMode;
+  final String trafficMode;
+  final bool avoidTolls;
+  final bool avoidFerries;
+  final bool avoidMotorways;
+
+  factory DriverRouteRoutingProfileDto.fromJson(Map<String, dynamic> json) {
+    bool parseBool(dynamic v) {
+      if (v is bool) return v;
+      if (v is String) {
+        final s = v.toLowerCase().trim();
+        if (s == 'true') return true;
+        if (s == 'false') return false;
+      }
+      return false;
+    }
+
+    String parseString(dynamic v, String fallback) {
+      if (v is String && v.trim().isNotEmpty) return v.trim();
+      return fallback;
+    }
+
+    return DriverRouteRoutingProfileDto(
+      transportMode: parseString(json['transportMode'], 'truck'),
+      routingMode: parseString(json['routingMode'], 'fast'),
+      trafficMode: parseString(json['trafficMode'], 'default'),
+      avoidTolls: parseBool(json['avoidTolls']),
+      avoidFerries: parseBool(json['avoidFerries']),
+      avoidMotorways: parseBool(json['avoidMotorways']),
+    );
+  }
+
+  DriverRouteRoutingProfile toDomain() => DriverRouteRoutingProfile(
+    transportMode: transportMode,
+    routingMode: routingMode,
+    trafficMode: trafficMode,
+    avoidTolls: avoidTolls,
+    avoidFerries: avoidFerries,
+    avoidMotorways: avoidMotorways,
+  );
+}
+
+class DriverRouteVehicleSpecDto {
+  const DriverRouteVehicleSpecDto({
+    this.heightCm,
+    this.widthCm,
+    this.lengthCm,
+    this.currentWeightKg,
+    this.grossWeightKg,
+    this.weightPerAxleKg,
+    this.axleCount,
+    this.trailerCount,
+    this.hazardousGoods = const [],
+  });
+
+  final int? heightCm;
+  final int? widthCm;
+  final int? lengthCm;
+  final int? currentWeightKg;
+  final int? grossWeightKg;
+  final int? weightPerAxleKg;
+  final int? axleCount;
+  final int? trailerCount;
+  final List<String> hazardousGoods;
+
+  factory DriverRouteVehicleSpecDto.fromJson(Map<String, dynamic> json) {
+    int? parseInt(dynamic v) {
+      if (v == null) return null;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v);
+      return null;
+    }
+
+    final hazardousGoodsJson = json['hazardousGoods'];
+
+    return DriverRouteVehicleSpecDto(
+      heightCm: parseInt(json['heightCm']),
+      widthCm: parseInt(json['widthCm']),
+      lengthCm: parseInt(json['lengthCm']),
+      currentWeightKg: parseInt(json['currentWeightKg']),
+      grossWeightKg: parseInt(json['grossWeightKg']),
+      weightPerAxleKg: parseInt(json['weightPerAxleKg']),
+      axleCount: parseInt(json['axleCount']),
+      trailerCount: parseInt(json['trailerCount']),
+      hazardousGoods: hazardousGoodsJson is List
+          ? hazardousGoodsJson.whereType<String>().toList(growable: false)
+          : const [],
+    );
+  }
+
+  DriverRouteVehicleSpec toDomain() => DriverRouteVehicleSpec(
+    heightCm: heightCm,
+    widthCm: widthCm,
+    lengthCm: lengthCm,
+    currentWeightKg: currentWeightKg,
+    grossWeightKg: grossWeightKg,
+    weightPerAxleKg: weightPerAxleKg,
+    axleCount: axleCount,
+    trailerCount: trailerCount,
+    hazardousGoods: hazardousGoods,
+  );
+}
+
+class DriverTransportOrderRoutePointDto {
+  const DriverTransportOrderRoutePointDto({
+    required this.id,
+    required this.sequence,
+    required this.type,
+    this.source = 'DISPATCHER',
+    this.isManual = true,
+    this.label,
+    this.address,
+    required this.latitude,
+    required this.longitude,
+    this.arrivedAt,
+  });
+
+  final String id;
+  final int sequence;
+  final String type;
+  final String source;
+  final bool isManual;
+  final String? label;
+  final String? address;
+  final double latitude;
+  final double longitude;
+  final DateTime? arrivedAt;
+
+  factory DriverTransportOrderRoutePointDto.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    int parseInt(dynamic v) {
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    double parseDouble(dynamic v) {
+      if (v is double) return v;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    bool parseBool(dynamic v) {
+      if (v is bool) return v;
+      if (v is String) {
+        final normalized = v.toLowerCase().trim();
+        if (normalized == 'true') return true;
+        if (normalized == 'false') return false;
+      }
+      return true;
+    }
+
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      if (v is String) return DateTime.tryParse(v);
+      return null;
+    }
+
+    return DriverTransportOrderRoutePointDto(
+      id: json['id'] as String? ?? '',
+      sequence: parseInt(json['sequence']),
+      type: json['type'] as String? ?? 'VIA',
+      source: json['source'] as String? ?? 'DISPATCHER',
+      isManual: parseBool(json['isManual']),
+      label: json['label'] as String?,
+      address: json['address'] as String?,
+      latitude: parseDouble(json['latitude']),
+      longitude: parseDouble(json['longitude']),
+      arrivedAt: parseDate(json['arrivedAt']),
+    );
+  }
+
+  DriverTransportOrderRoutePoint toDomain() =>
+      DriverTransportOrderRoutePoint(
+        id: id,
+        sequence: sequence,
+        type: type,
+        source: source,
+        isManual: isManual,
+        label: label,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
+        arrivedAt: arrivedAt,
+      );
 }
 
 class UpdateDriverTransportOrderStatusRequestDto {

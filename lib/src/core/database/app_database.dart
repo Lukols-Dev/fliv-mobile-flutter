@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -80,6 +80,20 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           driverOrderDetailsTable,
           driverOrderDetailsTable.toAddress,
+        );
+      }
+      // upgrade z v6 -> v7 (cache punktów trasy dla nawigacji HERE)
+      if (from < 7) {
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.routePointsJson,
+        );
+      }
+      // upgrade z v7 -> v8 (GPS odometr per zlecenie)
+      if (from < 8) {
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.gpsOdometerMeters,
         );
       }
     },
@@ -143,6 +157,19 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertOrderDetails(DriverOrderDetailsTableCompanion row) async {
     await into(driverOrderDetailsTable).insertOnConflictUpdate(row);
+  }
+
+  Future<int> getOrderOdometer(String orderId) async {
+    final row = await getOrderDetails(orderId);
+    return row?.gpsOdometerMeters ?? 0;
+  }
+
+  Future<void> saveOrderOdometer(String orderId, int meters) async {
+    await (update(driverOrderDetailsTable)..where((t) => t.id.equals(orderId)))
+        .write(DriverOrderDetailsTableCompanion(
+          gpsOdometerMeters: Value(meters),
+          updatedAt: Value(DateTime.now()),
+        ));
   }
 
   Future<void> clearAllOrders() async {

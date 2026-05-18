@@ -1,14 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:here_sdk/core.dart' as here;
 
+import 'package:mobile/src/core/here/driver_here_location_service.dart';
 import 'package:mobile/src/core/location/location.dart';
-import 'package:mobile/src/core/location/location_service.dart';
-
-final locationServiceProvider = Provider<LocationService>((ref) {
-  return const LocationService();
-});
 
 final locationControllerProvider =
     AsyncNotifierProvider.autoDispose<LocationController, AppLocation?>(
@@ -16,7 +12,7 @@ final locationControllerProvider =
     );
 
 class LocationController extends AsyncNotifier<AppLocation?> {
-  StreamSubscription<Position>? _sub;
+  StreamSubscription<here.Location>? _sub;
 
   @override
   Future<AppLocation?> build() async {
@@ -31,9 +27,9 @@ class LocationController extends AsyncNotifier<AppLocation?> {
   Future<AppLocation> getCurrent() async {
     state = const AsyncLoading();
     try {
-      final service = ref.read(locationServiceProvider);
-      final pos = await service.getCurrentPosition();
-      final loc = AppLocation.fromPosition(pos);
+      final service = ref.read(driverHereLocationServiceProvider);
+      final hereLocation = await service.getCurrentHereLocation();
+      final loc = AppLocation.fromHereLocation(hereLocation);
       state = AsyncData(loc);
       return loc;
     } catch (e, st) {
@@ -47,10 +43,10 @@ class LocationController extends AsyncNotifier<AppLocation?> {
     await getCurrent();
 
     // 2) stream
-    final service = ref.read(locationServiceProvider);
+    final service = ref.read(driverHereLocationServiceProvider);
     await _sub?.cancel();
-    _sub = service.getPositionStream().listen(
-      (pos) => state = AsyncData(AppLocation.fromPosition(pos)),
+    _sub = service.locationStream.listen(
+      (location) => state = AsyncData(AppLocation.fromHereLocation(location)),
       onError: (e, st) => state = AsyncError(e, st),
     );
   }
@@ -58,13 +54,5 @@ class LocationController extends AsyncNotifier<AppLocation?> {
   Future<void> stopTracking() async {
     await _sub?.cancel();
     _sub = null;
-  }
-
-  Future<void> openAppSettings() async {
-    await ref.read(locationServiceProvider).openAppSettings();
-  }
-
-  Future<void> openLocationSettings() async {
-    await ref.read(locationServiceProvider).openLocationSettings();
   }
 }

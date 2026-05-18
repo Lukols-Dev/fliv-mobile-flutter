@@ -148,8 +148,16 @@
   "route_no_order_description": "Когда диспетчер назначит заказ, здесь появится маршрут и кнопка запуска.",
   "route_distance_label": "Расстояние",
   "route_time_label": "Время",
+  "route_eta_arrival": "Прибытие",
   "route_route_not_calculated": "Маршрут: еще не рассчитан.",
+  "route_no_configured_route": "Маршрут не настроен.",
+  "route_loading_route": "Загрузка маршрута...",
+  "route_route_error": "Не удалось загрузить или рассчитать маршрут",
+  "route_next_point": "Следующая точка",
+  "route_next_instruction_label": "Следующий маневр",
   "route_calculate_route": "Рассчитать маршрут",
+  "route_calculate_approach": "Рассчитать подъезд",
+  "route_approach_label": "Подъезд к старту",
   "route_stop": "Остановить",
   "route_start_route": "Начать маршрут",
   "route_change_status": "Изменить статус",
@@ -157,6 +165,7 @@
   "route_status_change_failed": "Не удалось изменить статус",
   "common_back": "Назад",
   "route_center_on_my_location": "Центрировать на моем местоположении",
+  "route_rerouting": "Пересчёт маршрута...",
   "route_report_problem": "Сообщить о проблеме",
   "route_report_problem_sheet_title": "Сообщить о проблеме",
   "route_report_problem_description_label": "Описание проблемы",
@@ -172,5 +181,35 @@
   "route_status_change_title": "Изменение статуса",
   "route_status_in_progress_label": "В процессе",
   "common_minutes_short": "мин",
-  "route_order_number_prefix": "Заказ #"
+  "route_order_number_prefix": "Заказ #",
+  "route_fetch_route": "Рассчитать маршрут",
+  "route_fetching_route": "Расчёт маршрута...",
+  "route_total_distance_label": "Всего",
+  "route_my_location": "Моя локализация",
+  "route_no_order_map_title": "Нет активного заказа",
+  "route_no_order_map_description": "Диспетчер ещё не назначил заказ.",
+  "route_arrival_title": "Точка {index} из {total}",
+  "@route_arrival_title": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_confirm_arrival": "Подтвердить прибытие",
+  "route_drive_to_point": "Ехать к точке {index} из {total}",
+  "@route_drive_to_point": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_arrival_confirmation_failed": "Не удалось отправить подтверждение",
+  "order_route_progress_title": "Прогресс маршрута",
+  "order_route_point_arrived_at": "Прибытие: {time}",
+  "@order_route_point_arrived_at": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "order_route_point_next": "Следующая цель"
 }

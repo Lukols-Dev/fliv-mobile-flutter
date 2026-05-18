@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
+import 'package:mobile/src/features/orders/presentation/widgets/route_stops_progress_list.dart';
 
 class OrderDetailsScreen extends ConsumerWidget {
   const OrderDetailsScreen({super.key, this.orderId});
@@ -266,6 +267,80 @@ class OrderDetailsScreen extends ConsumerWidget {
                           ),
                         ),
 
+                        if (details.routePoints.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Builder(builder: (context) {
+                                  final t = AppLocalizations.of(context)!;
+                                  final sorted = [...details.routePoints]
+                                    ..sort((a, b) => a.sequence.compareTo(b.sequence));
+                                  final arrivedCount = sorted.where((p) => p.arrivedAt != null).length;
+                                  return Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          t.order_route_progress_title,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400,
+                                            color: Color(0xFF709470),
+                                            fontFamily: 'Figtree',
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        '$arrivedCount / ${sorted.length}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF111827),
+                                          fontFamily: 'Figtree',
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                                const SizedBox(height: 6),
+                                Builder(builder: (context) {
+                                  final sorted = [...details.routePoints]
+                                    ..sort((a, b) => a.sequence.compareTo(b.sequence));
+                                  final arrivedCount = sorted.where((p) => p.arrivedAt != null).length;
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: sorted.isNotEmpty ? arrivedCount / sorted.length : 0,
+                                      minHeight: 5,
+                                      backgroundColor: const Color(0xFFE5E7EB),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF22C55E)),
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 14),
+                                Builder(builder: (context) {
+                                  final sorted = [...details.routePoints]
+                                    ..sort((a, b) => a.sequence.compareTo(b.sequence));
+                                  final confirmedStops = sorted
+                                      .where((p) => p.arrivedAt != null)
+                                      .length;
+                                  return RouteStopsProgressList(
+                                    routePoints: sorted,
+                                    confirmedStops: confirmedStops,
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                        ],
+
                         const SizedBox(height: 16),
 
                         // CARGO CARD
@@ -343,7 +418,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
-                            // TODO: Implement start navigation
+                            context.go('/route');
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF0F4D46),

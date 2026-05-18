@@ -148,8 +148,16 @@
   "route_no_order_description": "Gdy dyspozytor przypisze zlecenie, tutaj pojawi się trasa oraz przycisk rozpoczęcia.",
   "route_distance_label": "Dystans",
   "route_time_label": "Czas",
+  "route_eta_arrival": "Przyjazd",
   "route_route_not_calculated": "Trasa: jeszcze nie wyznaczona.",
+  "route_no_configured_route": "Brak skonfigurowanej trasy.",
+  "route_loading_route": "Ładowanie trasy...",
+  "route_route_error": "Nie udało się pobrać lub wyznaczyć trasy",
+  "route_next_point": "Następny punkt",
+  "route_next_instruction_label": "Następny manewr",
   "route_calculate_route": "Wyznacz trasę",
+  "route_calculate_approach": "Wylicz dojazd",
+  "route_approach_label": "Dojazd do startu",
   "route_stop": "Zatrzymaj",
   "route_start_route": "Rozpocznij trasę",
   "route_change_status": "Zmień status",
@@ -157,6 +165,7 @@
   "route_status_change_failed": "Nie udało się zmienić statusu",
   "common_back": "Wstecz",
   "route_center_on_my_location": "Wycentruj na mojej lokalizacji",
+  "route_rerouting": "Przeliczam trasę...",
   "route_report_problem": "Zgłoś Problem",
   "route_report_problem_sheet_title": "Zgłoś problem",
   "route_report_problem_description_label": "Opis problemu",
@@ -172,5 +181,35 @@
   "route_status_change_title": "Zmiana statusu",
   "route_status_in_progress_label": "W realizacji",
   "common_minutes_short": "min",
-  "route_order_number_prefix": "Zlecenie #"
+  "route_order_number_prefix": "Zlecenie #",
+  "route_fetch_route": "Oblicz trasę",
+  "route_fetching_route": "Obliczanie trasy...",
+  "route_total_distance_label": "Łącznie",
+  "route_my_location": "Moja lokalizacja",
+  "route_no_order_map_title": "Brak aktywnego zlecenia",
+  "route_no_order_map_description": "Dyspozytor nie przypisał jeszcze zlecenia.",
+  "route_arrival_title": "Punkt {index} z {total}",
+  "@route_arrival_title": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_confirm_arrival": "Potwierdź dotarcie",
+  "route_drive_to_point": "Jedź do punktu {index} z {total}",
+  "@route_drive_to_point": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_arrival_confirmation_failed": "Nie udało się wysłać potwierdzenia",
+  "order_route_progress_title": "Postęp trasy",
+  "order_route_point_arrived_at": "Dotarcie: {time}",
+  "@order_route_point_arrived_at": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "order_route_point_next": "Następny cel"
 }

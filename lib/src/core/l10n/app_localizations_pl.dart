@@ -468,10 +468,34 @@ class AppLocalizationsPl extends AppLocalizations {
   String get route_time_label => 'Czas';
 
   @override
+  String get route_eta_arrival => 'Przyjazd';
+
+  @override
   String get route_route_not_calculated => 'Trasa: jeszcze nie wyznaczona.';
 
   @override
+  String get route_no_configured_route => 'Brak skonfigurowanej trasy.';
+
+  @override
+  String get route_loading_route => 'Ładowanie trasy...';
+
+  @override
+  String get route_route_error => 'Nie udało się pobrać lub wyznaczyć trasy';
+
+  @override
+  String get route_next_point => 'Następny punkt';
+
+  @override
+  String get route_next_instruction_label => 'Następny manewr';
+
+  @override
   String get route_calculate_route => 'Wyznacz trasę';
+
+  @override
+  String get route_calculate_approach => 'Wylicz dojazd';
+
+  @override
+  String get route_approach_label => 'Dojazd do startu';
 
   @override
   String get route_stop => 'Zatrzymaj';
@@ -493,6 +517,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get route_center_on_my_location => 'Wycentruj na mojej lokalizacji';
+
+  @override
+  String get route_rerouting => 'Przeliczam trasę...';
 
   @override
   String get route_report_problem => 'Zgłoś Problem';
@@ -541,4 +568,51 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get route_order_number_prefix => 'Zlecenie #';
+
+  @override
+  String get route_fetch_route => 'Oblicz trasę';
+
+  @override
+  String get route_fetching_route => 'Obliczanie trasy...';
+
+  @override
+  String get route_total_distance_label => 'Łącznie';
+
+  @override
+  String get route_my_location => 'Moja lokalizacja';
+
+  @override
+  String get route_no_order_map_title => 'Brak aktywnego zlecenia';
+
+  @override
+  String get route_no_order_map_description =>
+      'Dyspozytor nie przypisał jeszcze zlecenia.';
+
+  @override
+  String route_arrival_title(int index, int total) {
+    return 'Punkt $index z $total';
+  }
+
+  @override
+  String get route_confirm_arrival => 'Potwierdź dotarcie';
+
+  @override
+  String route_drive_to_point(int index, int total) {
+    return 'Jedź do punktu $index z $total';
+  }
+
+  @override
+  String get route_arrival_confirmation_failed =>
+      'Nie udało się wysłać potwierdzenia';
+
+  @override
+  String get order_route_progress_title => 'Postęp trasy';
+
+  @override
+  String order_route_point_arrived_at(String time) {
+    return 'Dotarcie: $time';
+  }
+
+  @override
+  String get order_route_point_next => 'Następny cel';
 }

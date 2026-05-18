@@ -1,4 +1,4 @@
-import 'package:geolocator/geolocator.dart';
+import 'package:here_sdk/core.dart' as here;
 
 class AppLocation {
   final double lat;
@@ -13,10 +13,10 @@ class AppLocation {
     this.accuracy,
   });
 
-  factory AppLocation.fromPosition(Position p) => AppLocation(
-    lat: p.latitude,
-    lon: p.longitude,
-    accuracy: p.accuracy,
-    timestamp: p.timestamp,
+  factory AppLocation.fromHereLocation(here.Location location) => AppLocation(
+    lat: location.coordinates.latitude,
+    lon: location.coordinates.longitude,
+    accuracy: location.horizontalAccuracyInMeters,
+    timestamp: location.time ?? DateTime.now(),
   );
 }

@@ -613,9 +613,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           height: 54,
                                           width: double.infinity,
                                           child: FilledButton(
-                                            onPressed: () {
-                                              // TODO: Implement open navigation
-                                            },
+                                            onPressed: () => context.go('/route'),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: const Color(
                                                 0xFF0F4D46,

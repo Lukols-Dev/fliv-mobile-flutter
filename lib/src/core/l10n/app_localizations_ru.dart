@@ -474,10 +474,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get route_time_label => 'Время';
 
   @override
+  String get route_eta_arrival => 'Прибытие';
+
+  @override
   String get route_route_not_calculated => 'Маршрут: еще не рассчитан.';
 
   @override
+  String get route_no_configured_route => 'Маршрут не настроен.';
+
+  @override
+  String get route_loading_route => 'Загрузка маршрута...';
+
+  @override
+  String get route_route_error => 'Не удалось загрузить или рассчитать маршрут';
+
+  @override
+  String get route_next_point => 'Следующая точка';
+
+  @override
+  String get route_next_instruction_label => 'Следующий маневр';
+
+  @override
   String get route_calculate_route => 'Рассчитать маршрут';
+
+  @override
+  String get route_calculate_approach => 'Рассчитать подъезд';
+
+  @override
+  String get route_approach_label => 'Подъезд к старту';
 
   @override
   String get route_stop => 'Остановить';
@@ -500,6 +524,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get route_center_on_my_location =>
       'Центрировать на моем местоположении';
+
+  @override
+  String get route_rerouting => 'Пересчёт маршрута...';
 
   @override
   String get route_report_problem => 'Сообщить о проблеме';
@@ -548,4 +575,51 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get route_order_number_prefix => 'Заказ #';
+
+  @override
+  String get route_fetch_route => 'Рассчитать маршрут';
+
+  @override
+  String get route_fetching_route => 'Расчёт маршрута...';
+
+  @override
+  String get route_total_distance_label => 'Всего';
+
+  @override
+  String get route_my_location => 'Моя локализация';
+
+  @override
+  String get route_no_order_map_title => 'Нет активного заказа';
+
+  @override
+  String get route_no_order_map_description =>
+      'Диспетчер ещё не назначил заказ.';
+
+  @override
+  String route_arrival_title(int index, int total) {
+    return 'Точка $index из $total';
+  }
+
+  @override
+  String get route_confirm_arrival => 'Подтвердить прибытие';
+
+  @override
+  String route_drive_to_point(int index, int total) {
+    return 'Ехать к точке $index из $total';
+  }
+
+  @override
+  String get route_arrival_confirmation_failed =>
+      'Не удалось отправить подтверждение';
+
+  @override
+  String get order_route_progress_title => 'Прогресс маршрута';
+
+  @override
+  String order_route_point_arrived_at(String time) {
+    return 'Прибытие: $time';
+  }
+
+  @override
+  String get order_route_point_next => 'Следующая цель';
 }
