@@ -120,15 +120,28 @@ class RouteMapController extends ChangeNotifier {
   static const Duration _rerouteCooldown = Duration(seconds: 8);
   Timer? _rerouteCooldownTimer;
 
-  int _milestonesReached = 0;
-  int get milestonesReached => _milestonesReached;
+  int _confirmedStops = 0;
+  int get confirmedStops => _confirmedStops;
+
+  int get totalStops => _lastDispatcherRoutePoints.length;
+
+  bool get isLastPoint =>
+      _lastDispatcherRoutePoints.isEmpty ||
+      _confirmedStops >= _lastDispatcherRoutePoints.length - 1;
+
+  DriverTransportOrderRoutePoint? _pendingArrivalPoint;
+  DriverTransportOrderRoutePoint? get pendingArrivalPoint => _pendingArrivalPoint;
+  void consumeArrivalPoint() {
+    _pendingArrivalPoint = null;
+    notifyListeners();
+  }
 
   String? get nextPointAddress {
     if (_lastDispatcherRoutePoints.isEmpty) return null;
     final sorted = [..._lastDispatcherRoutePoints]
       ..sort((a, b) => a.sequence.compareTo(b.sequence));
-    if (_milestonesReached >= sorted.length) return null;
-    return sorted[_milestonesReached].address;
+    if (_confirmedStops >= sorted.length) return null;
+    return sorted[_confirmedStops].address;
   }
 
   bool _isCalculating = false;
@@ -380,6 +393,8 @@ class RouteMapController extends ChangeNotifier {
     _navigationInstruction = null;
     _remainingDistanceInMeters = null;
     _remainingDuration = null;
+    _confirmedStops = 0;
+    _pendingArrivalPoint = null;
     _lastStartUsed = null;
     _lastDispatcherStops = const [];
     _lastDispatcherRoutePlan = routePlan;
@@ -515,6 +530,8 @@ class RouteMapController extends ChangeNotifier {
     _lastStartUsed = start;
     _lastDispatcherStops = [firstStop];
     _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(routePoints);
+    _confirmedStops = 0;
+    _pendingArrivalPoint = null;
     _navigationError = null;
     _navigationInstruction = null;
     _remainingDistanceInMeters = null;
@@ -636,6 +653,16 @@ class RouteMapController extends ChangeNotifier {
           profile.trafficMode.toLowerCase() == 'disabled'
           ? TrafficOptimizationMode.disabled
           : TrafficOptimizationMode.timeDependent;
+  }
+
+  RoutingOptions _buildImportRoutingOptions(DriverRouteRoutingProfile profile) {
+    final opts = RoutingOptions()
+      ..routeOptions = _buildRouteOptions(profile)
+      ..avoidanceOptions = _buildAvoidanceOptions(profile);
+    if (profile.transportMode.toLowerCase() != 'car') {
+      opts.transportSpecification.transportMode = TransportMode.truck;
+    }
+    return opts;
   }
 
   AvoidanceOptions _buildAvoidanceOptions(DriverRouteRoutingProfile profile) {
@@ -771,7 +798,6 @@ class RouteMapController extends ChangeNotifier {
 
     _locationIndicator?.disable();
     _locationIndicator = null;
-    _milestonesReached = 0;
     _isRerouting = false;
     _isCameraTracking = true;
 
@@ -900,18 +926,26 @@ class RouteMapController extends ChangeNotifier {
         deviation.currentLocation.mapMatchedLocation?.coordinates ??
         deviation.currentLocation.originalLocation.coordinates;
 
-    // Fix #2: only route to stops not yet reached
-    final remainingStops = _milestonesReached < _lastDispatcherStops.length
-        ? _lastDispatcherStops.sublist(_milestonesReached)
-        : const <GeoCoordinates>[];
-    if (remainingStops.isEmpty) {
+    // Route only to the current leg's target — the next unconfirmed point.
+    if (_lastDispatcherRoutePoints.isEmpty) {
       _isRerouting = false;
       return;
     }
+    final sortedForDeviation = [..._lastDispatcherRoutePoints]
+        ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    if (_confirmedStops >= sortedForDeviation.length) {
+      _isRerouting = false;
+      return;
+    }
+    final deviationTarget = sortedForDeviation[_confirmedStops];
+    final deviationTargetCoords = GeoCoordinates(
+      deviationTarget.latitude,
+      deviationTarget.longitude,
+    );
 
     final waypoints = <Waypoint>[
       Waypoint.withDefaults(startCoords),
-      ...remainingStops.map(Waypoint.withDefaults),
+      Waypoint.withDefaults(deviationTargetCoords),
     ];
 
     void onResult(RoutingError? error, List<Route>? routes) {
@@ -1007,10 +1041,7 @@ class RouteMapController extends ChangeNotifier {
       });
 
       _destinationReachedListener = DestinationReachedListener(() {
-        stopFollowing();
-        _remainingDistanceInMeters = 0;
-        _remainingDuration = Duration.zero;
-        notifyListeners();
+        _onLegDestinationReached();
       });
 
       _routeDeviationListener = RouteDeviationListener((deviation) {
@@ -1018,10 +1049,8 @@ class RouteMapController extends ChangeNotifier {
       });
 
       _milestoneStatusListener = MilestoneStatusListener((milestone, status) {
-        if (status == MilestoneStatus.reached) {
-          _milestonesReached++;
-          notifyListeners();
-        }
+        // Intermediate milestones don't fire for 2-waypoint legs; confirmed
+        // manually via arrival bottom sheet. Listener kept for HERE SDK wiring.
       });
 
       _speedLimitListener = SpeedLimitListener((speedLimit) {
@@ -1589,6 +1618,223 @@ class RouteMapController extends ChangeNotifier {
             math.cos(b.latitude * math.pi / 180) *
             sinLon * sinLon;
     return r * 2 * math.asin(math.sqrt(chord));
+  }
+
+  // ----------------------------
+  // LEG NAVIGATION
+  // ----------------------------
+
+  void _onLegDestinationReached() {
+    stopFollowing();
+    _remainingDistanceInMeters = 0;
+    _remainingDuration = Duration.zero;
+    final sorted = [..._lastDispatcherRoutePoints]
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    if (_confirmedStops < sorted.length) {
+      _pendingArrivalPoint = sorted[_confirmedStops];
+    }
+    notifyListeners();
+  }
+
+  /// Called by the screen after the driver confirms arrival and the backend
+  /// report has been sent (or skipped on failure). Advances to the next leg.
+  Future<void> advanceToNextLeg() async {
+    _confirmedStops++;
+    _pendingArrivalPoint = null;
+    _confirmStopCircle(_confirmedStops - 1);
+
+    final sorted = [..._lastDispatcherRoutePoints]
+        ..sort((a, b) => a.sequence.compareTo(b.sequence));
+
+    if (_confirmedStops >= sorted.length) {
+      _currentRoute = null;
+      _navigationInstruction = null;
+      _remainingDistanceInMeters = null;
+      _remainingDuration = null;
+      _clearRoutePolylines();
+      notifyListeners();
+      return;
+    }
+
+    _isCalculating = true;
+    notifyListeners();
+
+    try {
+      await _buildDispatcherLegRoute(_confirmedStops, sorted);
+      final route = _currentRoute;
+      if (_map != null && route != null) {
+        _clearRoutePolylines();
+        _showRouteOnMap(route);
+        _animateToRoute(route);
+      }
+    } catch (e) {
+      _navigationError = e.toString();
+    } finally {
+      _isCalculating = false;
+      notifyListeners();
+    }
+  }
+
+  /// Builds the dispatcher leg route for [legIndex] using importRoute from
+  /// the pre-calculated dispatcher polyline. Falls back to fresh calculation
+  /// if the section is unavailable or importRoute fails.
+  Future<void> _buildDispatcherLegRoute(
+    int legIndex,
+    List<DriverTransportOrderRoutePoint> sortedPoints,
+  ) async {
+    final routePlan = _lastDispatcherRoutePlan;
+    final routingEngine = _routingEngine;
+    if (routingEngine == null) return;
+
+    // Try importRoute from dispatcher polyline section.
+    if (routePlan != null) {
+      List<List<RoutePreviewCoordinate>> sections;
+      try {
+        sections = _dispatcherRoutePolylineDecoder.decodeSections(
+          routePlan.polyline,
+        );
+      } catch (_) {
+        sections = const [];
+      }
+
+      final sectionIndex = legIndex - 1;
+      final expectedSections = sortedPoints.length - 1;
+      if (sections.length == expectedSections &&
+          sectionIndex >= 0 &&
+          sectionIndex < sections.length &&
+          sections[sectionIndex].length >= 2) {
+        final sectionCoords = sections[sectionIndex];
+        final locations = sectionCoords.map((c) {
+          return Location.withCoordinates(
+            GeoCoordinates(c.latitude, c.longitude),
+          )..time = DateTime.now();
+        }).toList(growable: false);
+
+        final completer = Completer<Route?>();
+        final CalculateRouteCallback onImport = (
+          RoutingError? error,
+          List<Route>? routes,
+        ) {
+          completer.complete(
+            (error == null && routes != null && routes.isNotEmpty)
+                ? routes.first
+                : null,
+          );
+        };
+
+        final profile = routePlan.routingProfile;
+        routingEngine.importRouteWithRoutingOptions(
+          locations,
+          _buildImportRoutingOptions(profile),
+          onImport,
+        );
+
+        final imported = await completer.future;
+        if (imported != null) {
+          _currentRoute = imported;
+          return;
+        }
+      }
+    }
+
+    // Fallback: fresh route calculation between the two leg endpoints.
+    await _buildFreshLegRoute(legIndex, sortedPoints, routePlan);
+  }
+
+  Future<void> _buildFreshLegRoute(
+    int legIndex,
+    List<DriverTransportOrderRoutePoint> sortedPoints,
+    DriverTransportOrderRoutePlan? routePlan,
+  ) async {
+    if (legIndex == 0 || legIndex >= sortedPoints.length) return;
+    final routingEngine = _routingEngine;
+    if (routingEngine == null) return;
+
+    final from = sortedPoints[legIndex - 1];
+    final to = sortedPoints[legIndex];
+    final waypoints = [
+      Waypoint.withDefaults(GeoCoordinates(from.latitude, from.longitude)),
+      Waypoint.withDefaults(GeoCoordinates(to.latitude, to.longitude)),
+    ];
+
+    final completer = Completer<Route?>();
+    final CalculateRouteCallback cb = (RoutingError? error, List<Route>? routes) {
+      completer.complete(
+        (error == null && routes != null && routes.isNotEmpty)
+            ? routes.first
+            : null,
+      );
+    };
+
+    if (routePlan != null &&
+        routePlan.routingProfile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(
+        waypoints,
+        _buildCarOptions(routePlan.routingProfile),
+        cb,
+      );
+    } else if (routePlan != null) {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(routePlan.routingProfile, routePlan.vehicleSpec),
+        cb,
+      );
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        TruckOptions()
+          ..routeOptions.enableTolls = true
+          ..routeOptions.enableRouteHandle = true
+          ..routeOptions.trafficOptimizationMode =
+              TrafficOptimizationMode.timeDependent,
+        cb,
+      );
+    }
+
+    final route = await completer.future;
+    if (route != null) {
+      _currentRoute = route;
+    }
+  }
+
+  /// Removes only the route polylines from the map, leaving stop circles intact.
+  void _clearRoutePolylines() {
+    final map = _map;
+    if (map == null) {
+      _routePolylines.clear();
+      return;
+    }
+    for (final p in _routePolylines) {
+      map.mapScene.removeMapPolyline(p);
+    }
+    _routePolylines.clear();
+  }
+
+  /// Replaces the stop circle at [stopIndex] with a green confirmed circle.
+  void _confirmStopCircle(int stopIndex) {
+    final map = _map;
+    if (map == null) return;
+    if (stopIndex < 0 ||
+        stopIndex >= _stopCircles.length ||
+        stopIndex >= _lastDispatcherRoutePoints.length) {
+      return;
+    }
+
+    map.mapScene.removeMapPolygon(_stopCircles[stopIndex]);
+
+    final point = _lastDispatcherRoutePoints[stopIndex];
+    const double radiusMeters = 28;
+    final geoCircle = GeoCircle(
+      GeoCoordinates(point.latitude, point.longitude),
+      radiusMeters,
+    );
+    const confirmedColor = Color(0xFF22C55E);
+    final newCircle = MapPolygon(
+      GeoPolygon.withGeoCircle(geoCircle),
+      confirmedColor,
+    );
+    map.mapScene.addMapPolygon(newCircle);
+    _stopCircles[stopIndex] = newCircle;
   }
 
   @override

@@ -393,6 +393,7 @@ class DriverTransportOrderRoutePointDto {
     this.address,
     required this.latitude,
     required this.longitude,
+    this.arrivedAt,
   });
 
   final String id;
@@ -404,6 +405,7 @@ class DriverTransportOrderRoutePointDto {
   final String? address;
   final double latitude;
   final double longitude;
+  final DateTime? arrivedAt;
 
   factory DriverTransportOrderRoutePointDto.fromJson(
     Map<String, dynamic> json,
@@ -432,6 +434,12 @@ class DriverTransportOrderRoutePointDto {
       return true;
     }
 
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      if (v is String) return DateTime.tryParse(v);
+      return null;
+    }
+
     return DriverTransportOrderRoutePointDto(
       id: json['id'] as String? ?? '',
       sequence: parseInt(json['sequence']),
@@ -442,6 +450,7 @@ class DriverTransportOrderRoutePointDto {
       address: json['address'] as String?,
       latitude: parseDouble(json['latitude']),
       longitude: parseDouble(json['longitude']),
+      arrivedAt: parseDate(json['arrivedAt']),
     );
   }
 
@@ -456,6 +465,7 @@ class DriverTransportOrderRoutePointDto {
         address: address,
         latitude: latitude,
         longitude: longitude,
+        arrivedAt: arrivedAt,
       );
 }
 

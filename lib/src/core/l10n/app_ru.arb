@@ -187,5 +187,29 @@
   "route_total_distance_label": "Всего",
   "route_my_location": "Моя локализация",
   "route_no_order_map_title": "Нет активного заказа",
-  "route_no_order_map_description": "Диспетчер ещё не назначил заказ."
+  "route_no_order_map_description": "Диспетчер ещё не назначил заказ.",
+  "route_arrival_title": "Точка {index} из {total}",
+  "@route_arrival_title": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_confirm_arrival": "Подтвердить прибытие",
+  "route_drive_to_point": "Ехать к точке {index} из {total}",
+  "@route_drive_to_point": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_arrival_confirmation_failed": "Не удалось отправить подтверждение",
+  "order_route_progress_title": "Прогресс маршрута",
+  "order_route_point_arrived_at": "Прибытие: {time}",
+  "@order_route_point_arrived_at": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "order_route_point_next": "Следующая цель"
 }

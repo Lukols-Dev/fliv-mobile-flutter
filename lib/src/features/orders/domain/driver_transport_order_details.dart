@@ -59,6 +59,7 @@ class DriverTransportOrderRoutePoint {
     this.address,
     required this.latitude,
     required this.longitude,
+    this.arrivedAt,
   });
 
   final String id;
@@ -70,6 +71,7 @@ class DriverTransportOrderRoutePoint {
   final String? address;
   final double latitude;
   final double longitude;
+  final DateTime? arrivedAt;
 }
 
 class DriverTransportOrderRoutePlan {

@@ -594,4 +594,32 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get route_no_order_map_description =>
       'Диспетчер ещё не назначил заказ.';
+
+  @override
+  String route_arrival_title(int index, int total) {
+    return 'Точка $index из $total';
+  }
+
+  @override
+  String get route_confirm_arrival => 'Подтвердить прибытие';
+
+  @override
+  String route_drive_to_point(int index, int total) {
+    return 'Ехать к точке $index из $total';
+  }
+
+  @override
+  String get route_arrival_confirmation_failed =>
+      'Не удалось отправить подтверждение';
+
+  @override
+  String get order_route_progress_title => 'Прогресс маршрута';
+
+  @override
+  String order_route_point_arrived_at(String time) {
+    return 'Прибытие: $time';
+  }
+
+  @override
+  String get order_route_point_next => 'Следующая цель';
 }

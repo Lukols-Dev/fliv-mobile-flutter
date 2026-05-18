@@ -17,6 +17,9 @@ import 'package:mobile/src/features/route/presentation/widgets/route_controls_pa
 import 'package:mobile/src/features/route/presentation/widgets/route_incident_bottom_sheet.dart';
 import 'package:mobile/src/features/route/presentation/widgets/route_map_layer.dart';
 import 'package:mobile/src/features/route/presentation/widgets/order_status_bottom_sheet.dart';
+import 'package:mobile/src/features/orders/presentation/widgets/route_stops_progress_list.dart';
+import 'package:mobile/src/features/route/data/route_point_arrival_api.dart';
+import 'package:mobile/src/features/route/presentation/widgets/route_arrival_bottom_sheet.dart';
 
 final routeMapControllerProvider = ChangeNotifierProvider<RouteMapController>((
   ref,
@@ -374,8 +377,50 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     }
   }
 
+  Future<void> _handleArrivalFlow({
+    required String orderId,
+    required DriverTransportOrderRoutePoint point,
+    required RouteMapController controller,
+  }) async {
+    if (!mounted) return;
 
+    await showArrivalConfirmationBottomSheet(
+      context,
+      point: point,
+      indexOneBased: controller.confirmedStops + 1,
+      total: controller.totalStops,
+    );
 
+    if (!mounted) return;
+
+    final location =
+        ref.read(driverHereLocationServiceProvider).lastKnownHereLocation;
+    try {
+      await ref.read(routePointArrivalApiProvider).confirmArrival(
+        orderId: orderId,
+        routePointId: point.id,
+        sequence: point.sequence,
+        confirmedAt: DateTime.now(),
+        latitude: location?.coordinates.latitude ?? point.latitude,
+        longitude: location?.coordinates.longitude ?? point.longitude,
+      );
+      ref.invalidate(driverOrderDetailsProvider(orderId));
+    } catch (_) {
+      if (mounted) {
+        final t = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.route_arrival_confirmation_failed),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+
+    if (!mounted) return;
+    if (controller.isLastPoint) return;
+    await controller.advanceToNextLeg();
+  }
 
   Widget _buildLocationAccessScaffold(AppLocalizations t) {
     final isChecking =
@@ -484,6 +529,20 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     _routeMapController = controller;
 
     ref.listen<RouteMapController>(routeMapControllerProvider, (_, next) {
+      final arrivalPoint = next.pendingArrivalPoint;
+      if (arrivalPoint != null) {
+        next.consumeArrivalPoint();
+        final orderId = _currentOrderId;
+        if (orderId != null && mounted) {
+          _handleArrivalFlow(
+            orderId: orderId,
+            point: arrivalPoint,
+            controller: next,
+          ).ignore();
+        }
+        return;
+      }
+
       if (!next.pendingAutoStart) return;
       next.consumeAutoStart();
       final orderId = _currentOrderId;
@@ -769,10 +828,11 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
-                                    _WaypointsList(
-                                      approachDistanceM: approachDistanceM,
+                                    RouteStopsProgressList(
                                       routePoints: validRoutePoints,
+                                      confirmedStops: controller.confirmedStops,
                                       myLocationLabel: t.route_my_location,
+                                      approachDistanceM: approachDistanceM,
                                     ),
                                     const SizedBox(height: 16),
                                     if (controller.navigationError != null) ...[
@@ -1207,116 +1267,6 @@ class _NoOrderMapOverlay extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _WaypointsList extends StatelessWidget {
-  const _WaypointsList({
-    required this.approachDistanceM,
-    required this.routePoints,
-    required this.myLocationLabel,
-  });
-
-  final int approachDistanceM;
-  final List<DriverTransportOrderRoutePoint> routePoints;
-  final String myLocationLabel;
-
-  String _fmtDist(int m) {
-    if (m < 1000) return '$m m';
-    return '${(m / 1000).toStringAsFixed(1)} km';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final items = <Widget>[];
-    items.add(_WaypointRow(label: myLocationLabel, isOrigin: true));
-    items.add(_WaypointConnector(
-      distanceLabel: approachDistanceM > 0 ? _fmtDist(approachDistanceM) : null,
-    ));
-    for (int i = 0; i < routePoints.length; i++) {
-      final point = routePoints[i];
-      items.add(_WaypointRow(
-        label: point.address ?? point.label ?? 'Punkt ${i + 1}',
-        isOrigin: false,
-      ));
-      if (i < routePoints.length - 1) {
-        items.add(const _WaypointConnector(distanceLabel: null));
-      }
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: items,
-    );
-  }
-}
-
-class _WaypointRow extends StatelessWidget {
-  const _WaypointRow({required this.label, required this.isOrigin});
-
-  final String label;
-  final bool isOrigin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: isOrigin ? const Color(0xFF0F4D46) : Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF0F4D46), width: 2),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Figtree',
-              color: Color(0xFF111827),
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WaypointConnector extends StatelessWidget {
-  const _WaypointConnector({required this.distanceLabel});
-
-  final String? distanceLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 5),
-      child: Row(
-        children: [
-          Container(width: 2, height: 24, color: const Color(0xFFD1D5DB)),
-          if (distanceLabel != null) ...[
-            const SizedBox(width: 10),
-            Text(
-              distanceLabel!,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                fontFamily: 'Figtree',
-                color: Color(0xFF6B7280),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

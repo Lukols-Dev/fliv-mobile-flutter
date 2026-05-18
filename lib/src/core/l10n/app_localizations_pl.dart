@@ -587,4 +587,32 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get route_no_order_map_description =>
       'Dyspozytor nie przypisał jeszcze zlecenia.';
+
+  @override
+  String route_arrival_title(int index, int total) {
+    return 'Punkt $index z $total';
+  }
+
+  @override
+  String get route_confirm_arrival => 'Potwierdź dotarcie';
+
+  @override
+  String route_drive_to_point(int index, int total) {
+    return 'Jedź do punktu $index z $total';
+  }
+
+  @override
+  String get route_arrival_confirmation_failed =>
+      'Nie udało się wysłać potwierdzenia';
+
+  @override
+  String get order_route_progress_title => 'Postęp trasy';
+
+  @override
+  String order_route_point_arrived_at(String time) {
+    return 'Dotarcie: $time';
+  }
+
+  @override
+  String get order_route_point_next => 'Następny cel';
 }

@@ -187,5 +187,29 @@
   "route_total_distance_label": "Łącznie",
   "route_my_location": "Moja lokalizacja",
   "route_no_order_map_title": "Brak aktywnego zlecenia",
-  "route_no_order_map_description": "Dyspozytor nie przypisał jeszcze zlecenia."
+  "route_no_order_map_description": "Dyspozytor nie przypisał jeszcze zlecenia.",
+  "route_arrival_title": "Punkt {index} z {total}",
+  "@route_arrival_title": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_confirm_arrival": "Potwierdź dotarcie",
+  "route_drive_to_point": "Jedź do punktu {index} z {total}",
+  "@route_drive_to_point": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "route_arrival_confirmation_failed": "Nie udało się wysłać potwierdzenia",
+  "order_route_progress_title": "Postęp trasy",
+  "order_route_point_arrived_at": "Dotarcie: {time}",
+  "@order_route_point_arrived_at": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "order_route_point_next": "Następny cel"
 }

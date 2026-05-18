@@ -1225,6 +1225,48 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Dyspozytor nie przypisał jeszcze zlecenia.'**
   String get route_no_order_map_description;
+
+  /// No description provided for @route_arrival_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Punkt {index} z {total}'**
+  String route_arrival_title(int index, int total);
+
+  /// No description provided for @route_confirm_arrival.
+  ///
+  /// In pl, this message translates to:
+  /// **'Potwierdź dotarcie'**
+  String get route_confirm_arrival;
+
+  /// No description provided for @route_drive_to_point.
+  ///
+  /// In pl, this message translates to:
+  /// **'Jedź do punktu {index} z {total}'**
+  String route_drive_to_point(int index, int total);
+
+  /// No description provided for @route_arrival_confirmation_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się wysłać potwierdzenia'**
+  String get route_arrival_confirmation_failed;
+
+  /// No description provided for @order_route_progress_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Postęp trasy'**
+  String get order_route_progress_title;
+
+  /// No description provided for @order_route_point_arrived_at.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dotarcie: {time}'**
+  String order_route_point_arrived_at(String time);
+
+  /// No description provided for @order_route_point_next.
+  ///
+  /// In pl, this message translates to:
+  /// **'Następny cel'**
+  String get order_route_point_next;
 }
 
 class _AppLocalizationsDelegate
