@@ -281,7 +281,7 @@ class _ManeuverBanner extends StatelessWidget {
     ManeuverAction.leftRoundaboutExit9 ||
     ManeuverAction.leftRoundaboutExit10 ||
     ManeuverAction.leftRoundaboutExit11 ||
-    ManeuverAction.leftRoundaboutExit12 => Icons.roundabout_left_rounded,
+    ManeuverAction.leftRoundaboutExit12 => Icons.roundabout_right_rounded,
     ManeuverAction.rightRoundaboutEnter ||
     ManeuverAction.rightRoundaboutPass ||
     ManeuverAction.rightRoundaboutExit1 ||
@@ -295,7 +295,7 @@ class _ManeuverBanner extends StatelessWidget {
     ManeuverAction.rightRoundaboutExit9 ||
     ManeuverAction.rightRoundaboutExit10 ||
     ManeuverAction.rightRoundaboutExit11 ||
-    ManeuverAction.rightRoundaboutExit12 => Icons.roundabout_right_rounded,
+    ManeuverAction.rightRoundaboutExit12 => Icons.roundabout_left_rounded,
   };
 }
 

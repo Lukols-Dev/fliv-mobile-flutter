@@ -713,6 +713,33 @@ class RouteMapController extends ChangeNotifier {
   // NAVIGATION / START-STOP
   // ----------------------------
 
+  SpeedBasedCameraBehavior _buildNavigationCameraBehavior() {
+    final behavior = SpeedBasedCameraBehavior()
+      ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
+
+    // Reduced tilt and closer zoom vs default 3D profile to push the sky/horizon
+    // line above the top edge of the viewport (same effect as Yanosik/Waze).
+    behavior.setProfile([
+      SpeedBasedCameraBehaviorProfileValue(
+        0, 15,   // 0–54 km/h  (city)
+        MapMeasure(MapMeasureKind.distanceInMeters, 180),
+        45,
+      ),
+      SpeedBasedCameraBehaviorProfileValue(
+        13, 30,  // 47–108 km/h  (extra-urban, overlapping range avoids oscillation)
+        MapMeasure(MapMeasureKind.distanceInMeters, 320),
+        50,
+      ),
+      SpeedBasedCameraBehaviorProfileValue(
+        28, 80,  // 101–288 km/h  (motorway)
+        MapMeasure(MapMeasureKind.distanceInMeters, 520),
+        53,
+      ),
+    ]);
+
+    return behavior;
+  }
+
   Future<void> startFollowing() async {
     if (_positionSub != null) return;
 
@@ -723,9 +750,7 @@ class RouteMapController extends ChangeNotifier {
 
     final visualNavigator = _ensureVisualNavigator();
     _cancelNavigationCameraAutoResume();
-    final cameraBehavior = SpeedBasedCameraBehavior()
-      ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
-    visualNavigator.cameraBehavior = cameraBehavior;
+    visualNavigator.cameraBehavior = _buildNavigationCameraBehavior();
     visualNavigator.route = route;
     _navigationError = null;
     _navigationInstruction = null;
@@ -1101,9 +1126,7 @@ class RouteMapController extends ChangeNotifier {
     final visualNavigator = _visualNavigator;
     if (visualNavigator == null) return;
 
-    final cameraBehavior = SpeedBasedCameraBehavior()
-      ..normalizedPrincipalPoint = Anchor2D.withHorizontalAndVertical(0.5, 0.65);
-    visualNavigator.cameraBehavior = cameraBehavior;
+    visualNavigator.cameraBehavior = _buildNavigationCameraBehavior();
     _isCameraTracking = true;
 
     final currentLocation = _ref
