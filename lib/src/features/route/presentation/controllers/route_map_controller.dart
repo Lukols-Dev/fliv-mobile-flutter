@@ -96,6 +96,8 @@ class RouteMapController extends ChangeNotifier {
   Duration? _remainingDuration;
   Duration? get remainingDuration => _remainingDuration;
 
+  GeoCoordinates? _lastOdometerCoordinates;
+
   List<GeoCoordinates> _lastDispatcherStops = const [];
   GeoCoordinates? _lastStartUsed;
 
@@ -394,6 +396,7 @@ class RouteMapController extends ChangeNotifier {
     _remainingDistanceInMeters = null;
     _remainingDuration = null;
     _confirmedStops = 0;
+    _lastOdometerCoordinates = null;
     _pendingArrivalPoint = null;
     _lastStartUsed = null;
     _lastDispatcherStops = const [];
@@ -421,6 +424,8 @@ class RouteMapController extends ChangeNotifier {
     _navigationInstruction = null;
     _remainingDistanceInMeters = null;
     _remainingDuration = null;
+
+    _lastOdometerCoordinates = null;
     _clearRouteAndStops();
     _locationIndicator?.disable();
     _locationIndicator = null;
@@ -531,6 +536,7 @@ class RouteMapController extends ChangeNotifier {
     _lastDispatcherStops = [firstStop];
     _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(routePoints);
     _confirmedStops = 0;
+    _lastOdometerCoordinates = null;
     _pendingArrivalPoint = null;
     _navigationError = null;
     _navigationInstruction = null;
@@ -877,11 +883,11 @@ class RouteMapController extends ChangeNotifier {
     _rerouteCooldownTimer = null;
     _isRerouting = false;
     _isCameraTracking = false;
+    _lastOdometerCoordinates = null;
     final reportingService = _ref.read(driverLocationReportingServiceProvider);
     reportingService.setSimulatedLocation(null);
     reportingService.updateNavigationProgress(
       remainingDistanceMeters: null,
-      traveledDistanceMeters: null,
       remainingDurationSeconds: null,
     );
     reportingService.stopPeriodicReporting();
@@ -1004,12 +1010,8 @@ class RouteMapController extends ChangeNotifier {
           _remainingDistanceInMeters = remaining.remainingDistanceInMeters;
           _remainingDuration = remaining.remainingDuration;
 
-          final totalMeters = _currentRoute?.lengthInMeters;
           _ref.read(driverLocationReportingServiceProvider).updateNavigationProgress(
             remainingDistanceMeters: _remainingDistanceInMeters,
-            traveledDistanceMeters: (totalMeters != null && _remainingDistanceInMeters != null)
-                ? totalMeters - _remainingDistanceInMeters!
-                : null,
             remainingDurationSeconds: _remainingDuration?.inSeconds,
           );
         }
@@ -1132,6 +1134,17 @@ class RouteMapController extends ChangeNotifier {
     bool centerCamera = false,
   }) {
     final coords = location.coordinates;
+
+    if (isFollowing) {
+      final speed = location.speedInMetersPerSecond ?? 0.0;
+      final prev = _lastOdometerCoordinates;
+      if (prev != null && speed > 1.0) {
+        final delta = _approxDistanceMeters(prev, coords);
+        _ref.read(driverLocationReportingServiceProvider).addToOdometer(delta.round());
+      }
+      _lastOdometerCoordinates = coords;
+    }
+
     _lastUserCoordinates = coords;
 
     if (isFollowing) {
