@@ -339,32 +339,49 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
         messenger.showSnackBar(SnackBar(content: Text(t.route_no_configured_route)));
         return;
       }
-      final routePoints = details.routePoints
-          .where(_isValidRoutePoint)
-          .toList(growable: false);
+      final routePoints = (details.routePoints.where(_isValidRoutePoint).toList()
+          ..sort((a, b) => a.sequence.compareTo(b.sequence)));
       if (routePoints.isEmpty) {
         messenger.showSnackBar(SnackBar(content: Text(t.route_no_configured_route)));
         return;
       }
 
       final controller = ref.read(routeMapControllerProvider);
-      final firstStop = routePoints.first;
-      await controller.calculateApproachRouteToFirstStop(
-        firstStop: GeoCoordinates(firstStop.latitude, firstStop.longitude),
-        routePlan: routePlan,
-        routePoints: routePoints,
-      );
-      if (!mounted) return;
 
-      final approachRoute = controller.currentRoute;
-      if (approachRoute != null) {
-        try {
-          await _locationReportingService.reportApproachRoute(
-            transportOrderId: orderId,
-            distanceMeters: approachRoute.lengthInMeters,
-            duration: approachRoute.duration,
-          );
-        } catch (_) {}
+      // Derive confirmed count from backend data (arrivedAt) so that progress
+      // is restored correctly after an app restart or re-calculation.
+      final arrivedCount =
+          routePoints.where((p) => p.arrivedAt != null).length;
+      final effectiveConfirmed =
+          arrivedCount > controller.confirmedStops ? arrivedCount : controller.confirmedStops;
+
+      if (effectiveConfirmed > 0) {
+        // Already past some stops — rebuild route for current leg without
+        // resetting progress.
+        await controller.recalculateToCurrentTarget(
+          routePlan: routePlan,
+          routePoints: routePoints,
+          confirmedStops: effectiveConfirmed,
+        );
+      } else {
+        final firstStop = routePoints.first;
+        await controller.calculateApproachRouteToFirstStop(
+          firstStop: GeoCoordinates(firstStop.latitude, firstStop.longitude),
+          routePlan: routePlan,
+          routePoints: routePoints,
+        );
+        if (!mounted) return;
+
+        final approachRoute = controller.currentRoute;
+        if (approachRoute != null) {
+          try {
+            await _locationReportingService.reportApproachRoute(
+              transportOrderId: orderId,
+              distanceMeters: approachRoute.lengthInMeters,
+              duration: approachRoute.duration,
+            );
+          } catch (_) {}
+        }
       }
 
       if (!mounted) return;
@@ -570,9 +587,8 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     final orderDetails = orderDetailsAsync?.asData?.value;
     final routePoints =
         orderDetails?.routePoints ?? const <DriverTransportOrderRoutePoint>[];
-    final validRoutePoints = routePoints
-        .where(_isValidRoutePoint)
-        .toList(growable: false);
+    final validRoutePoints = (routePoints.where(_isValidRoutePoint).toList()
+        ..sort((a, b) => a.sequence.compareTo(b.sequence)));
     final routePlan = orderDetails?.routePlan;
     final savedRoutePlan =
         routePlan != null && routePlan.polyline.trim().isNotEmpty

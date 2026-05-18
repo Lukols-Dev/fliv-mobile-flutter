@@ -1636,6 +1636,93 @@ class RouteMapController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called by "Oblicz trasę" when progress > 0.
+  /// Calculates a fresh route from the driver's current GPS position to
+  /// P[_confirmedStops] — the current target — without resetting progress.
+  Future<void> recalculateToCurrentTarget({
+    required DriverTransportOrderRoutePlan routePlan,
+    required List<DriverTransportOrderRoutePoint> routePoints,
+    int? confirmedStops,
+  }) async {
+    if (isFollowing) stopFollowing();
+
+    if (confirmedStops != null) _confirmedStops = confirmedStops;
+    _lastDispatcherRoutePlan = routePlan;
+    _lastDispatcherRoutePoints = List<DriverTransportOrderRoutePoint>.from(routePoints);
+    _pendingArrivalPoint = null;
+    _navigationError = null;
+    _navigationInstruction = null;
+    _remainingDistanceInMeters = null;
+    _remainingDuration = null;
+
+    final routingEngine = _routingEngine;
+    if (_map == null || routingEngine == null) return;
+
+    _isCalculating = true;
+    notifyListeners();
+
+    final sorted = List<DriverTransportOrderRoutePoint>.from(routePoints)
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+
+    if (_confirmedStops >= sorted.length) {
+      _isCalculating = false;
+      notifyListeners();
+      return;
+    }
+
+    final target = sorted[_confirmedStops];
+
+    _clearRoutePolylines();
+    final dispatcherBox = _drawDispatcherRoutePreview(routePlan, fitCamera: false);
+    _ensureLocationIndicatorEnabled();
+
+    final start = await _getUserCoordinates();
+    _lastUserCoordinates = start;
+    _lastStartUsed = start;
+    _updateHereLocationIndicator(start);
+
+    final waypoints = <Waypoint>[
+      Waypoint.withDefaults(start),
+      Waypoint.withDefaults(GeoCoordinates(target.latitude, target.longitude)),
+    ];
+
+    final completer = Completer<void>();
+    final CalculateRouteCallback callback =
+        (RoutingError? error, List<Route>? routes) {
+      _isCalculating = false;
+      if (error != null || routes == null || routes.isEmpty) {
+        _navigationError = error?.name ?? 'Route calculation failed';
+        _setCurrentRoute(null);
+        completer.complete();
+        return;
+      }
+      final route = routes.first;
+      _setCurrentRoute(route);
+      if (_map != null) {
+        _showApproachRouteOnMap(route);
+        _fitApproachAndDispatcherRoute(
+          approachRoute: route,
+          dispatcherBox: dispatcherBox,
+        );
+      }
+      completer.complete();
+    };
+
+    final profile = routePlan.routingProfile;
+    if (profile.transportMode.toLowerCase() == 'car') {
+      routingEngine.calculateCarRoute(waypoints, _buildCarOptions(profile), callback);
+    } else {
+      routingEngine.calculateTruckRoute(
+        waypoints,
+        _buildTruckOptions(profile, routePlan.vehicleSpec),
+        callback,
+      );
+    }
+
+    await completer.future;
+    notifyListeners();
+  }
+
   /// Called by the screen after the driver confirms arrival and the backend
   /// report has been sent (or skipped on failure). Advances to the next leg.
   Future<void> advanceToNextLeg() async {
