@@ -24,7 +24,6 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
 
   final _firstNameFocus = FocusNode();
   final _lastNameFocus = FocusNode();
-  final _emailFocus = FocusNode();
   final _phoneFocus = FocusNode();
 
   bool _didSetInitialValues = false;
@@ -40,27 +39,13 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
 
     _firstNameFocus.dispose();
     _lastNameFocus.dispose();
-    _emailFocus.dispose();
     _phoneFocus.dispose();
     super.dispose();
-  }
-
-  bool _isValidEmail(String value) {
-    final v = value.trim();
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    return re.hasMatch(v);
   }
 
   String? _validateRequired(String? value, AppLocalizations t) {
     final v = (value ?? '').trim();
     if (v.isEmpty) return t.common_fill_all_fields;
-    return null;
-  }
-
-  String? _validateEmail(String? value, AppLocalizations t) {
-    final v = (value ?? '').trim();
-    if (v.isEmpty) return t.common_fill_all_fields;
-    if (!_isValidEmail(v)) return t.auth_invalid_email;
     return null;
   }
 
@@ -244,7 +229,7 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
                             textInputAction: TextInputAction.next,
                             validator: (v) => _validateRequired(v, t),
                             onFieldSubmitted: (_) {
-                              FocusScope.of(context).requestFocus(_emailFocus);
+                              FocusScope.of(context).requestFocus(_phoneFocus);
                             },
                             decoration: InputDecoration(
                               filled: true,
@@ -300,17 +285,16 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _emailController,
-                            focusNode: _emailFocus,
-                            enabled: !_isSaving,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            validator: (v) => _validateEmail(v, t),
-                            onFieldSubmitted: (_) {
-                              FocusScope.of(context).requestFocus(_phoneFocus);
-                            },
+                            readOnly: true,
+                            style: const TextStyle(color: Color(0xFF6B7280)),
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: const Color(0xFFF5F5DC),
+                              suffixIcon: const Icon(
+                                Icons.lock_outline,
+                                size: 18,
+                                color: Color(0xFF9CA3AF),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
@@ -328,17 +312,13 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFF0F4D46),
+                                  color: Color(0xFFE5E7EB),
                                   width: 1,
                                 ),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 16,
-                              ),
-                              errorStyle: const TextStyle(
-                                fontSize: 12,
-                                height: 1.2,
                               ),
                             ),
                           ),
