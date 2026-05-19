@@ -1,29 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/storage/secure_storage_provider.dart';
+import '../../driver/application/cached_driver_profile_provider.dart';
+import '../../driver/application/driver_profile_provider.dart';
 import '../data/users_repository_impl.dart';
 
 final avatarControllerProvider =
-    AsyncNotifierProvider<AvatarController, String?>(AvatarController.new);
+    AsyncNotifierProvider<AvatarController, void>(AvatarController.new);
 
-class AvatarController extends AsyncNotifier<String?> {
+/// Upload-only action. The avatar URL is part of the driver profile
+/// ([driverProfileProvider]) and is the single source of truth — this
+/// controller performs the upload and triggers a profile refresh so the
+/// freshly uploaded avatar is picked up. Its state only reflects upload
+/// progress.
+class AvatarController extends AsyncNotifier<void> {
   @override
-  Future<String?> build() async {
-    final storage = ref.read(secureStorageProvider);
-    final url = await storage.read(key: kAvatarUrlKey);
-    return (url == null || url.trim().isEmpty) ? null : url;
-  }
+  void build() {}
 
   Future<void> uploadAvatar({required String filePath}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final repo = ref.read(usersRepositoryProvider);
-      final url = await repo.uploadAvatar(filePath: filePath);
+      await repo.uploadAvatar(filePath: filePath);
 
-      final storage = ref.read(secureStorageProvider);
-      await storage.write(key: kAvatarUrlKey, value: url);
-
-      return url;
+      ref.invalidate(driverProfileProvider);
+      ref.invalidate(cachedDriverProfileProvider);
     });
   }
 }

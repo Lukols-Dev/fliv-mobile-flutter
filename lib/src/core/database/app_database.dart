@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -94,6 +94,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           driverOrderDetailsTable,
           driverOrderDetailsTable.gpsOdometerMeters,
+        );
+      }
+      // upgrade z v8 -> v9 (avatar URL w profilu kierowcy)
+      if (from < 9) {
+        await m.addColumn(
+          driverProfileTable,
+          driverProfileTable.avatarUrl,
         );
       }
     },

@@ -85,6 +85,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get auth_register_failed => 'Не удалось создать аккаунт';
 
   @override
+  String get auth_register_success_pending_activation =>
+      'Аккаунт создан. Войдите после активации аккаунта администратором.';
+
+  @override
   String get common_or => 'или';
 
   @override

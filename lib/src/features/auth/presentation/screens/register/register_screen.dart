@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/core/l10n/l10n.dart';
 import 'package:mobile/src/core/l10n/locale_controller.dart';
-import 'package:mobile/src/features/auth/application/auth_controller.dart';
-import 'package:mobile/src/features/driver/domain/register_driver_payload.dart';
+import 'package:mobile/src/features/auth/application/driver_registration_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -80,24 +79,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final lastName = _lastNameController.text.trim();
     final companyId = _companyIdController.text.trim();
 
-    const isAgreedToTerms = true;
-    const isAgreedToPrivacyPolicy = true;
-
-    final payload = RegisterDriverPayload(
-      companyInternalId: companyId,
-      phone: null,
-    );
-
     await ref
-        .read(authControllerProvider.notifier)
-        .signUpDriver(
+        .read(driverRegistrationControllerProvider.notifier)
+        .register(
           email: email,
           password: password,
           firstName: firstName,
           lastName: lastName,
-          isAgreedToTerms: isAgreedToTerms,
-          isAgreedToPrivacyPolicy: isAgreedToPrivacyPolicy,
-          driver: payload,
+          companyInternalId: companyId,
+          isAgreedToTerms: true,
+          isAgreedToPrivacyPolicy: true,
         );
   }
 
@@ -106,21 +97,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final t = AppLocalizations.of(context)!;
     final locale = ref.watch(localeControllerProvider);
 
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
+    final registrationState = ref.watch(driverRegistrationControllerProvider);
+    final isLoading = registrationState.isLoading;
 
-    ref.listen(authControllerProvider, (prev, next) {
+    ref.listen(driverRegistrationControllerProvider, (prev, next) {
       final wasLoading = prev?.isLoading ?? false;
-      next.whenOrNull(
-        error: (e, _) {
-          if (!wasLoading) return;
-          final messenger = ScaffoldMessenger.of(context);
-          messenger.clearSnackBars();
-          messenger.showSnackBar(
-            SnackBar(content: Text(t.auth_register_failed)),
-          );
-        },
+      if (!wasLoading || next.isLoading) return;
+
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.clearSnackBars();
+
+      if (next.hasError) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(t.auth_register_failed)),
+        );
+        return;
+      }
+
+      messenger.showSnackBar(
+        SnackBar(content: Text(t.auth_register_success_pending_activation)),
       );
+      context.go('/auth/login');
     });
 
     return Scaffold(

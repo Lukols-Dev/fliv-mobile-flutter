@@ -4,7 +4,6 @@ import '../domain/auth_session.dart';
 import '../data/auth_repository_impl.dart';
 import '../../../core/storage/secure_storage_provider.dart';
 import '../../driver/data/driver_repository_impl.dart';
-import '../../driver/domain/register_driver_payload.dart';
 import '../../driver/data/driver_local_data_source.dart';
 import 'package:mobile/src/features/orders/data/driver_orders_local_data_source.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
@@ -21,14 +20,22 @@ class AuthController extends AsyncNotifier<AuthSession?> {
     return AuthSession(accessToken: token);
   }
 
+  /// Wipes every trace of the previous account from this device: auth token
+  /// and the global Drift caches (profile — including the avatar URL — and
+  /// orders). The Drift DB is not partitioned per user, so this must run on
+  /// every account switch to avoid leaking data between drivers.
+  Future<void> _clearLocalAccountData() async {
+    final storage = ref.read(secureStorageProvider);
+    await storage.delete(key: kAccessTokenKey);
+
+    await ref.read(driverLocalDataSourceProvider).clearMyProfile();
+    await ref.read(driverOrdersLocalDataSourceProvider).clearAll();
+  }
+
   Future<void> signIn({required String email, required String password}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final driverLocal = ref.read(driverLocalDataSourceProvider);
-      final ordersLocal = ref.read(driverOrdersLocalDataSourceProvider);
-
-      await driverLocal.clearMyProfile();
-      await ordersLocal.clearAll();
+      await _clearLocalAccountData();
 
       // Login
       final authRepo = ref.read(authRepositoryProvider);
@@ -41,6 +48,8 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       // Prefetch
       final driverRepo = ref.read(driverRepositoryProvider);
       final ordersRepo = ref.read(driverTransportOrdersRepositoryProvider);
+      final driverLocal = ref.read(driverLocalDataSourceProvider);
+      final ordersLocal = ref.read(driverOrdersLocalDataSourceProvider);
 
       try {
         final profile = await driverRepo.getProfile();
@@ -66,41 +75,6 @@ class AuthController extends AsyncNotifier<AuthSession?> {
     });
   }
 
-  Future<void> signUpDriver({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-    required bool isAgreedToTerms,
-    required bool isAgreedToPrivacyPolicy,
-    required RegisterDriverPayload driver,
-  }) async {
-    state = const AsyncLoading();
-
-    state = await AsyncValue.guard(() async {
-      final authRepo = ref.read(authRepositoryProvider);
-
-      final session = await authRepo.signUpEmail(
-        email: email,
-        password: password,
-        firstName: firstName,
-        lastName: lastName,
-        isAgreedToTerms: isAgreedToTerms,
-        isAgreedToPrivacyPolicy: isAgreedToPrivacyPolicy,
-      );
-
-      final token = session.accessToken;
-
-      final storage = ref.read(secureStorageProvider);
-      await storage.write(key: kAccessTokenKey, value: token);
-
-      final driverRepo = ref.read(driverRepositoryProvider);
-      await driverRepo.registerDriver(payload: driver);
-
-      return session;
-    });
-  }
-
   Future<void> signOut() async {
     try {
       final repo = ref.read(authRepositoryProvider);
@@ -108,15 +82,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
     } catch (e) {
       print('Sign out API error: $e');
     } finally {
-      final storage = ref.read(secureStorageProvider);
-      await storage.delete(key: kAccessTokenKey);
-
-      final driverLocal = ref.read(driverLocalDataSourceProvider);
-      final ordersLocal = ref.read(driverOrdersLocalDataSourceProvider);
-
-      await driverLocal.clearMyProfile();
-      await ordersLocal.clearAll();
-
+      await _clearLocalAccountData();
       state = const AsyncData(null);
     }
   }

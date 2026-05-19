@@ -50,6 +50,7 @@ class DriverLocalDataSource {
       lastName: row.lastName,
       email: row.email,
       phone: row.phone,
+      avatarUrl: row.avatarUrl,
       companyInternalId: row.companyInternalId,
       driverCode: row.driverCode,
       visaExpiresAt: row.visaExpiry,
@@ -74,6 +75,9 @@ class DriverLocalDataSource {
       phone: profile.phone == null
           ? const Value.absent()
           : Value(profile.phone!),
+      avatarUrl: profile.avatarUrl == null
+          ? const Value.absent()
+          : Value(profile.avatarUrl!),
       companyInternalId: profile.companyInternalId == null
           ? const Value.absent()
           : Value(profile.companyInternalId!),

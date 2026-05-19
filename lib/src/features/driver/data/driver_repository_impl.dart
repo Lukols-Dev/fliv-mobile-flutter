@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/dio_provider.dart';
 import '../domain/driver_repository.dart';
 import '../domain/driver_profile.dart';
-import '../domain/register_driver_payload.dart';
+import '../domain/register_driver_account_payload.dart';
 import '../domain/update_driver_documents_payload.dart';
 import '../domain/update_user_profile_payload.dart';
 
@@ -22,8 +22,10 @@ class DriverRepositoryImpl implements DriverRepository {
   final DriverApi _api;
 
   @override
-  Future<void> registerDriver({required RegisterDriverPayload payload}) {
-    return _api.registerDriver(payload: payload);
+  Future<void> registerDriverAccount({
+    required RegisterDriverAccountPayload payload,
+  }) {
+    return _api.registerDriverAccount(payload: payload);
   }
 
   @override

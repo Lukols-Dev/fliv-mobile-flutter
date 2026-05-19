@@ -24,6 +24,7 @@
   "auth_invalid_email": "Nieprawidłowy adres email",
   "auth_login_failed": "Nieprawidłowy email lub hasło",
   "auth_register_failed": "Nie udało się utworzyć konta",
+  "auth_register_success_pending_activation": "Konto zostało utworzone. Zaloguj się po aktywacji konta przez administratora.",
   "common_or": "lub",
   "common_fill_all_fields": "Wypełnij wszystkie pola",
   "language_pl": "Polski",
