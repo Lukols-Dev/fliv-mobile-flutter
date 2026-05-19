@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart' show NumberFormat;
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 
 import 'package:mobile/src/core/location/location_controller.dart';
 import 'package:mobile/src/core/location/geocoding_providers.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
+import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
 import 'package:mobile/src/features/users/application/avatar_controller.dart';
 
@@ -33,6 +35,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (dt == null) return '—';
     final d = dt.toLocal();
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+  }
+
+  // Route distance set by the dispatcher, formatted the same way as the web
+  // app: locale-aware, metres below 1 km, and decimals dropped for routes of
+  // 100 km or more. Falls back to 0.0 km when no route has been planned yet.
+  String _formatRouteDistance(BuildContext context, int? meters) {
+    if (meters == null) return '0.0 km';
+    if (meters < 1000) return '${meters.round()} m';
+    final locale = Localizations.localeOf(context).toString();
+    final formatter = NumberFormat.decimalPattern(locale)
+      ..minimumFractionDigits = 0
+      ..maximumFractionDigits = meters >= 100000 ? 0 : 1;
+    return '${formatter.format(meters / 1000)} km';
+  }
+
+  // Estimated route time, e.g. "9h 30min".
+  String _formatRouteDuration(int? seconds) {
+    final total = seconds ?? 0;
+    final hours = total ~/ 3600;
+    final minutes = (total % 3600) ~/ 60;
+    return '${hours}h ${minutes}min';
+  }
+
+  // Cargo weight from the order, shown in tonnes.
+  String _formatCargoWeight(int? kilograms) {
+    final tonnes = (kilograms ?? 0) / 1000;
+    return '${tonnes.toStringAsFixed(1)} t';
   }
 
   String _statusLabel(AppLocalizations t, String raw) {
@@ -133,6 +162,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (o) => o,
       orElse: () => null,
     );
+
+    // Order details carry the dispatcher route plan (distance, duration) and
+    // cargo weight, which the list endpoint behind currentOrder does not.
+    final orderDetails = currentOrder == null
+        ? null
+        : ref
+              .watch(driverOrderDetailsProvider(currentOrder.id))
+              .maybeWhen(data: (d) => d, orElse: () => null);
 
     final avatarAsync = ref.watch(avatarControllerProvider);
     final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
@@ -579,6 +616,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             ),
                                           ),
                                         ),
+                                        const SizedBox(height: 12),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Wrap(
+                                            spacing: 18,
+                                            runSpacing: 8,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
+                                            children: [
+                                              _OrderStat(
+                                                icon: Icons.route,
+                                                value: _formatRouteDistance(
+                                                  context,
+                                                  orderDetails
+                                                      ?.routePlan
+                                                      ?.distanceMeters,
+                                                ),
+                                              ),
+                                              _OrderStat(
+                                                icon: Icons.schedule,
+                                                value: _formatRouteDuration(
+                                                  orderDetails
+                                                      ?.routePlan
+                                                      ?.durationSeconds,
+                                                ),
+                                              ),
+                                              _OrderStat(
+                                                icon:
+                                                    Icons.inventory_2_outlined,
+                                                value: _formatCargoWeight(
+                                                  orderDetails?.cargoWeightKg,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -761,6 +834,35 @@ class _TimelineRow extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A single icon + value pair shown in the current order card header
+/// (route distance, route time, cargo weight).
+class _OrderStat extends StatelessWidget {
+  const _OrderStat({required this.icon, required this.value});
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Colors.white),
+        const SizedBox(width: 5),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontFamily: 'Figtree',
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
