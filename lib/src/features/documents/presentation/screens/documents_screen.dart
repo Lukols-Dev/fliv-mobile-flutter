@@ -130,6 +130,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
