@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Nie udało się utworzyć konta'**
   String get auth_register_failed;
 
+  /// No description provided for @auth_register_success_pending_activation.
+  ///
+  /// In pl, this message translates to:
+  /// **'Konto zostało utworzone. Zaloguj się po aktywacji konta przez administratora.'**
+  String get auth_register_success_pending_activation;
+
   /// No description provided for @common_or.
   ///
   /// In pl, this message translates to:

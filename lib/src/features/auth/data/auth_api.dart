@@ -19,28 +19,6 @@ class AuthApi {
     return LoginResponseDto.fromJson(res.data as Map<String, dynamic>);
   }
 
-  Future<SignUpResponseDto> signUpEmail({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-    required bool isAgreedToTerms,
-    required bool isAgreedToPrivacyPolicy,
-  }) async {
-    final res = await _dio.post(
-      '/api/auth/sign-up/email',
-      data: {
-        'email': email,
-        'password': password,
-        'firstName': firstName,
-        'lastName': lastName,
-        'isAgreedToTerms': isAgreedToTerms,
-        'isAgreedToPrivacyPolicy': isAgreedToPrivacyPolicy,
-      },
-    );
-    return SignUpResponseDto.fromJson(res.data as Map<String, dynamic>);
-  }
-
   Future<void> signOut() async {
     await _dio.post('/api/auth/sign-out');
   }

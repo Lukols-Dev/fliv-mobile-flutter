@@ -6,4 +6,3 @@ final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
 });
 
 const kAccessTokenKey = 'access_token';
-const kAvatarUrlKey = 'avatar_url';

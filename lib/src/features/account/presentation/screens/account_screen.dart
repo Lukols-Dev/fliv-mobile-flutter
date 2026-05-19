@@ -52,9 +52,8 @@ class AccountScreen extends ConsumerWidget {
         : '—';
     final driverId = profile?.driverCode ?? '—';
 
-    final avatarAsync = ref.watch(avatarControllerProvider);
-    final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
-    final isAvatarUploading = avatarAsync.isLoading;
+    final avatarUrl = profile?.avatarUrl;
+    final isAvatarUploading = ref.watch(avatarControllerProvider).isLoading;
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -8,6 +8,7 @@ class DriverProfileTable extends Table {
 
   TextColumn get email => text().nullable()();
   TextColumn get phone => text().nullable()();
+  TextColumn get avatarUrl => text().nullable()();
 
   TextColumn get companyInternalId => text().nullable()();
   TextColumn get driverCode => text().nullable()();

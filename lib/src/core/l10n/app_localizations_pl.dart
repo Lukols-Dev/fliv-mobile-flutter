@@ -85,6 +85,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get auth_register_failed => 'Nie udało się utworzyć konta';
 
   @override
+  String get auth_register_success_pending_activation =>
+      'Konto zostało utworzone. Zaloguj się po aktywacji konta przez administratora.';
+
+  @override
   String get common_or => 'lub';
 
   @override

@@ -4,6 +4,7 @@ class DriverProfile {
     required this.lastName,
     this.email,
     this.phone,
+    this.avatarUrl,
     this.companyInternalId,
     this.driverCode,
 
@@ -21,6 +22,7 @@ class DriverProfile {
   final String lastName;
   final String? email;
   final String? phone;
+  final String? avatarUrl;
   final String? companyInternalId;
   final String? driverCode;
 

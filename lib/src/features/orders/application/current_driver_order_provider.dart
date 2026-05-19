@@ -19,15 +19,18 @@ final currentDriverOrderProvider =
       }
 
       try {
-        final order = await repo.getLatest();
+        // Bound the network call so a slow/unreachable backend cannot keep
+        // the home screen spinning up to dio's 20s receive timeout.
+        final order =
+            await repo.getLatest().timeout(const Duration(seconds: 6));
         if (order != null) {
           await local.upsertCurrent(order);
           return order;
         }
         return local.getCurrent();
       } catch (_) {
-        final cached = await local.getCurrent();
-        if (cached != null) return cached;
-        rethrow;
+        // Timeout or network error: fall back to cache. For a brand-new
+        // driver the cache is empty, so this resolves to null ("no order").
+        return local.getCurrent();
       }
     });

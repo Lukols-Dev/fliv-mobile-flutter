@@ -58,6 +58,17 @@ class $DriverProfileTableTable extends DriverProfileTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _avatarUrlMeta = const VerificationMeta(
+    'avatarUrl',
+  );
+  @override
+  late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
+    'avatar_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _companyInternalIdMeta = const VerificationMeta(
     'companyInternalId',
   );
@@ -191,6 +202,7 @@ class $DriverProfileTableTable extends DriverProfileTable
     lastName,
     email,
     phone,
+    avatarUrl,
     companyInternalId,
     driverCode,
     updatedAt,
@@ -249,6 +261,12 @@ class $DriverProfileTableTable extends DriverProfileTable
       context.handle(
         _phoneMeta,
         phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta),
+      );
+    }
+    if (data.containsKey('avatar_url')) {
+      context.handle(
+        _avatarUrlMeta,
+        avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta),
       );
     }
     if (data.containsKey('company_internal_id')) {
@@ -370,6 +388,10 @@ class $DriverProfileTableTable extends DriverProfileTable
         DriftSqlType.string,
         data['${effectivePrefix}phone'],
       ),
+      avatarUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_url'],
+      ),
       companyInternalId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}company_internal_id'],
@@ -430,6 +452,7 @@ class DriverProfileTableData extends DataClass
   final String lastName;
   final String? email;
   final String? phone;
+  final String? avatarUrl;
   final String? companyInternalId;
   final String? driverCode;
   final DateTime updatedAt;
@@ -447,6 +470,7 @@ class DriverProfileTableData extends DataClass
     required this.lastName,
     this.email,
     this.phone,
+    this.avatarUrl,
     this.companyInternalId,
     this.driverCode,
     required this.updatedAt,
@@ -470,6 +494,9 @@ class DriverProfileTableData extends DataClass
     }
     if (!nullToAbsent || phone != null) {
       map['phone'] = Variable<String>(phone);
+    }
+    if (!nullToAbsent || avatarUrl != null) {
+      map['avatar_url'] = Variable<String>(avatarUrl);
     }
     if (!nullToAbsent || companyInternalId != null) {
       map['company_internal_id'] = Variable<String>(companyInternalId);
@@ -520,6 +547,9 @@ class DriverProfileTableData extends DataClass
       phone: phone == null && nullToAbsent
           ? const Value.absent()
           : Value(phone),
+      avatarUrl: avatarUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarUrl),
       companyInternalId: companyInternalId == null && nullToAbsent
           ? const Value.absent()
           : Value(companyInternalId),
@@ -565,6 +595,7 @@ class DriverProfileTableData extends DataClass
       lastName: serializer.fromJson<String>(json['lastName']),
       email: serializer.fromJson<String?>(json['email']),
       phone: serializer.fromJson<String?>(json['phone']),
+      avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
       companyInternalId: serializer.fromJson<String?>(
         json['companyInternalId'],
       ),
@@ -601,6 +632,7 @@ class DriverProfileTableData extends DataClass
       'lastName': serializer.toJson<String>(lastName),
       'email': serializer.toJson<String?>(email),
       'phone': serializer.toJson<String?>(phone),
+      'avatarUrl': serializer.toJson<String?>(avatarUrl),
       'companyInternalId': serializer.toJson<String?>(companyInternalId),
       'driverCode': serializer.toJson<String?>(driverCode),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -627,6 +659,7 @@ class DriverProfileTableData extends DataClass
     String? lastName,
     Value<String?> email = const Value.absent(),
     Value<String?> phone = const Value.absent(),
+    Value<String?> avatarUrl = const Value.absent(),
     Value<String?> companyInternalId = const Value.absent(),
     Value<String?> driverCode = const Value.absent(),
     DateTime? updatedAt,
@@ -644,6 +677,7 @@ class DriverProfileTableData extends DataClass
     lastName: lastName ?? this.lastName,
     email: email.present ? email.value : this.email,
     phone: phone.present ? phone.value : this.phone,
+    avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
     companyInternalId: companyInternalId.present
         ? companyInternalId.value
         : this.companyInternalId,
@@ -679,6 +713,7 @@ class DriverProfileTableData extends DataClass
       lastName: data.lastName.present ? data.lastName.value : this.lastName,
       email: data.email.present ? data.email.value : this.email,
       phone: data.phone.present ? data.phone.value : this.phone,
+      avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
       companyInternalId: data.companyInternalId.present
           ? data.companyInternalId.value
           : this.companyInternalId,
@@ -721,6 +756,7 @@ class DriverProfileTableData extends DataClass
           ..write('lastName: $lastName, ')
           ..write('email: $email, ')
           ..write('phone: $phone, ')
+          ..write('avatarUrl: $avatarUrl, ')
           ..write('companyInternalId: $companyInternalId, ')
           ..write('driverCode: $driverCode, ')
           ..write('updatedAt: $updatedAt, ')
@@ -743,6 +779,7 @@ class DriverProfileTableData extends DataClass
     lastName,
     email,
     phone,
+    avatarUrl,
     companyInternalId,
     driverCode,
     updatedAt,
@@ -764,6 +801,7 @@ class DriverProfileTableData extends DataClass
           other.lastName == this.lastName &&
           other.email == this.email &&
           other.phone == this.phone &&
+          other.avatarUrl == this.avatarUrl &&
           other.companyInternalId == this.companyInternalId &&
           other.driverCode == this.driverCode &&
           other.updatedAt == this.updatedAt &&
@@ -784,6 +822,7 @@ class DriverProfileTableCompanion
   final Value<String> lastName;
   final Value<String?> email;
   final Value<String?> phone;
+  final Value<String?> avatarUrl;
   final Value<String?> companyInternalId;
   final Value<String?> driverCode;
   final Value<DateTime> updatedAt;
@@ -802,6 +841,7 @@ class DriverProfileTableCompanion
     this.lastName = const Value.absent(),
     this.email = const Value.absent(),
     this.phone = const Value.absent(),
+    this.avatarUrl = const Value.absent(),
     this.companyInternalId = const Value.absent(),
     this.driverCode = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -821,6 +861,7 @@ class DriverProfileTableCompanion
     required String lastName,
     this.email = const Value.absent(),
     this.phone = const Value.absent(),
+    this.avatarUrl = const Value.absent(),
     this.companyInternalId = const Value.absent(),
     this.driverCode = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -842,6 +883,7 @@ class DriverProfileTableCompanion
     Expression<String>? lastName,
     Expression<String>? email,
     Expression<String>? phone,
+    Expression<String>? avatarUrl,
     Expression<String>? companyInternalId,
     Expression<String>? driverCode,
     Expression<DateTime>? updatedAt,
@@ -861,6 +903,7 @@ class DriverProfileTableCompanion
       if (lastName != null) 'last_name': lastName,
       if (email != null) 'email': email,
       if (phone != null) 'phone': phone,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
       if (companyInternalId != null) 'company_internal_id': companyInternalId,
       if (driverCode != null) 'driver_code': driverCode,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -886,6 +929,7 @@ class DriverProfileTableCompanion
     Value<String>? lastName,
     Value<String?>? email,
     Value<String?>? phone,
+    Value<String?>? avatarUrl,
     Value<String?>? companyInternalId,
     Value<String?>? driverCode,
     Value<DateTime>? updatedAt,
@@ -905,6 +949,7 @@ class DriverProfileTableCompanion
       lastName: lastName ?? this.lastName,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       companyInternalId: companyInternalId ?? this.companyInternalId,
       driverCode: driverCode ?? this.driverCode,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -939,6 +984,9 @@ class DriverProfileTableCompanion
     }
     if (phone.present) {
       map['phone'] = Variable<String>(phone.value);
+    }
+    if (avatarUrl.present) {
+      map['avatar_url'] = Variable<String>(avatarUrl.value);
     }
     if (companyInternalId.present) {
       map['company_internal_id'] = Variable<String>(companyInternalId.value);
@@ -995,6 +1043,7 @@ class DriverProfileTableCompanion
           ..write('lastName: $lastName, ')
           ..write('email: $email, ')
           ..write('phone: $phone, ')
+          ..write('avatarUrl: $avatarUrl, ')
           ..write('companyInternalId: $companyInternalId, ')
           ..write('driverCode: $driverCode, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3372,6 +3421,7 @@ typedef $$DriverProfileTableTableCreateCompanionBuilder =
       required String lastName,
       Value<String?> email,
       Value<String?> phone,
+      Value<String?> avatarUrl,
       Value<String?> companyInternalId,
       Value<String?> driverCode,
       Value<DateTime> updatedAt,
@@ -3392,6 +3442,7 @@ typedef $$DriverProfileTableTableUpdateCompanionBuilder =
       Value<String> lastName,
       Value<String?> email,
       Value<String?> phone,
+      Value<String?> avatarUrl,
       Value<String?> companyInternalId,
       Value<String?> driverCode,
       Value<DateTime> updatedAt,
@@ -3437,6 +3488,11 @@ class $$DriverProfileTableTableFilterComposer
 
   ColumnFilters<String> get phone => $composableBuilder(
     column: $table.phone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarUrl => $composableBuilder(
+    column: $table.avatarUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3530,6 +3586,11 @@ class $$DriverProfileTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get avatarUrl => $composableBuilder(
+    column: $table.avatarUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get companyInternalId => $composableBuilder(
     column: $table.companyInternalId,
     builder: (column) => ColumnOrderings(column),
@@ -3609,6 +3670,9 @@ class $$DriverProfileTableTableAnnotationComposer
 
   GeneratedColumn<String> get phone =>
       $composableBuilder(column: $table.phone, builder: (column) => column);
+
+  GeneratedColumn<String> get avatarUrl =>
+      $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
 
   GeneratedColumn<String> get companyInternalId => $composableBuilder(
     column: $table.companyInternalId,
@@ -3709,6 +3773,7 @@ class $$DriverProfileTableTableTableManager
                 Value<String> lastName = const Value.absent(),
                 Value<String?> email = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
                 Value<String?> companyInternalId = const Value.absent(),
                 Value<String?> driverCode = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -3727,6 +3792,7 @@ class $$DriverProfileTableTableTableManager
                 lastName: lastName,
                 email: email,
                 phone: phone,
+                avatarUrl: avatarUrl,
                 companyInternalId: companyInternalId,
                 driverCode: driverCode,
                 updatedAt: updatedAt,
@@ -3747,6 +3813,7 @@ class $$DriverProfileTableTableTableManager
                 required String lastName,
                 Value<String?> email = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
                 Value<String?> companyInternalId = const Value.absent(),
                 Value<String?> driverCode = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -3765,6 +3832,7 @@ class $$DriverProfileTableTableTableManager
                 lastName: lastName,
                 email: email,
                 phone: phone,
+                avatarUrl: avatarUrl,
                 companyInternalId: companyInternalId,
                 driverCode: driverCode,
                 updatedAt: updatedAt,

@@ -6,6 +6,7 @@ class DriverProfileDto {
     required this.lastName,
     this.email,
     this.phone,
+    this.avatarUrl,
     this.companyInternalId,
     this.driverCode,
 
@@ -23,6 +24,7 @@ class DriverProfileDto {
   final String lastName;
   final String? email;
   final String? phone;
+  final String? avatarUrl;
   final String? companyInternalId;
   final String? driverCode;
 
@@ -52,6 +54,7 @@ class DriverProfileDto {
       lastName: (json['lastName'] as String?) ?? '',
       phone: json['phone'] as String?,
       email: json['email'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
       companyInternalId: dp['companyInternalId'] as String?,
       driverCode: dp['driverCode'] as String?,
 
@@ -71,6 +74,7 @@ class DriverProfileDto {
     lastName: lastName,
     email: email,
     phone: phone,
+    avatarUrl: avatarUrl,
     companyInternalId: companyInternalId,
     driverCode: driverCode,
 

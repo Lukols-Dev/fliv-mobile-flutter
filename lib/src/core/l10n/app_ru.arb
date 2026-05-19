@@ -24,6 +24,7 @@
   "auth_invalid_email": "Некорректный адрес электронной почты",
   "auth_login_failed": "Неверный email или пароль",
   "auth_register_failed": "Не удалось создать аккаунт",
+  "auth_register_success_pending_activation": "Аккаунт создан. Войдите после активации аккаунта администратором.",
   "common_or": "или",
   "common_fill_all_fields": "Заполните все поля",
   "language_pl": "Польский",

@@ -10,7 +10,6 @@ import 'package:mobile/src/features/driver/application/driver_profile_provider.d
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
-import 'package:mobile/src/features/users/application/avatar_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -129,7 +128,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _refresh() async {
     ref.invalidate(driverProfileProvider);
     ref.invalidate(currentDriverOrderProvider);
-    ref.invalidate(avatarControllerProvider);
 
     await Future.wait<void>([
       ref.read(driverProfileProvider.future).then((_) {}).catchError((_) {}),
@@ -137,7 +135,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(currentDriverOrderProvider.future)
           .then((_) {})
           .catchError((_) {}),
-      ref.read(avatarControllerProvider.future).then((_) {}).catchError((_) {}),
       // User initiated refresh: ok to request location permission if needed.
       ref
           .read(locationControllerProvider.notifier)
@@ -186,8 +183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     }
 
-    final avatarAsync = ref.watch(avatarControllerProvider);
-    final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
+    final avatarUrl = profile?.avatarUrl;
 
     final locationAsync = ref.watch(locationControllerProvider);
     final loc = locationAsync.asData?.value;
