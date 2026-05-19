@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
+import 'package:mobile/src/features/orders/application/unassign_order_controller.dart';
 import 'package:mobile/src/features/orders/presentation/widgets/route_stops_progress_list.dart';
 
 class OrderDetailsScreen extends ConsumerWidget {
@@ -79,6 +80,77 @@ class OrderDetailsScreen extends ConsumerWidget {
         return t.order_status_problem;
       default:
         return '-';
+    }
+  }
+
+  Future<void> _confirmUnassign({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String orderId,
+    required AppLocalizations t,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          t.order_unassign_confirm_title,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Figtree',
+          ),
+        ),
+        content: Text(
+          t.order_unassign_confirm_description,
+          style: const TextStyle(
+            fontSize: 14,
+            fontFamily: 'Figtree',
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(t.order_unassign_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFEF4444),
+            ),
+            child: Text(
+              t.order_unassign_confirm_action,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final controller = ref.read(unassignOrderControllerProvider.notifier);
+    await controller.unassign(orderId: orderId);
+
+    if (!context.mounted) return;
+
+    final state = ref.read(unassignOrderControllerProvider);
+    if (state is AsyncError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.order_unassign_failed),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.order_unassign_success),
+          backgroundColor: const Color(0xFF0F4D46),
+        ),
+      );
+      context.go('/home');
     }
   }
 
@@ -498,6 +570,33 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: TextButton(
+                          onPressed: () => _confirmUnassign(
+                            context: context,
+                            ref: ref,
+                            orderId: details.id,
+                            t: t,
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFFEF4444),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            t.order_unassign_button,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Figtree',
+                            ),
                           ),
                         ),
                       ),

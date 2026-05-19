@@ -615,4 +615,30 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get order_route_point_next => 'Następny cel';
+
+  @override
+  String get route_manual_route_banner =>
+      'Trasa orientacyjna – linia prosta między punktami';
+
+  @override
+  String get order_unassign_button => 'Odepnij zlecenie';
+
+  @override
+  String get order_unassign_confirm_title => 'Odepnij zlecenie?';
+
+  @override
+  String get order_unassign_confirm_description =>
+      'Zlecenie wróci do puli nieprzypisanych. Dyspozytor będzie musiał przypisać je ponownie.';
+
+  @override
+  String get order_unassign_confirm_action => 'Odepnij';
+
+  @override
+  String get order_unassign_cancel => 'Anuluj';
+
+  @override
+  String get order_unassign_success => 'Zlecenie zostało odpięte';
+
+  @override
+  String get order_unassign_failed => 'Nie udało się odpiąć zlecenia';
 }

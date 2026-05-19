@@ -1267,6 +1267,54 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Następny cel'**
   String get order_route_point_next;
+
+  /// No description provided for @route_manual_route_banner.
+  ///
+  /// In pl, this message translates to:
+  /// **'Trasa orientacyjna – linia prosta między punktami'**
+  String get route_manual_route_banner;
+
+  /// No description provided for @order_unassign_button.
+  ///
+  /// In pl, this message translates to:
+  /// **'Odepnij zlecenie'**
+  String get order_unassign_button;
+
+  /// No description provided for @order_unassign_confirm_title.
+  ///
+  /// In pl, this message translates to:
+  /// **'Odepnij zlecenie?'**
+  String get order_unassign_confirm_title;
+
+  /// No description provided for @order_unassign_confirm_description.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zlecenie wróci do puli nieprzypisanych. Dyspozytor będzie musiał przypisać je ponownie.'**
+  String get order_unassign_confirm_description;
+
+  /// No description provided for @order_unassign_confirm_action.
+  ///
+  /// In pl, this message translates to:
+  /// **'Odepnij'**
+  String get order_unassign_confirm_action;
+
+  /// No description provided for @order_unassign_cancel.
+  ///
+  /// In pl, this message translates to:
+  /// **'Anuluj'**
+  String get order_unassign_cancel;
+
+  /// No description provided for @order_unassign_success.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zlecenie zostało odpięte'**
+  String get order_unassign_success;
+
+  /// No description provided for @order_unassign_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się odpiąć zlecenia'**
+  String get order_unassign_failed;
 }
 
 class _AppLocalizationsDelegate

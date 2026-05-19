@@ -89,4 +89,8 @@ class DriverTransportOrdersApi {
       res.data as Map<String, dynamic>,
     );
   }
+
+  Future<void> unassign({required String id}) async {
+    await _dio.delete('/api/v1/driver/transport-orders/$id/assignment');
+  }
 }

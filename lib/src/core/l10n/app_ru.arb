@@ -211,5 +211,13 @@
       "time": { "type": "String" }
     }
   },
-  "order_route_point_next": "Следующая цель"
+  "order_route_point_next": "Следующая цель",
+  "route_manual_route_banner": "Ориентировочный маршрут – прямая линия между точками",
+  "order_unassign_button": "Отвязать заказ",
+  "order_unassign_confirm_title": "Отвязать заказ?",
+  "order_unassign_confirm_description": "Заказ вернётся в пул неназначенных. Диспетчеру потребуется назначить его снова.",
+  "order_unassign_confirm_action": "Отвязать",
+  "order_unassign_cancel": "Отмена",
+  "order_unassign_success": "Заказ успешно отвязан",
+  "order_unassign_failed": "Не удалось отвязать заказ"
 }

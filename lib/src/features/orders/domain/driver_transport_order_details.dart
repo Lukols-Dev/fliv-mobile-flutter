@@ -96,6 +96,7 @@ class DriverTransportOrderRoutePlan {
 
 class DriverRouteRoutingProfile {
   const DriverRouteRoutingProfile({
+    this.mode,
     this.transportMode = 'truck',
     this.routingMode = 'fast',
     this.trafficMode = 'default',
@@ -104,6 +105,7 @@ class DriverRouteRoutingProfile {
     this.avoidMotorways = false,
   });
 
+  final String? mode;
   final String transportMode;
   final String routingMode;
   final String trafficMode;
