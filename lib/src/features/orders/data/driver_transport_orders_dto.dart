@@ -269,6 +269,7 @@ class DriverTransportOrderRoutePlanDto {
 
 class DriverRouteRoutingProfileDto {
   const DriverRouteRoutingProfileDto({
+    this.mode,
     this.transportMode = 'truck',
     this.routingMode = 'fast',
     this.trafficMode = 'default',
@@ -277,6 +278,7 @@ class DriverRouteRoutingProfileDto {
     this.avoidMotorways = false,
   });
 
+  final String? mode;
   final String transportMode;
   final String routingMode;
   final String trafficMode;
@@ -301,6 +303,7 @@ class DriverRouteRoutingProfileDto {
     }
 
     return DriverRouteRoutingProfileDto(
+      mode: json['mode'] as String?,
       transportMode: parseString(json['transportMode'], 'truck'),
       routingMode: parseString(json['routingMode'], 'fast'),
       trafficMode: parseString(json['trafficMode'], 'default'),
@@ -311,6 +314,7 @@ class DriverRouteRoutingProfileDto {
   }
 
   DriverRouteRoutingProfile toDomain() => DriverRouteRoutingProfile(
+    mode: mode,
     transportMode: transportMode,
     routingMode: routingMode,
     trafficMode: trafficMode,

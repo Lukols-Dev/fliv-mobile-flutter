@@ -15,4 +15,6 @@ abstract class DriverTransportOrdersRepository {
     required String id,
     required String description,
   });
+
+  Future<void> unassign({required String id});
 }

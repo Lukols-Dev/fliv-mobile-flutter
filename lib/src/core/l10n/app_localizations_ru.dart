@@ -622,4 +622,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get order_route_point_next => 'Следующая цель';
+
+  @override
+  String get route_manual_route_banner =>
+      'Ориентировочный маршрут – прямая линия между точками';
+
+  @override
+  String get order_unassign_button => 'Отвязать заказ';
+
+  @override
+  String get order_unassign_confirm_title => 'Отвязать заказ?';
+
+  @override
+  String get order_unassign_confirm_description =>
+      'Заказ вернётся в пул неназначенных. Диспетчеру потребуется назначить его снова.';
+
+  @override
+  String get order_unassign_confirm_action => 'Отвязать';
+
+  @override
+  String get order_unassign_cancel => 'Отмена';
+
+  @override
+  String get order_unassign_success => 'Заказ успешно отвязан';
+
+  @override
+  String get order_unassign_failed => 'Не удалось отвязать заказ';
 }

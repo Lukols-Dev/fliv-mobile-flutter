@@ -68,4 +68,9 @@ class DriverTransportOrdersRepositoryImpl
     );
     return responseDto.toDomain();
   }
+
+  @override
+  Future<void> unassign({required String id}) async {
+    await _api.unassign(id: id);
+  }
 }

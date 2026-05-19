@@ -612,6 +612,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     final bottomSafe = MediaQuery.of(context).padding.bottom;
     final bottomPaddingForFab = (screenH * _sheetMin) + 12 - bottomSafe;
 
+    final isManualRoute = savedRoutePlan?.routingProfile.mode == 'manual';
     final route = controller.currentRoute;
     final showRouteControls = controller.isFollowing && hasOrder;
     final showChangeStatus = controller.isFollowing && hasOrder;
@@ -823,6 +824,10 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                   if (_locationPreparationMessage != null) ...[
                                     const SizedBox(height: 8),
                                     _LocationNotice(message: _locationPreparationMessage!),
+                                  ],
+                                  if (isManualRoute) ...[
+                                    const SizedBox(height: 8),
+                                    const _ManualRouteBanner(),
                                   ],
                                   const SizedBox(height: 16),
                                   ...[
@@ -1212,6 +1217,46 @@ class _NavigationProgressPanel extends StatelessWidget {
               thumbColor: const Color(0xFF0F4D46),
             ),
             child: Slider(value: progress, onChanged: null),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ManualRouteBanner extends StatelessWidget {
+  const _ManualRouteBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.timeline_rounded,
+            size: 16,
+            color: Color(0xFFB45309),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              t.route_manual_route_banner,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Figtree',
+                color: Color(0xFF92400E),
+                height: 1.3,
+              ),
+            ),
           ),
         ],
       ),
