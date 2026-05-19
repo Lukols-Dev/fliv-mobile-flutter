@@ -806,6 +806,18 @@ abstract class AppLocalizations {
   /// **'Nie udało się przypisać zlecenia'**
   String get home_assign_order_failed;
 
+  /// No description provided for @home_assign_order_not_found.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie znaleziono zlecenia o podanym numerze'**
+  String get home_assign_order_not_found;
+
+  /// No description provided for @home_assign_order_already_assigned.
+  ///
+  /// In pl, this message translates to:
+  /// **'To zlecenie jest już przypisane do innego kierowcy'**
+  String get home_assign_order_already_assigned;
+
   /// No description provided for @home_no_assigned_order_title.
   ///
   /// In pl, this message translates to:

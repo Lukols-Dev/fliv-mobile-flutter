@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/dio_provider.dart';
+import '../domain/assign_order_exception.dart';
 import '../domain/driver_transport_order.dart';
 import '../domain/driver_transport_order_details.dart';
 import '../domain/driver_transport_orders_repository.dart';
@@ -34,7 +36,17 @@ class DriverTransportOrdersRepositoryImpl
 
   @override
   Future<void> assignByZtNumber({required String ztNumber}) async {
-    await _api.assign(ztNumber: ztNumber.trim());
+    try {
+      await _api.assign(ztNumber: ztNumber.trim());
+    } on DioException catch (e) {
+      switch (e.response?.statusCode) {
+        case 404:
+          throw const OrderNotFoundException();
+        case 409:
+          throw const OrderAlreadyAssignedException();
+      }
+      rethrow;
+    }
   }
 
   @override

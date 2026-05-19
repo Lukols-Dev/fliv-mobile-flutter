@@ -118,6 +118,8 @@
   "home_enter_zt_number": "Введите номер ZT.",
   "home_order_assigned": "Заказ назначен.",
   "home_assign_order_failed": "Не удалось назначить заказ",
+  "home_assign_order_not_found": "Заказ с указанным номером не найден",
+  "home_assign_order_already_assigned": "Этот заказ уже назначен другому водителю",
   "home_no_assigned_order_title": "Нет назначенного заказа",
   "home_no_assigned_order_description": "Чтобы назначить заказ, введите номер ZT, полученный от диспетчера.",
   "home_zt_hint": "например, ZT-123456",

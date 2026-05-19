@@ -10,6 +10,7 @@ import 'package:mobile/src/features/driver/application/driver_profile_provider.d
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
+import 'package:mobile/src/features/orders/domain/assign_order_exception.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -114,10 +115,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text(t.home_order_assigned)));
       }
-    } catch (e) {
+    } on OrderNotFoundException catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${t.home_assign_order_failed}: $e')),
+          SnackBar(content: Text(t.home_assign_order_not_found)),
+        );
+      }
+    } on OrderAlreadyAssignedException catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.home_assign_order_already_assigned)),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.home_assign_order_failed)),
         );
       }
     } finally {

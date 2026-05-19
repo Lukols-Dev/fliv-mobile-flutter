@@ -375,6 +375,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get home_assign_order_failed => 'Не удалось назначить заказ';
 
   @override
+  String get home_assign_order_not_found =>
+      'Заказ с указанным номером не найден';
+
+  @override
+  String get home_assign_order_already_assigned =>
+      'Этот заказ уже назначен другому водителю';
+
+  @override
   String get home_no_assigned_order_title => 'Нет назначенного заказа';
 
   @override

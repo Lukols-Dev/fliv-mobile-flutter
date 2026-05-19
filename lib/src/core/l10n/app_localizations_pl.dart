@@ -370,6 +370,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get home_assign_order_failed => 'Nie udało się przypisać zlecenia';
 
   @override
+  String get home_assign_order_not_found =>
+      'Nie znaleziono zlecenia o podanym numerze';
+
+  @override
+  String get home_assign_order_already_assigned =>
+      'To zlecenie jest już przypisane do innego kierowcy';
+
+  @override
   String get home_no_assigned_order_title => 'Brak przypisanego zlecenia';
 
   @override
