@@ -130,6 +130,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -663,15 +664,20 @@ class _FilterChip extends StatelessWidget {
           ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? const Color(0xFF111827)
-                    : const Color(0xFF6B7280),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected
+                      ? const Color(0xFF111827)
+                      : const Color(0xFF6B7280),
+                ),
               ),
             ),
             const SizedBox(height: 2),
@@ -963,7 +969,7 @@ class _DocumentCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.10),
+                    color: statusColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(

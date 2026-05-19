@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart' show NumberFormat;
 import 'package:mobile/src/core/l10n/app_localizations.dart';
 
 import 'package:mobile/src/core/location/location_controller.dart';
 import 'package:mobile/src/core/location/geocoding_providers.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
+import 'package:mobile/src/features/orders/application/driver_order_details_provider.dart';
 import 'package:mobile/src/features/orders/data/driver_transport_orders_repository_impl.dart';
 import 'package:mobile/src/features/users/application/avatar_controller.dart';
 
@@ -33,6 +35,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (dt == null) return '—';
     final d = dt.toLocal();
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+  }
+
+  String _formatTime(DateTime dt) {
+    final d = dt.toLocal();
+    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  // Route distance set by the dispatcher, formatted the same way as the web
+  // app: locale-aware, metres below 1 km, and decimals dropped for routes of
+  // 100 km or more. Falls back to 0.0 km when no route has been planned yet.
+  String _formatRouteDistance(BuildContext context, int? meters) {
+    if (meters == null) return '0.0 km';
+    if (meters < 1000) return '${meters.round()} m';
+    final locale = Localizations.localeOf(context).toString();
+    final formatter = NumberFormat.decimalPattern(locale)
+      ..minimumFractionDigits = 0
+      ..maximumFractionDigits = meters >= 100000 ? 0 : 1;
+    return '${formatter.format(meters / 1000)} km';
+  }
+
+  // Estimated route time, e.g. "9h 30min".
+  String _formatRouteDuration(int? seconds) {
+    final total = seconds ?? 0;
+    final hours = total ~/ 3600;
+    final minutes = (total % 3600) ~/ 60;
+    return '${hours}h ${minutes}min';
+  }
+
+  // Cargo weight from the order, shown in tonnes.
+  String _formatCargoWeight(int? kilograms) {
+    final tonnes = (kilograms ?? 0) / 1000;
+    return '${tonnes.toStringAsFixed(1)} t';
   }
 
   String _statusLabel(AppLocalizations t, String raw) {
@@ -133,6 +167,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (o) => o,
       orElse: () => null,
     );
+
+    // Order details carry the dispatcher route plan (distance, duration) and
+    // cargo weight, which the list endpoint behind currentOrder does not.
+    final orderDetails = currentOrder == null
+        ? null
+        : ref
+              .watch(driverOrderDetailsProvider(currentOrder.id))
+              .maybeWhen(data: (d) => d, orElse: () => null);
+
+    // Arrival time at the LOADING route point — shown as the "loaded at" line
+    // once the driver has confirmed the loading stop.
+    DateTime? loadingArrivedAt;
+    for (final point in orderDetails?.routePoints ?? const []) {
+      if (point.type == 'LOADING' && point.arrivedAt != null) {
+        loadingArrivedAt = point.arrivedAt;
+        break;
+      }
+    }
 
     final avatarAsync = ref.watch(avatarControllerProvider);
     final avatarUrl = avatarAsync.maybeWhen(data: (u) => u, orElse: () => null);
@@ -579,6 +631,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             ),
                                           ),
                                         ),
+                                        const SizedBox(height: 12),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Wrap(
+                                            spacing: 18,
+                                            runSpacing: 8,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
+                                            children: [
+                                              _OrderStat(
+                                                icon: Icons.route,
+                                                value: _formatRouteDistance(
+                                                  context,
+                                                  orderDetails
+                                                      ?.routePlan
+                                                      ?.distanceMeters,
+                                                ),
+                                              ),
+                                              _OrderStat(
+                                                icon: Icons.schedule,
+                                                value: _formatRouteDuration(
+                                                  orderDetails
+                                                      ?.routePlan
+                                                      ?.durationSeconds,
+                                                ),
+                                              ),
+                                              _OrderStat(
+                                                icon:
+                                                    Icons.inventory_2_outlined,
+                                                value: _formatCargoWeight(
+                                                  orderDetails?.cargoWeightKg,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -594,19 +682,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         _TimelineRow(
                                           color: const Color(0xFF004F45),
                                           title: t.order_loading_point,
-                                          subtitle1: currentOrder.fromCountry,
-                                          subtitle2: '',
+                                          location:
+                                              orderDetails?.fromCountry ??
+                                              currentOrder.fromCountry,
+                                          address:
+                                              orderDetails?.fromAddress ?? '',
                                           date: _formatLoadingDate(
-                                            currentOrder.loadingDate,
+                                            orderDetails?.loadingDate ??
+                                                currentOrder.loadingDate,
                                           ),
+                                          showConnector: true,
+                                          statusText: loadingArrivedAt != null
+                                              ? '${t.order_loaded} '
+                                                    '${_formatTime(loadingArrivedAt)}'
+                                              : null,
+                                          statusColor: const Color(0xFF22C55E),
+                                          statusIcon: Icons.check_circle,
                                         ),
                                         const SizedBox(height: 10),
                                         _TimelineRow(
                                           color: const Color(0xFFEF4444),
                                           title: t.order_unloading_point,
-                                          subtitle1: currentOrder.toCountry,
-                                          subtitle2: '',
+                                          location:
+                                              orderDetails?.toCountry ??
+                                              currentOrder.toCountry,
+                                          address:
+                                              orderDetails?.toAddress ?? '',
                                           date: '—',
+                                          showConnector: false,
+                                          statusText:
+                                              currentOrder.status ==
+                                                  'IN_PROGRESS'
+                                              ? t.order_en_route
+                                              : null,
+                                          statusColor: const Color(
+                                            0xFFEF4444,
+                                          ),
+                                          statusIcon: Icons.circle,
                                         ),
                                         const SizedBox(height: 12),
                                         SizedBox(
@@ -674,63 +786,109 @@ class _TimelineRow extends StatelessWidget {
   const _TimelineRow({
     required this.color,
     required this.title,
-    required this.subtitle1,
-    required this.subtitle2,
+    required this.location,
+    required this.address,
     required this.date,
+    this.showConnector = true,
+    this.statusText,
+    this.statusColor,
+    this.statusIcon,
   });
 
   final Color color;
   final String title;
-  final String subtitle1;
-  final String subtitle2;
+
+  /// City + country line, e.g. "Piaseczno, Polska".
+  final String location;
+
+  /// Street address line shown below [location]; hidden when empty.
+  final String address;
   final String date;
+
+  /// Whether to draw the fading connector line down to the next point.
+  final bool showConnector;
+
+  /// Optional status line under the address, e.g. "Załadowano 10:34".
+  final String? statusText;
+  final Color? statusColor;
+  final IconData? statusIcon;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            Container(
-              width: 2,
-              height: 34,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [color, color.withValues(alpha: 0.0)],
-                  stops: const [0.0, 0.8],
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
+              if (showConnector)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [color, color.withValues(alpha: 0.0)],
+                        stops: const [0.0, 0.9],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Color(0xFF709470),
+                          fontSize: 11,
+                          fontFamily: 'Figtree',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      date,
                       style: const TextStyle(
-                        color: Color(0xFF709470),
-                        fontSize: 11,
+                        color: Color(0xFF99A1AE),
+                        fontSize: 10,
                         fontFamily: 'Figtree',
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  location,
+                  style: const TextStyle(
+                    color: Color(0xFF0A0A0A),
+                    fontSize: 14,
+                    fontFamily: 'Figtree',
+                    fontWeight: FontWeight.w500,
                   ),
+                ),
+                if (address.isNotEmpty) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    date,
+                    address,
                     style: const TextStyle(
                       color: Color(0xFF99A1AE),
                       fontSize: 10,
@@ -739,28 +897,61 @@ class _TimelineRow extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle1,
-                style: const TextStyle(
-                  color: Color(0xFF0A0A0A),
-                  fontSize: 14,
-                  fontFamily: 'Figtree',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle2,
-                style: const TextStyle(
-                  color: Color(0xFF99A1AE),
-                  fontSize: 10,
-                  fontFamily: 'Figtree',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+                if (statusText != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        statusIcon ?? Icons.circle,
+                        size: 12,
+                        color: statusColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        statusText!,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 11,
+                          fontFamily: 'Figtree',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (showConnector) const SizedBox(height: 4),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single icon + value pair shown in the current order card header
+/// (route distance, route time, cargo weight).
+class _OrderStat extends StatelessWidget {
+  const _OrderStat({required this.icon, required this.value});
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Colors.white),
+        const SizedBox(width: 5),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontFamily: 'Figtree',
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],

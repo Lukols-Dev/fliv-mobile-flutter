@@ -22,6 +22,11 @@ class OrderDetailsScreen extends ConsumerWidget {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
   }
 
+  String _formatTime(DateTime dt) {
+    final d = dt.toLocal();
+    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
   String _formatBool(AppLocalizations t, bool? v) {
     if (v == null) return '-';
     return v ? t.common_yes : t.common_no;
@@ -141,6 +146,16 @@ class OrderDetailsScreen extends ConsumerWidget {
           final statusLabel = _statusLabel(t, details.status);
           final statusColor = _statusColor(details.status);
 
+          // Arrival time at the LOADING route point, if the driver has
+          // confirmed it — shown as the "loaded at" line on the loading point.
+          DateTime? loadingArrivedAt;
+          for (final point in details.routePoints) {
+            if (point.type == 'LOADING' && point.arrivedAt != null) {
+              loadingArrivedAt = point.arrivedAt;
+              break;
+            }
+          }
+
           return Column(
             children: [
               Expanded(
@@ -245,9 +260,12 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 date: _formatDate(details.loadingDate),
                                 statusColor: const Color(0xFF004F45),
                                 showLine: true,
-                                orderStatus: details.status,
-                                localizations: t,
-                                isUnloadingPoint: false,
+                                statusText: loadingArrivedAt != null
+                                    ? '${t.order_loaded} '
+                                          '${_formatTime(loadingArrivedAt)}'
+                                    : null,
+                                statusTextColor: const Color(0xFF22C55E),
+                                statusIcon: Icons.check_circle,
                               ),
                               const SizedBox(height: 10),
                               _RoutePoint(
@@ -258,10 +276,11 @@ class OrderDetailsScreen extends ConsumerWidget {
                                 date: '-',
                                 statusColor: const Color(0xFFF2542F),
                                 showLine: false,
-                                orderStatus: details.status,
-                                localizations: t,
-                                isUnloadingPoint: true,
-                                etaTime: null,
+                                statusText: details.status == 'IN_PROGRESS'
+                                    ? t.order_en_route
+                                    : null,
+                                statusTextColor: const Color(0xFFEF4444),
+                                statusIcon: Icons.circle,
                               ),
                             ],
                           ),
@@ -616,10 +635,9 @@ class _RoutePoint extends StatelessWidget {
     required this.date,
     required this.statusColor,
     required this.showLine,
-    this.orderStatus,
-    this.localizations,
-    this.isUnloadingPoint = false,
-    this.etaTime,
+    this.statusText,
+    this.statusTextColor,
+    this.statusIcon,
   });
 
   final Color color;
@@ -629,134 +647,122 @@ class _RoutePoint extends StatelessWidget {
   final String date;
   final Color statusColor;
   final bool showLine;
-  final String? orderStatus;
-  final AppLocalizations? localizations;
-  final bool isUnloadingPoint;
-  final String? etaTime;
+
+  /// Optional status line under the address, e.g. "Załadowano 10:34".
+  final String? statusText;
+  final Color? statusTextColor;
+  final IconData? statusIcon;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            if (showLine)
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
               Container(
-                width: 2,
-                height: 60,
+                width: 12,
+                height: 12,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [statusColor, Colors.white],
-                  ),
+                  color: color,
+                  shape: BoxShape.circle,
                 ),
               ),
-          ],
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
+              if (showLine)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [statusColor, Colors.white],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF709470),
+                          fontFamily: 'Figtree',
+                        ),
+                      ),
+                    ),
+                    Text(
+                      date,
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF709470),
+                        color: Color(0xFF99A1AF),
                         fontFamily: 'Figtree',
                       ),
                     ),
-                  ),
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF99A1AF),
-                      fontFamily: 'Figtree',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                location,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF0A0A0A),
-                  fontFamily: 'Figtree',
+                  ],
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                address,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF6A7282),
-                  fontFamily: 'Figtree',
+                const SizedBox(height: 4),
+                Text(
+                  location,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF0A0A0A),
+                    fontFamily: 'Figtree',
+                  ),
                 ),
-              ),
-              if (orderStatus == 'IN_PROGRESS') ...[
-                const SizedBox(height: 6),
-                if (isUnloadingPoint)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.circle_rounded,
-                            size: 10,
-                            color: statusColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${localizations!.order_eta}: ${etaTime ?? '-'}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
-                              color: statusColor,
-                              fontFamily: 'Figtree',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                else
+                const SizedBox(height: 2),
+                Text(
+                  address,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF6A7282),
+                    fontFamily: 'Figtree',
+                  ),
+                ),
+                if (statusText != null) ...[
+                  const SizedBox(height: 6),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_outlined, size: 10, color: statusColor),
+                      Icon(
+                        statusIcon ?? Icons.circle,
+                        size: 12,
+                        color: statusTextColor,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        localizations!.order_loaded,
+                        statusText!,
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
-                          color: statusColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: statusTextColor,
                           fontFamily: 'Figtree',
                         ),
                       ),
                     ],
                   ),
+                ],
+                if (showLine) const SizedBox(height: 6),
               ],
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
