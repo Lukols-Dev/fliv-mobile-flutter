@@ -1655,6 +1655,28 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _payerNameMeta = const VerificationMeta(
+    'payerName',
+  );
+  @override
+  late final GeneratedColumn<String> payerName = GeneratedColumn<String>(
+    'payer_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payerEmailMeta = const VerificationMeta(
+    'payerEmail',
+  );
+  @override
+  late final GeneratedColumn<String> payerEmail = GeneratedColumn<String>(
+    'payer_email',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _fromCountryMeta = const VerificationMeta(
     'fromCountry',
   );
@@ -1796,6 +1818,8 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
     vehiclePlate,
     trailerPlate,
     clientName,
+    payerName,
+    payerEmail,
     fromCountry,
     fromAddress,
     toCountry,
@@ -1860,6 +1884,18 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
       context.handle(
         _clientNameMeta,
         clientName.isAcceptableOrUnknown(data['client_name']!, _clientNameMeta),
+      );
+    }
+    if (data.containsKey('payer_name')) {
+      context.handle(
+        _payerNameMeta,
+        payerName.isAcceptableOrUnknown(data['payer_name']!, _payerNameMeta),
+      );
+    }
+    if (data.containsKey('payer_email')) {
+      context.handle(
+        _payerEmailMeta,
+        payerEmail.isAcceptableOrUnknown(data['payer_email']!, _payerEmailMeta),
       );
     }
     if (data.containsKey('from_country')) {
@@ -1994,6 +2030,14 @@ class $DriverOrderDetailsTableTable extends DriverOrderDetailsTable
         DriftSqlType.string,
         data['${effectivePrefix}client_name'],
       ),
+      payerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payer_name'],
+      ),
+      payerEmail: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payer_email'],
+      ),
       fromCountry: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}from_country'],
@@ -2059,6 +2103,8 @@ class DriverOrderDetailsTableData extends DataClass
   final String? vehiclePlate;
   final String? trailerPlate;
   final String? clientName;
+  final String? payerName;
+  final String? payerEmail;
   final String? fromCountry;
   final String? fromAddress;
   final String? toCountry;
@@ -2078,6 +2124,8 @@ class DriverOrderDetailsTableData extends DataClass
     this.vehiclePlate,
     this.trailerPlate,
     this.clientName,
+    this.payerName,
+    this.payerEmail,
     this.fromCountry,
     this.fromAddress,
     this.toCountry,
@@ -2109,6 +2157,12 @@ class DriverOrderDetailsTableData extends DataClass
     }
     if (!nullToAbsent || clientName != null) {
       map['client_name'] = Variable<String>(clientName);
+    }
+    if (!nullToAbsent || payerName != null) {
+      map['payer_name'] = Variable<String>(payerName);
+    }
+    if (!nullToAbsent || payerEmail != null) {
+      map['payer_email'] = Variable<String>(payerEmail);
     }
     if (!nullToAbsent || fromCountry != null) {
       map['from_country'] = Variable<String>(fromCountry);
@@ -2165,6 +2219,12 @@ class DriverOrderDetailsTableData extends DataClass
       clientName: clientName == null && nullToAbsent
           ? const Value.absent()
           : Value(clientName),
+      payerName: payerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payerName),
+      payerEmail: payerEmail == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payerEmail),
       fromCountry: fromCountry == null && nullToAbsent
           ? const Value.absent()
           : Value(fromCountry),
@@ -2214,6 +2274,8 @@ class DriverOrderDetailsTableData extends DataClass
       vehiclePlate: serializer.fromJson<String?>(json['vehiclePlate']),
       trailerPlate: serializer.fromJson<String?>(json['trailerPlate']),
       clientName: serializer.fromJson<String?>(json['clientName']),
+      payerName: serializer.fromJson<String?>(json['payerName']),
+      payerEmail: serializer.fromJson<String?>(json['payerEmail']),
       fromCountry: serializer.fromJson<String?>(json['fromCountry']),
       fromAddress: serializer.fromJson<String?>(json['fromAddress']),
       toCountry: serializer.fromJson<String?>(json['toCountry']),
@@ -2240,6 +2302,8 @@ class DriverOrderDetailsTableData extends DataClass
       'vehiclePlate': serializer.toJson<String?>(vehiclePlate),
       'trailerPlate': serializer.toJson<String?>(trailerPlate),
       'clientName': serializer.toJson<String?>(clientName),
+      'payerName': serializer.toJson<String?>(payerName),
+      'payerEmail': serializer.toJson<String?>(payerEmail),
       'fromCountry': serializer.toJson<String?>(fromCountry),
       'fromAddress': serializer.toJson<String?>(fromAddress),
       'toCountry': serializer.toJson<String?>(toCountry),
@@ -2262,6 +2326,8 @@ class DriverOrderDetailsTableData extends DataClass
     Value<String?> vehiclePlate = const Value.absent(),
     Value<String?> trailerPlate = const Value.absent(),
     Value<String?> clientName = const Value.absent(),
+    Value<String?> payerName = const Value.absent(),
+    Value<String?> payerEmail = const Value.absent(),
     Value<String?> fromCountry = const Value.absent(),
     Value<String?> fromAddress = const Value.absent(),
     Value<String?> toCountry = const Value.absent(),
@@ -2281,6 +2347,8 @@ class DriverOrderDetailsTableData extends DataClass
     vehiclePlate: vehiclePlate.present ? vehiclePlate.value : this.vehiclePlate,
     trailerPlate: trailerPlate.present ? trailerPlate.value : this.trailerPlate,
     clientName: clientName.present ? clientName.value : this.clientName,
+    payerName: payerName.present ? payerName.value : this.payerName,
+    payerEmail: payerEmail.present ? payerEmail.value : this.payerEmail,
     fromCountry: fromCountry.present ? fromCountry.value : this.fromCountry,
     fromAddress: fromAddress.present ? fromAddress.value : this.fromAddress,
     toCountry: toCountry.present ? toCountry.value : this.toCountry,
@@ -2320,6 +2388,10 @@ class DriverOrderDetailsTableData extends DataClass
       clientName: data.clientName.present
           ? data.clientName.value
           : this.clientName,
+      payerName: data.payerName.present ? data.payerName.value : this.payerName,
+      payerEmail: data.payerEmail.present
+          ? data.payerEmail.value
+          : this.payerEmail,
       fromCountry: data.fromCountry.present
           ? data.fromCountry.value
           : this.fromCountry,
@@ -2360,6 +2432,8 @@ class DriverOrderDetailsTableData extends DataClass
           ..write('vehiclePlate: $vehiclePlate, ')
           ..write('trailerPlate: $trailerPlate, ')
           ..write('clientName: $clientName, ')
+          ..write('payerName: $payerName, ')
+          ..write('payerEmail: $payerEmail, ')
           ..write('fromCountry: $fromCountry, ')
           ..write('fromAddress: $fromAddress, ')
           ..write('toCountry: $toCountry, ')
@@ -2384,6 +2458,8 @@ class DriverOrderDetailsTableData extends DataClass
     vehiclePlate,
     trailerPlate,
     clientName,
+    payerName,
+    payerEmail,
     fromCountry,
     fromAddress,
     toCountry,
@@ -2407,6 +2483,8 @@ class DriverOrderDetailsTableData extends DataClass
           other.vehiclePlate == this.vehiclePlate &&
           other.trailerPlate == this.trailerPlate &&
           other.clientName == this.clientName &&
+          other.payerName == this.payerName &&
+          other.payerEmail == this.payerEmail &&
           other.fromCountry == this.fromCountry &&
           other.fromAddress == this.fromAddress &&
           other.toCountry == this.toCountry &&
@@ -2429,6 +2507,8 @@ class DriverOrderDetailsTableCompanion
   final Value<String?> vehiclePlate;
   final Value<String?> trailerPlate;
   final Value<String?> clientName;
+  final Value<String?> payerName;
+  final Value<String?> payerEmail;
   final Value<String?> fromCountry;
   final Value<String?> fromAddress;
   final Value<String?> toCountry;
@@ -2449,6 +2529,8 @@ class DriverOrderDetailsTableCompanion
     this.vehiclePlate = const Value.absent(),
     this.trailerPlate = const Value.absent(),
     this.clientName = const Value.absent(),
+    this.payerName = const Value.absent(),
+    this.payerEmail = const Value.absent(),
     this.fromCountry = const Value.absent(),
     this.fromAddress = const Value.absent(),
     this.toCountry = const Value.absent(),
@@ -2470,6 +2552,8 @@ class DriverOrderDetailsTableCompanion
     this.vehiclePlate = const Value.absent(),
     this.trailerPlate = const Value.absent(),
     this.clientName = const Value.absent(),
+    this.payerName = const Value.absent(),
+    this.payerEmail = const Value.absent(),
     this.fromCountry = const Value.absent(),
     this.fromAddress = const Value.absent(),
     this.toCountry = const Value.absent(),
@@ -2491,6 +2575,8 @@ class DriverOrderDetailsTableCompanion
     Expression<String>? vehiclePlate,
     Expression<String>? trailerPlate,
     Expression<String>? clientName,
+    Expression<String>? payerName,
+    Expression<String>? payerEmail,
     Expression<String>? fromCountry,
     Expression<String>? fromAddress,
     Expression<String>? toCountry,
@@ -2512,6 +2598,8 @@ class DriverOrderDetailsTableCompanion
       if (vehiclePlate != null) 'vehicle_plate': vehiclePlate,
       if (trailerPlate != null) 'trailer_plate': trailerPlate,
       if (clientName != null) 'client_name': clientName,
+      if (payerName != null) 'payer_name': payerName,
+      if (payerEmail != null) 'payer_email': payerEmail,
       if (fromCountry != null) 'from_country': fromCountry,
       if (fromAddress != null) 'from_address': fromAddress,
       if (toCountry != null) 'to_country': toCountry,
@@ -2536,6 +2624,8 @@ class DriverOrderDetailsTableCompanion
     Value<String?>? vehiclePlate,
     Value<String?>? trailerPlate,
     Value<String?>? clientName,
+    Value<String?>? payerName,
+    Value<String?>? payerEmail,
     Value<String?>? fromCountry,
     Value<String?>? fromAddress,
     Value<String?>? toCountry,
@@ -2557,6 +2647,8 @@ class DriverOrderDetailsTableCompanion
       vehiclePlate: vehiclePlate ?? this.vehiclePlate,
       trailerPlate: trailerPlate ?? this.trailerPlate,
       clientName: clientName ?? this.clientName,
+      payerName: payerName ?? this.payerName,
+      payerEmail: payerEmail ?? this.payerEmail,
       fromCountry: fromCountry ?? this.fromCountry,
       fromAddress: fromAddress ?? this.fromAddress,
       toCountry: toCountry ?? this.toCountry,
@@ -2593,6 +2685,12 @@ class DriverOrderDetailsTableCompanion
     }
     if (clientName.present) {
       map['client_name'] = Variable<String>(clientName.value);
+    }
+    if (payerName.present) {
+      map['payer_name'] = Variable<String>(payerName.value);
+    }
+    if (payerEmail.present) {
+      map['payer_email'] = Variable<String>(payerEmail.value);
     }
     if (fromCountry.present) {
       map['from_country'] = Variable<String>(fromCountry.value);
@@ -2645,6 +2743,8 @@ class DriverOrderDetailsTableCompanion
           ..write('vehiclePlate: $vehiclePlate, ')
           ..write('trailerPlate: $trailerPlate, ')
           ..write('clientName: $clientName, ')
+          ..write('payerName: $payerName, ')
+          ..write('payerEmail: $payerEmail, ')
           ..write('fromCountry: $fromCountry, ')
           ..write('fromAddress: $fromAddress, ')
           ..write('toCountry: $toCountry, ')
@@ -4163,6 +4263,8 @@ typedef $$DriverOrderDetailsTableTableCreateCompanionBuilder =
       Value<String?> vehiclePlate,
       Value<String?> trailerPlate,
       Value<String?> clientName,
+      Value<String?> payerName,
+      Value<String?> payerEmail,
       Value<String?> fromCountry,
       Value<String?> fromAddress,
       Value<String?> toCountry,
@@ -4185,6 +4287,8 @@ typedef $$DriverOrderDetailsTableTableUpdateCompanionBuilder =
       Value<String?> vehiclePlate,
       Value<String?> trailerPlate,
       Value<String?> clientName,
+      Value<String?> payerName,
+      Value<String?> payerEmail,
       Value<String?> fromCountry,
       Value<String?> fromAddress,
       Value<String?> toCountry,
@@ -4236,6 +4340,16 @@ class $$DriverOrderDetailsTableTableFilterComposer
 
   ColumnFilters<String> get clientName => $composableBuilder(
     column: $table.clientName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payerName => $composableBuilder(
+    column: $table.payerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payerEmail => $composableBuilder(
+    column: $table.payerEmail,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4339,6 +4453,16 @@ class $$DriverOrderDetailsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get payerName => $composableBuilder(
+    column: $table.payerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payerEmail => $composableBuilder(
+    column: $table.payerEmail,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get fromCountry => $composableBuilder(
     column: $table.fromCountry,
     builder: (column) => ColumnOrderings(column),
@@ -4430,6 +4554,14 @@ class $$DriverOrderDetailsTableTableAnnotationComposer
 
   GeneratedColumn<String> get clientName => $composableBuilder(
     column: $table.clientName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payerName =>
+      $composableBuilder(column: $table.payerName, builder: (column) => column);
+
+  GeneratedColumn<String> get payerEmail => $composableBuilder(
+    column: $table.payerEmail,
     builder: (column) => column,
   );
 
@@ -4538,6 +4670,8 @@ class $$DriverOrderDetailsTableTableTableManager
                 Value<String?> vehiclePlate = const Value.absent(),
                 Value<String?> trailerPlate = const Value.absent(),
                 Value<String?> clientName = const Value.absent(),
+                Value<String?> payerName = const Value.absent(),
+                Value<String?> payerEmail = const Value.absent(),
                 Value<String?> fromCountry = const Value.absent(),
                 Value<String?> fromAddress = const Value.absent(),
                 Value<String?> toCountry = const Value.absent(),
@@ -4558,6 +4692,8 @@ class $$DriverOrderDetailsTableTableTableManager
                 vehiclePlate: vehiclePlate,
                 trailerPlate: trailerPlate,
                 clientName: clientName,
+                payerName: payerName,
+                payerEmail: payerEmail,
                 fromCountry: fromCountry,
                 fromAddress: fromAddress,
                 toCountry: toCountry,
@@ -4580,6 +4716,8 @@ class $$DriverOrderDetailsTableTableTableManager
                 Value<String?> vehiclePlate = const Value.absent(),
                 Value<String?> trailerPlate = const Value.absent(),
                 Value<String?> clientName = const Value.absent(),
+                Value<String?> payerName = const Value.absent(),
+                Value<String?> payerEmail = const Value.absent(),
                 Value<String?> fromCountry = const Value.absent(),
                 Value<String?> fromAddress = const Value.absent(),
                 Value<String?> toCountry = const Value.absent(),
@@ -4600,6 +4738,8 @@ class $$DriverOrderDetailsTableTableTableManager
                 vehiclePlate: vehiclePlate,
                 trailerPlate: trailerPlate,
                 clientName: clientName,
+                payerName: payerName,
+                payerEmail: payerEmail,
                 fromCountry: fromCountry,
                 fromAddress: fromAddress,
                 toCountry: toCountry,
