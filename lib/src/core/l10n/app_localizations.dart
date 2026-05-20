@@ -1333,6 +1333,162 @@ abstract class AppLocalizations {
   /// In pl, this message translates to:
   /// **'Nie udało się odpiąć zlecenia'**
   String get order_unassign_failed;
+
+  /// No description provided for @common_retry.
+  ///
+  /// In pl, this message translates to:
+  /// **'Spróbuj ponownie'**
+  String get common_retry;
+
+  /// No description provided for @app_offline.
+  ///
+  /// In pl, this message translates to:
+  /// **'Jesteś offline'**
+  String get app_offline;
+
+  /// No description provided for @app_online.
+  ///
+  /// In pl, this message translates to:
+  /// **'Znowu online'**
+  String get app_online;
+
+  /// No description provided for @route_not_found.
+  ///
+  /// In pl, this message translates to:
+  /// **'404 - Nie znaleziono trasy'**
+  String get route_not_found;
+
+  /// No description provided for @open_url_invalid.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nieprawidłowy adres URL'**
+  String get open_url_invalid;
+
+  /// No description provided for @open_url_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się otworzyć linku'**
+  String get open_url_failed;
+
+  /// No description provided for @profile_avatar_updated.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zmieniono avatar.'**
+  String get profile_avatar_updated;
+
+  /// No description provided for @profile_avatar_update_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się zmienić avatara: {error}'**
+  String profile_avatar_update_failed(String error);
+
+  /// No description provided for @profile_fetch_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać profilu.'**
+  String get profile_fetch_failed;
+
+  /// No description provided for @profile_no_cached_data.
+  ///
+  /// In pl, this message translates to:
+  /// **'Brak danych profilu (offline i brak cache).'**
+  String get profile_no_cached_data;
+
+  /// No description provided for @driver_data_fetch_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać danych kierowcy.'**
+  String get driver_data_fetch_failed;
+
+  /// No description provided for @documents_take_photo.
+  ///
+  /// In pl, this message translates to:
+  /// **'Zrób zdjęcie'**
+  String get documents_take_photo;
+
+  /// No description provided for @documents_choose_from_gallery.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wybierz z galerii'**
+  String get documents_choose_from_gallery;
+
+  /// No description provided for @documents_pick_photo_required.
+  ///
+  /// In pl, this message translates to:
+  /// **'Wybierz zdjęcie.'**
+  String get documents_pick_photo_required;
+
+  /// No description provided for @documents_name_required.
+  ///
+  /// In pl, this message translates to:
+  /// **'Podaj nazwę dokumentu.'**
+  String get documents_name_required;
+
+  /// No description provided for @documents_added.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dodano dokument.'**
+  String get documents_added;
+
+  /// No description provided for @documents_added_locally.
+  ///
+  /// In pl, this message translates to:
+  /// **'Dodano lokalnie.'**
+  String get documents_added_locally;
+
+  /// No description provided for @documents_add_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się dodać dokumentu.'**
+  String get documents_add_failed;
+
+  /// No description provided for @documents_operation_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się wykonać operacji na dokumencie.'**
+  String get documents_operation_failed;
+
+  /// No description provided for @route_location_permission_message.
+  ///
+  /// In pl, this message translates to:
+  /// **'Aplikacja potrzebuje dostępu do lokalizacji, aby prowadzić Cię po trasie i udostępniać pozycję dyspozytorowi po rozpoczęciu zlecenia transportowego.'**
+  String get route_location_permission_message;
+
+  /// No description provided for @route_location_unavailable.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie udało się pobrać aktualnej lokalizacji.'**
+  String get route_location_unavailable;
+
+  /// No description provided for @route_location_permission_denied_forever.
+  ///
+  /// In pl, this message translates to:
+  /// **'Uprawnienie do lokalizacji jest wyłączone. Włącz dostęp do lokalizacji w ustawieniach systemu.'**
+  String get route_location_permission_denied_forever;
+
+  /// No description provided for @route_location_service_disabled.
+  ///
+  /// In pl, this message translates to:
+  /// **'Usługi lokalizacji są wyłączone. Włącz usługi lokalizacji, aby korzystać z mapy.'**
+  String get route_location_service_disabled;
+
+  /// No description provided for @route_location_report_failed.
+  ///
+  /// In pl, this message translates to:
+  /// **'Lokalizacja nie została wysłana do dyspozytora.'**
+  String get route_location_report_failed;
+
+  /// No description provided for @route_location_forbidden.
+  ///
+  /// In pl, this message translates to:
+  /// **'Nie możesz wysyłać lokalizacji dla tego zlecenia transportowego.'**
+  String get route_location_forbidden;
+
+  /// No description provided for @route_location_inactive_order.
+  ///
+  /// In pl, this message translates to:
+  /// **'To zlecenie transportowe nie jest aktywne.'**
+  String get route_location_inactive_order;
 }
 
 class _AppLocalizationsDelegate

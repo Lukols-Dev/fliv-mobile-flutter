@@ -222,5 +222,36 @@
   "order_unassign_confirm_action": "Odepnij",
   "order_unassign_cancel": "Anuluj",
   "order_unassign_success": "Zlecenie zostało odpięte",
-  "order_unassign_failed": "Nie udało się odpiąć zlecenia"
+  "order_unassign_failed": "Nie udało się odpiąć zlecenia",
+  "common_retry": "Spróbuj ponownie",
+  "app_offline": "Jesteś offline",
+  "app_online": "Znowu online",
+  "route_not_found": "404 - Nie znaleziono trasy",
+  "open_url_invalid": "Nieprawidłowy adres URL",
+  "open_url_failed": "Nie udało się otworzyć linku",
+  "profile_avatar_updated": "Zmieniono avatar.",
+  "profile_avatar_update_failed": "Nie udało się zmienić avatara: {error}",
+  "@profile_avatar_update_failed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "profile_fetch_failed": "Nie udało się pobrać profilu.",
+  "profile_no_cached_data": "Brak danych profilu (offline i brak cache).",
+  "driver_data_fetch_failed": "Nie udało się pobrać danych kierowcy.",
+  "documents_take_photo": "Zrób zdjęcie",
+  "documents_choose_from_gallery": "Wybierz z galerii",
+  "documents_pick_photo_required": "Wybierz zdjęcie.",
+  "documents_name_required": "Podaj nazwę dokumentu.",
+  "documents_added": "Dodano dokument.",
+  "documents_added_locally": "Dodano lokalnie.",
+  "documents_add_failed": "Nie udało się dodać dokumentu.",
+  "documents_operation_failed": "Nie udało się wykonać operacji na dokumencie.",
+  "route_location_permission_message": "Aplikacja potrzebuje dostępu do lokalizacji, aby prowadzić Cię po trasie i udostępniać pozycję dyspozytorowi po rozpoczęciu zlecenia transportowego.",
+  "route_location_unavailable": "Nie udało się pobrać aktualnej lokalizacji.",
+  "route_location_permission_denied_forever": "Uprawnienie do lokalizacji jest wyłączone. Włącz dostęp do lokalizacji w ustawieniach systemu.",
+  "route_location_service_disabled": "Usługi lokalizacji są wyłączone. Włącz usługi lokalizacji, aby korzystać z mapy.",
+  "route_location_report_failed": "Lokalizacja nie została wysłana do dyspozytora.",
+  "route_location_forbidden": "Nie możesz wysyłać lokalizacji dla tego zlecenia transportowego.",
+  "route_location_inactive_order": "To zlecenie transportowe nie jest aktywne."
 }

@@ -47,15 +47,21 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
       final isOffline = next;
 
       if (!wasOffline && isOffline) {
-        _messengerKey.currentState
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(content: Text('Jesteś offline')));
+        final t = _currentLocalizations();
+        if (t != null) {
+          _messengerKey.currentState
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(t.app_offline)));
+        }
       }
 
       if (wasOffline && !isOffline) {
-        _messengerKey.currentState
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(content: Text('Znowu online')));
+        final t = _currentLocalizations();
+        if (t != null) {
+          _messengerKey.currentState
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(t.app_online)));
+        }
       }
     });
 
@@ -103,6 +109,12 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     await ref.read(hereSdkInitProvider.future);
 
     FlutterNativeSplash.remove();
+  }
+
+  AppLocalizations? _currentLocalizations() {
+    final currentContext = _messengerKey.currentContext;
+    if (currentContext == null) return null;
+    return AppLocalizations.of(currentContext);
   }
 
   @override

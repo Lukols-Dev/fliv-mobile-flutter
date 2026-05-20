@@ -84,11 +84,11 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
           backgroundColor: const Color(0xFF0F4D46),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       final t = AppLocalizations.of(widget.parentContext)!;
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: Text('${t.route_report_problem_failed}: ${e.toString()}'),
+          content: Text(t.route_report_problem_failed),
           backgroundColor: const Color(0xFFEF4444),
         ),
       );
@@ -124,10 +124,10 @@ class _ReportEventSheetState extends ConsumerState<_ReportEventSheet> {
           backgroundColor: const Color(0xFF0F4D46),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: Text('${t.route_report_error}: ${e.toString()}'),
+          content: Text(t.route_report_error),
           backgroundColor: const Color(0xFFEF4444),
         ),
       );
@@ -330,9 +330,9 @@ class _ReportProblemSheetState extends State<_ReportProblemSheet> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Zgłoś problem',
-                    style: TextStyle(
+                  Text(
+                    t.route_report_problem_sheet_title,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Figtree',

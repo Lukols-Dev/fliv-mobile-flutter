@@ -518,7 +518,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                               ScaffoldMessenger.of(
                                                 context,
                                               ).showSnackBar(
-                                                SnackBar(content: Text('$e')),
+                                                SnackBar(
+                                                  content: Text(
+                                                    t.documents_operation_failed,
+                                                  ),
+                                                ),
                                               );
                                             }
                                           };
@@ -546,7 +550,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                               ScaffoldMessenger.of(
                                                 context,
                                               ).showSnackBar(
-                                                SnackBar(content: Text('$e')),
+                                                SnackBar(
+                                                  content: Text(
+                                                    t.documents_operation_failed,
+                                                  ),
+                                                ),
                                               );
                                             }
                                           };
@@ -582,7 +590,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                               ScaffoldMessenger.of(
                                                 context,
                                               ).showSnackBar(
-                                                SnackBar(content: Text('$e')),
+                                                SnackBar(
+                                                  content: Text(
+                                                    t.documents_operation_failed,
+                                                  ),
+                                                ),
                                               );
                                             }
                                           };
@@ -606,7 +618,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                           child: Text(
                             _isOfflineLikeRemoteError(remoteAsync.error)
                                 ? t.documents_offline_error
-                                : '${t.documents_fetch_failed}\n${remoteAsync.error}',
+                                : t.documents_fetch_failed,
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -995,7 +1007,7 @@ class _DocumentCard extends StatelessWidget {
                 if ((item.lastError ?? '').trim().isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
-                    item.lastError!.trim(),
+                    t.documents_operation_failed,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
