@@ -93,13 +93,13 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Nie udało się pobrać profilu.\n$e',
+                    '${t.profile_fetch_failed}\n$e',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () => ref.invalidate(driverProfileProvider),
-                    child: const Text('Spróbuj ponownie'),
+                    child: Text(t.common_retry),
                   ),
                 ],
               ),
@@ -107,11 +107,11 @@ class _YourDataScreenState extends ConsumerState<YourDataScreen> {
           ),
           data: (profile) {
             if (profile == null) {
-              return const Center(
+              return Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Brak danych profilu (offline i brak cache).',
+                    t.profile_no_cached_data,
                     textAlign: TextAlign.center,
                   ),
                 ),

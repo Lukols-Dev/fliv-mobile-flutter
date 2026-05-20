@@ -111,11 +111,11 @@ class RouteMapLayer extends StatelessWidget {
                         onPressed: () async {
                           try {
                             await controller.refreshAndCenter();
-                          } catch (e) {
+                          } catch (_) {
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('${t.common_location}: $e'),
+                                content: Text(t.route_location_unavailable),
                               ),
                             );
                           }

@@ -653,4 +653,94 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get order_unassign_failed => 'Nie udało się odpiąć zlecenia';
+
+  @override
+  String get common_retry => 'Spróbuj ponownie';
+
+  @override
+  String get app_offline => 'Jesteś offline';
+
+  @override
+  String get app_online => 'Znowu online';
+
+  @override
+  String get route_not_found => '404 - Nie znaleziono trasy';
+
+  @override
+  String get open_url_invalid => 'Nieprawidłowy adres URL';
+
+  @override
+  String get open_url_failed => 'Nie udało się otworzyć linku';
+
+  @override
+  String get profile_avatar_updated => 'Zmieniono avatar.';
+
+  @override
+  String profile_avatar_update_failed(String error) {
+    return 'Nie udało się zmienić avatara: $error';
+  }
+
+  @override
+  String get profile_fetch_failed => 'Nie udało się pobrać profilu.';
+
+  @override
+  String get profile_no_cached_data =>
+      'Brak danych profilu (offline i brak cache).';
+
+  @override
+  String get driver_data_fetch_failed =>
+      'Nie udało się pobrać danych kierowcy.';
+
+  @override
+  String get documents_take_photo => 'Zrób zdjęcie';
+
+  @override
+  String get documents_choose_from_gallery => 'Wybierz z galerii';
+
+  @override
+  String get documents_pick_photo_required => 'Wybierz zdjęcie.';
+
+  @override
+  String get documents_name_required => 'Podaj nazwę dokumentu.';
+
+  @override
+  String get documents_added => 'Dodano dokument.';
+
+  @override
+  String get documents_added_locally => 'Dodano lokalnie.';
+
+  @override
+  String get documents_add_failed => 'Nie udało się dodać dokumentu.';
+
+  @override
+  String get documents_operation_failed =>
+      'Nie udało się wykonać operacji na dokumencie.';
+
+  @override
+  String get route_location_permission_message =>
+      'Aplikacja potrzebuje dostępu do lokalizacji, aby prowadzić Cię po trasie i udostępniać pozycję dyspozytorowi po rozpoczęciu zlecenia transportowego.';
+
+  @override
+  String get route_location_unavailable =>
+      'Nie udało się pobrać aktualnej lokalizacji.';
+
+  @override
+  String get route_location_permission_denied_forever =>
+      'Uprawnienie do lokalizacji jest wyłączone. Włącz dostęp do lokalizacji w ustawieniach systemu.';
+
+  @override
+  String get route_location_service_disabled =>
+      'Usługi lokalizacji są wyłączone. Włącz usługi lokalizacji, aby korzystać z mapy.';
+
+  @override
+  String get route_location_report_failed =>
+      'Lokalizacja nie została wysłana do dyspozytora.';
+
+  @override
+  String get route_location_forbidden =>
+      'Nie możesz wysyłać lokalizacji dla tego zlecenia transportowego.';
+
+  @override
+  String get route_location_inactive_order =>
+      'To zlecenie transportowe nie jest aktywne.';
 }

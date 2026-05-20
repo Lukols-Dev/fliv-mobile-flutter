@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -101,6 +101,17 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           driverProfileTable,
           driverProfileTable.avatarUrl,
+        );
+      }
+      // upgrade z v9 -> v10 (dane płatnika/klienta w offline cache)
+      if (from < 10) {
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.payerName,
+        );
+        await m.addColumn(
+          driverOrderDetailsTable,
+          driverOrderDetailsTable.payerEmail,
         );
       }
     },

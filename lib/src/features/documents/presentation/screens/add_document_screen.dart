@@ -38,6 +38,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
 
   Future<void> _showPickSourceSheet() async {
     if (_submitting) return;
+    final t = AppLocalizations.of(context)!;
 
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -59,7 +60,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                     Icons.camera_alt_outlined,
                     color: Color(0xFF0F4D46),
                   ),
-                  title: const Text('Zrób zdjęcie'),
+                  title: Text(t.documents_take_photo),
                   onTap: () => Navigator.of(context).pop(ImageSource.camera),
                 ),
                 ListTile(
@@ -67,7 +68,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
                     Icons.photo_library_outlined,
                     color: Color(0xFF0F4D46),
                   ),
-                  title: const Text('Wybierz z galerii'),
+                  title: Text(t.documents_choose_from_gallery),
                   onTap: () => Navigator.of(context).pop(ImageSource.gallery),
                 ),
               ],
@@ -83,17 +84,18 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
   }
 
   Future<void> _submit() async {
+    final t = AppLocalizations.of(context)!;
     final title = _nameController.text.trim();
     if (_picked == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Wybierz zdjęcie.')));
+      ).showSnackBar(SnackBar(content: Text(t.documents_pick_photo_required)));
       return;
     }
     if (title.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Podaj nazwę dokumentu.')));
+      ).showSnackBar(SnackBar(content: Text(t.documents_name_required)));
       return;
     }
 
@@ -111,13 +113,17 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(uploaded ? 'Dodano dokument.' : 'Dodano lokalnie.'),
+          content: Text(
+            uploaded ? t.documents_added : t.documents_added_locally,
+          ),
         ),
       );
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.documents_add_failed)));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

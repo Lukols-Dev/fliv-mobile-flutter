@@ -8,6 +8,8 @@ class DriverOrderDetailsTable extends Table {
   TextColumn get vehiclePlate => text().nullable()();
   TextColumn get trailerPlate => text().nullable()();
   TextColumn get clientName => text().nullable()();
+  TextColumn get payerName => text().nullable()();
+  TextColumn get payerEmail => text().nullable()();
   TextColumn get fromCountry => text().nullable()();
   TextColumn get fromAddress => text().nullable()();
   TextColumn get toCountry => text().nullable()();

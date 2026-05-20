@@ -14,6 +14,7 @@ class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
+    final t = AppLocalizations.of(context)!;
     final picker = ImagePicker();
 
     try {
@@ -31,12 +32,14 @@ class AccountScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Zmieniono avatar.')));
+        ).showSnackBar(SnackBar(content: Text(t.profile_avatar_updated)));
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Nie udało się zmienić avatara: $e')),
+          SnackBar(
+            content: Text(t.profile_avatar_update_failed(e.toString())),
+          ),
         );
       }
     }

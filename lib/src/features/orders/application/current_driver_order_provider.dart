@@ -8,13 +8,14 @@ import '../domain/driver_transport_order.dart';
 
 final currentDriverOrderProvider =
     FutureProvider.autoDispose<DriverTransportOrder?>((ref) async {
+      final isOffline = ref.watch(isOfflineProvider);
       final session = await ref.watch(authControllerProvider.future);
       if (session == null) return null;
 
       final repo = ref.read(driverTransportOrdersRepositoryProvider);
       final local = ref.read(driverOrdersLocalDataSourceProvider);
 
-      if (ref.read(isOfflineProvider)) {
+      if (isOffline) {
         return local.getCurrent();
       }
 

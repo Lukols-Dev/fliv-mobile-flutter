@@ -163,12 +163,12 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
           backgroundColor: const Color(0xFF0F4D46),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${t.route_status_change_failed}: ${e.toString()}'),
+          content: Text(t.route_status_change_failed),
           backgroundColor: const Color(0xFFEF4444),
         ),
       );
@@ -185,6 +185,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   Future<void> _prepareHereLocationOnMapOpen() async {
     if (_isPreparingLocationAccess) return;
     _isPreparingLocationAccess = true;
+    final t = AppLocalizations.of(context)!;
 
     if (mounted) {
       setState(() {
@@ -206,22 +207,23 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
       }
     } on DriverHereLocationPermissionException catch (e) {
       if (!mounted) return;
+      final message = _locationPermissionMessage(t, e.status);
       setState(() => _locationAccessState = _stateFromPermissionError(e));
-      _showSnack(e.message);
+      _showSnack(message);
     } on DriverHereLocationUnavailableException {
       if (!mounted) return;
       setState(() {
         _locationAccessState = _RouteLocationAccessState.unavailable;
-        _locationPreparationMessage = driverLocationUnavailableMessage;
+        _locationPreparationMessage = t.route_location_unavailable;
       });
-      _showSnack(driverLocationUnavailableMessage);
+      _showSnack(t.route_location_unavailable);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _locationAccessState = _RouteLocationAccessState.unavailable;
-        _locationPreparationMessage = driverLocationUnavailableMessage;
+        _locationPreparationMessage = t.route_location_unavailable;
       });
-      _showSnack(driverLocationUnavailableMessage);
+      _showSnack(t.route_location_unavailable);
       // ignore: avoid_print
       print('HERE location prepare error: $e');
     } finally {
@@ -241,16 +243,38 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     };
   }
 
-  String _locationAccessMessage() {
+  String _locationAccessMessage(AppLocalizations t) {
     return switch (_locationAccessState) {
       _RouteLocationAccessState.serviceDisabled =>
-        driverLocationServiceDisabledMessage,
+        t.route_location_service_disabled,
       _RouteLocationAccessState.deniedForever =>
-        driverLocationPermissionDeniedForeverMessage,
-      _RouteLocationAccessState.denied => driverLocationPermissionMessage,
+        t.route_location_permission_denied_forever,
+      _RouteLocationAccessState.denied => t.route_location_permission_message,
       _RouteLocationAccessState.unavailable =>
-        _locationPreparationMessage ?? driverLocationUnavailableMessage,
-      _ => driverLocationPermissionMessage,
+        _locationPreparationMessage ?? t.route_location_unavailable,
+      _ => t.route_location_permission_message,
+    };
+  }
+
+  String _locationPermissionMessage(
+    AppLocalizations t,
+    AppLocationPermissionStatus status,
+  ) {
+    return switch (status) {
+      AppLocationPermissionStatus.deniedForever =>
+        t.route_location_permission_denied_forever,
+      AppLocationPermissionStatus.serviceDisabled =>
+        t.route_location_service_disabled,
+      _ => t.route_location_permission_message,
+    };
+  }
+
+  String _driverLocationReportingMessage(AppLocalizations t, String message) {
+    return switch (message) {
+      driverLocationForbiddenMessage => t.route_location_forbidden,
+      driverLocationInactiveOrderMessage => t.route_location_inactive_order,
+      driverLocationReportFailedMessage => t.route_location_report_failed,
+      _ => message,
     };
   }
 
@@ -267,6 +291,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     setState(() => _isStartingNavigation = true);
     final messenger = ScaffoldMessenger.of(context);
+    final t = AppLocalizations.of(context)!;
 
     try {
       await ref.read(routeMapControllerProvider).startFollowing();
@@ -275,26 +300,26 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
       await _collapseRouteSheet();
     } on DriverHereLocationPermissionException catch (e) {
       if (!mounted) return;
-      setState(() => _locationPreparationMessage = e.message);
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      final message = _locationPermissionMessage(t, e.status);
+      setState(() => _locationPreparationMessage = message);
+      messenger.showSnackBar(SnackBar(content: Text(message)));
       return;
     } on DriverHereLocationUnavailableException {
       if (!mounted) return;
       setState(
-        () => _locationPreparationMessage = driverLocationUnavailableMessage,
+        () => _locationPreparationMessage = t.route_location_unavailable,
       );
       messenger.showSnackBar(
-        const SnackBar(content: Text(driverLocationUnavailableMessage)),
+        SnackBar(content: Text(t.route_location_unavailable)),
       );
       return;
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(
-        () => _locationPreparationMessage = driverLocationUnavailableMessage,
+        () => _locationPreparationMessage = t.route_location_unavailable,
       );
-      final t = AppLocalizations.of(context)!;
       messenger.showSnackBar(
-        SnackBar(content: Text('${t.common_location}: $e')),
+        SnackBar(content: Text(t.route_location_unavailable)),
       );
       return;
     } finally {
@@ -308,18 +333,20 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
     } on DriverHereLocationUnavailableException {
       if (!mounted) return;
       setState(
-        () => _locationPreparationMessage = driverLocationUnavailableMessage,
+        () => _locationPreparationMessage = t.route_location_unavailable,
       );
       messenger.showSnackBar(
-        const SnackBar(content: Text(driverLocationUnavailableMessage)),
+        SnackBar(content: Text(t.route_location_unavailable)),
       );
     } on DriverLocationReportingException catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      messenger.showSnackBar(
+        SnackBar(content: Text(_driverLocationReportingMessage(t, e.message))),
+      );
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text(driverLocationReportFailedMessage)),
+        SnackBar(content: Text(t.route_location_report_failed)),
       );
     }
   }
@@ -386,9 +413,9 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
       if (!mounted) return;
       setState(() => _routeReady = true);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+      messenger.showSnackBar(SnackBar(content: Text(t.route_route_error)));
     } finally {
       if (mounted) setState(() => _isFetchingRoute = false);
     }
@@ -496,7 +523,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      _locationAccessMessage(),
+                      _locationAccessMessage(t),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 14,
@@ -858,7 +885,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                     const SizedBox(height: 16),
                                     if (controller.navigationError != null) ...[
                                       Text(
-                                        controller.navigationError!,
+                                        t.route_route_error,
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
@@ -889,13 +916,11 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                                         orderId: currentOrder.id,
                                                         status: 'IN_PROGRESS',
                                                       );
-                                                } catch (e) {
+                                                } catch (_) {
                                                   if (!mounted) return;
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(
-                                                      content: Text(
-                                                        '${t.route_status_change_failed}: ${e.toString()}',
-                                                      ),
+                                                      content: Text(t.route_status_change_failed),
                                                       backgroundColor: const Color(0xFFEF4444),
                                                     ),
                                                   );
@@ -954,11 +979,11 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
                                   await controller.startFollowing();
                                   if (!mounted) return;
                                   await _collapseRouteSheet();
-                                } catch (e) {
+                                } catch (_) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('${t.common_location}: $e'),
+                                      content: Text(t.route_location_unavailable),
                                     ),
                                   );
                                 }

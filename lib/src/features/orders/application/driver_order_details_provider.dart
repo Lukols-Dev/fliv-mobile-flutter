@@ -8,13 +8,14 @@ import '../domain/driver_transport_order_details.dart';
 
 final driverOrderDetailsProvider = FutureProvider.family
     .autoDispose<DriverTransportOrderDetails, String>((ref, id) async {
+      final isOffline = ref.watch(isOfflineProvider);
       final session = await ref.watch(authControllerProvider.future);
       if (session == null) throw Exception('Not authenticated');
 
       final repo = ref.read(driverTransportOrdersRepositoryProvider);
       final local = ref.read(driverOrdersLocalDataSourceProvider);
 
-      if (ref.read(isOfflineProvider)) {
+      if (isOffline) {
         final cached = await local.getDetails(id);
         if (cached != null) return cached;
         throw Exception('Offline and no cached order details for id=$id');

@@ -222,5 +222,36 @@
   "order_unassign_confirm_action": "Отвязать",
   "order_unassign_cancel": "Отмена",
   "order_unassign_success": "Заказ успешно отвязан",
-  "order_unassign_failed": "Не удалось отвязать заказ"
+  "order_unassign_failed": "Не удалось отвязать заказ",
+  "common_retry": "Повторить",
+  "app_offline": "Вы офлайн",
+  "app_online": "Снова онлайн",
+  "route_not_found": "404 - маршрут не найден",
+  "open_url_invalid": "Некорректный URL-адрес",
+  "open_url_failed": "Не удалось открыть ссылку",
+  "profile_avatar_updated": "Аватар изменён.",
+  "profile_avatar_update_failed": "Не удалось изменить аватар: {error}",
+  "@profile_avatar_update_failed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "profile_fetch_failed": "Не удалось загрузить профиль.",
+  "profile_no_cached_data": "Нет данных профиля (офлайн и нет кеша).",
+  "driver_data_fetch_failed": "Не удалось загрузить данные водителя.",
+  "documents_take_photo": "Сделать фото",
+  "documents_choose_from_gallery": "Выбрать из галереи",
+  "documents_pick_photo_required": "Выберите фото.",
+  "documents_name_required": "Введите название документа.",
+  "documents_added": "Документ добавлен.",
+  "documents_added_locally": "Добавлено локально.",
+  "documents_add_failed": "Не удалось добавить документ.",
+  "documents_operation_failed": "Не удалось выполнить операцию с документом.",
+  "route_location_permission_message": "Приложению нужен доступ к вашей геолокации, чтобы вести вас по маршруту и передавать позицию диспетчеру после начала транспортного заказа.",
+  "route_location_unavailable": "Не удалось получить текущее местоположение.",
+  "route_location_permission_denied_forever": "Доступ к геолокации отключён. Включите доступ в системных настройках.",
+  "route_location_service_disabled": "Службы геолокации отключены. Включите их, чтобы пользоваться картой.",
+  "route_location_report_failed": "Геолокация не была отправлена диспетчеру.",
+  "route_location_forbidden": "Вы не можете отправлять геолокацию для этого транспортного заказа.",
+  "route_location_inactive_order": "Этот транспортный заказ не активен."
 }

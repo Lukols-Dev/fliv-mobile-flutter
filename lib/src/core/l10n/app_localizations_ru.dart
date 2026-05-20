@@ -660,4 +660,94 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get order_unassign_failed => 'Не удалось отвязать заказ';
+
+  @override
+  String get common_retry => 'Повторить';
+
+  @override
+  String get app_offline => 'Вы офлайн';
+
+  @override
+  String get app_online => 'Снова онлайн';
+
+  @override
+  String get route_not_found => '404 - маршрут не найден';
+
+  @override
+  String get open_url_invalid => 'Некорректный URL-адрес';
+
+  @override
+  String get open_url_failed => 'Не удалось открыть ссылку';
+
+  @override
+  String get profile_avatar_updated => 'Аватар изменён.';
+
+  @override
+  String profile_avatar_update_failed(String error) {
+    return 'Не удалось изменить аватар: $error';
+  }
+
+  @override
+  String get profile_fetch_failed => 'Не удалось загрузить профиль.';
+
+  @override
+  String get profile_no_cached_data =>
+      'Нет данных профиля (офлайн и нет кеша).';
+
+  @override
+  String get driver_data_fetch_failed =>
+      'Не удалось загрузить данные водителя.';
+
+  @override
+  String get documents_take_photo => 'Сделать фото';
+
+  @override
+  String get documents_choose_from_gallery => 'Выбрать из галереи';
+
+  @override
+  String get documents_pick_photo_required => 'Выберите фото.';
+
+  @override
+  String get documents_name_required => 'Введите название документа.';
+
+  @override
+  String get documents_added => 'Документ добавлен.';
+
+  @override
+  String get documents_added_locally => 'Добавлено локально.';
+
+  @override
+  String get documents_add_failed => 'Не удалось добавить документ.';
+
+  @override
+  String get documents_operation_failed =>
+      'Не удалось выполнить операцию с документом.';
+
+  @override
+  String get route_location_permission_message =>
+      'Приложению нужен доступ к вашей геолокации, чтобы вести вас по маршруту и передавать позицию диспетчеру после начала транспортного заказа.';
+
+  @override
+  String get route_location_unavailable =>
+      'Не удалось получить текущее местоположение.';
+
+  @override
+  String get route_location_permission_denied_forever =>
+      'Доступ к геолокации отключён. Включите доступ в системных настройках.';
+
+  @override
+  String get route_location_service_disabled =>
+      'Службы геолокации отключены. Включите их, чтобы пользоваться картой.';
+
+  @override
+  String get route_location_report_failed =>
+      'Геолокация не была отправлена диспетчеру.';
+
+  @override
+  String get route_location_forbidden =>
+      'Вы не можете отправлять геолокацию для этого транспортного заказа.';
+
+  @override
+  String get route_location_inactive_order =>
+      'Этот транспортный заказ не активен.';
 }

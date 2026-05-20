@@ -150,13 +150,13 @@ class _DriverDataScreenState extends ConsumerState<DriverDataScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Nie udało się pobrać danych kierowcy.\n$e',
+                    '${t.driver_data_fetch_failed}\n$e',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () => ref.invalidate(driverProfileProvider),
-                    child: const Text('Spróbuj ponownie'),
+                    child: Text(t.common_retry),
                   ),
                 ],
               ),
