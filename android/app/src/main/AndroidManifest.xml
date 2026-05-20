@@ -1,6 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Camera permission for image_picker (ImageSource.camera) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Gallery / photos (needed mainly on Android <= 12; safe to declare) -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Location permission for HERE LocationEngine. Coordinates are read only from HERE SDK. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Optional: declare camera feature (doesn't require hardware, but helps filtering/compat) -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
-        android:label="mobile"
+        android:label="FLIV"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
