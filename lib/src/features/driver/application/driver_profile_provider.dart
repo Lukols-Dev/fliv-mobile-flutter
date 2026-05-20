@@ -7,6 +7,8 @@ import '../data/driver_repository_impl.dart';
 import '../domain/driver_profile.dart';
 
 final driverProfileProvider = FutureProvider<DriverProfile>((ref) async {
+  final isOffline = ref.watch(isOfflineProvider);
+
   // Tie cached provider state to auth session so switching accounts can't reuse
   // previous user's in-memory value.
   final session = await ref.watch(authControllerProvider.future);
@@ -18,7 +20,7 @@ final driverProfileProvider = FutureProvider<DriverProfile>((ref) async {
   final local = ref.read(driverLocalDataSourceProvider);
 
   // If we know we're offline, return cached profile (if any).
-  if (ref.watch(isOfflineProvider)) {
+  if (isOffline) {
     final cached = await local.getMyProfile();
     if (cached != null) return cached;
     throw Exception('Offline and no cached driver profile');

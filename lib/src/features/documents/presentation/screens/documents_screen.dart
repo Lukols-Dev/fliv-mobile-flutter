@@ -123,6 +123,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
 
     Future<void> refresh() async {
       if (!hasResolvedOrder) return;
+      await ref
+          .read(networkStatusControllerProvider.notifier)
+          .checkNow(force: true);
       ref.invalidate(transportOrderDocumentsProvider(resolvedOrderId));
     }
 

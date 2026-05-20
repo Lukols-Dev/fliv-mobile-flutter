@@ -25,8 +25,10 @@ class UpdateOrderStatusController extends AsyncNotifier<void> {
       final repo = ref.read(driverTransportOrdersRepositoryProvider);
       final local = ref.read(driverOrdersLocalDataSourceProvider);
 
-      // Check if offline
-      if (ref.read(isOfflineProvider)) {
+      final isOnline = await ref
+          .read(networkStatusControllerProvider.notifier)
+          .checkNow(force: true);
+      if (!isOnline) {
         throw Exception('Nie można zmienić statusu w trybie offline');
       }
 

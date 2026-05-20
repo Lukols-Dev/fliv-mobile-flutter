@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' show NumberFormat;
 import 'package:mobile/src/core/l10n/app_localizations.dart';
+import 'package:mobile/src/core/network/connectivity_provider.dart';
 
 import 'package:mobile/src/core/location/location_controller.dart';
 import 'package:mobile/src/core/location/geocoding_providers.dart';
@@ -139,6 +140,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    await ref
+        .read(networkStatusControllerProvider.notifier)
+        .checkNow(force: true);
+
     ref.invalidate(driverProfileProvider);
     ref.invalidate(currentDriverOrderProvider);
 

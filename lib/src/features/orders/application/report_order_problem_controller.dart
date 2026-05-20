@@ -24,7 +24,10 @@ class ReportOrderProblemController extends AsyncNotifier<void> {
       final repo = ref.read(driverTransportOrdersRepositoryProvider);
       final local = ref.read(driverOrdersLocalDataSourceProvider);
 
-      if (ref.read(isOfflineProvider)) {
+      final isOnline = await ref
+          .read(networkStatusControllerProvider.notifier)
+          .checkNow(force: true);
+      if (!isOnline) {
         throw Exception('Nie można zgłosić problemu w trybie offline');
       }
 

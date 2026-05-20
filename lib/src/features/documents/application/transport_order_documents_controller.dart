@@ -81,7 +81,10 @@ class OrderDocumentsController extends Notifier<void> {
 
     // 3) opcjonalnie spróbuj wysłać od razu (jeśli online)
     if (!tryUploadImmediately) return false;
-    if (ref.read(isOfflineProvider)) return false;
+    final isOnline = await ref
+        .read(networkStatusControllerProvider.notifier)
+        .checkNow(force: true);
+    if (!isOnline) return false;
 
     return await _uploadOne(
       localId: localId,
@@ -95,7 +98,10 @@ class OrderDocumentsController extends Notifier<void> {
     required String localId,
     required String orderId,
   }) async {
-    if (ref.read(isOfflineProvider)) {
+    final isOnline = await ref
+        .read(networkStatusControllerProvider.notifier)
+        .checkNow(force: true);
+    if (!isOnline) {
       throw Exception('Brak internetu. Spróbuj ponownie gdy będziesz online.');
     }
     final localDs = ref.read(orderDocumentsLocalDataSourceProvider);
@@ -173,7 +179,10 @@ class OrderDocumentsController extends Notifier<void> {
     required String orderId,
     required String orderDocumentId,
   }) async {
-    if (ref.read(isOfflineProvider)) {
+    final isOnline = await ref
+        .read(networkStatusControllerProvider.notifier)
+        .checkNow(force: true);
+    if (!isOnline) {
       throw Exception('Brak internetu. Nie można usunąć dokumentu z serwera.');
     }
     final repo = ref.read(transportOrderDocumentsRepositoryProvider);

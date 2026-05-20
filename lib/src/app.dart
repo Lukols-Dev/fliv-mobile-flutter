@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,7 @@ import 'package:mobile/src/core/routing/app_router.dart';
 import 'package:mobile/src/features/auth/application/auth_controller.dart';
 import 'package:mobile/src/features/driver/application/driver_profile_provider.dart';
 import 'package:mobile/src/core/here/sdk_engine_provider.dart';
+import 'package:mobile/src/features/orders/application/current_driver_order_provider.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -29,6 +32,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     ref.listenManual(authControllerProvider, (prev, next) {
       next.whenData((session) {
@@ -42,28 +46,26 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
       });
     });
 
-    _offlineSub = ref.listenManual(isOfflineProvider, (prev, next) {
-      final wasOffline = prev ?? false;
-      final isOffline = next;
-
-      if (!wasOffline && isOffline) {
-        final t = _currentLocalizations();
-        if (t != null) {
-          _messengerKey.currentState
-            ?..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(t.app_offline)));
+    _offlineSub = ref.listenManual(
+      isOfflineProvider,
+      (prev, next) {
+        if (prev == null) {
+          if (next) _showConnectivitySnackBar(isOffline: true);
+          return;
         }
-      }
+        if (prev == next) return;
 
-      if (wasOffline && !isOffline) {
-        final t = _currentLocalizations();
-        if (t != null) {
-          _messengerKey.currentState
-            ?..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(t.app_online)));
+        if (next) {
+          _showConnectivitySnackBar(isOffline: true);
+          return;
         }
-      }
-    });
+
+        ref.invalidate(driverProfileProvider);
+        ref.invalidate(currentDriverOrderProvider);
+        _showConnectivitySnackBar(isOffline: false);
+      },
+      fireImmediately: true,
+    );
 
     _hereLifecycleSub = ref.listenManual(
       hereSdkLifecycleProvider,
@@ -77,6 +79,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _offlineSub.close();
+    _hereLifecycleSub.close();
     super.dispose();
   }
 
@@ -92,16 +95,21 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     }
     _lastResumeRefresh = now;
 
-    // tylko jeśli ONLINE
-    final offline = ref.read(isOfflineProvider);
-    if (offline) return;
-
     // tylko jeśli zalogowany
     final session = ref.read(authControllerProvider).asData?.value;
     if (session == null) return;
 
-    // odśwież profil (provider sam zapisze do cache jeśli tak masz)
+    unawaited(_refreshAfterResume());
+  }
+
+  Future<void> _refreshAfterResume() async {
+    final isOnline = await ref
+        .read(networkStatusControllerProvider.notifier)
+        .checkNow(force: true);
+    if (!mounted || !isOnline) return;
+
     ref.invalidate(driverProfileProvider);
+    ref.invalidate(currentDriverOrderProvider);
   }
 
   Future<void> _init() async {
@@ -115,6 +123,23 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     final currentContext = _messengerKey.currentContext;
     if (currentContext == null) return null;
     return AppLocalizations.of(currentContext);
+  }
+
+  void _showConnectivitySnackBar({required bool isOffline}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final t = _currentLocalizations();
+      final message = isOffline
+          ? (t?.app_offline ?? 'Jesteś offline')
+          : (t?.app_online ?? 'Znowu online');
+      final messenger = _messengerKey.currentState;
+      if (messenger == null) return;
+
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    });
   }
 
   @override
